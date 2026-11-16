@@ -1,0 +1,22 @@
+# Decision log
+
+Design decisions for NeuroLog, newest first. Each one says what was decided and why, so it is not
+re-argued later. Details live in [data-dictionary.md](data-dictionary.md).
+
+| Date | Decision | Why |
+| --- | --- | --- |
+| 2026-11-15 | In a «Διαδερμική σπονδυλοδεσία» the pedicle screws are placed **percutaneously**, not through the tubular approach. | Confirmed by the surgeon. Counting them as tubular would mix percutaneous instrumentation into tubular-MIS results. |
+| 2026-11-15 | **PLIF/TLIF means an interbody cage only** and never implies screws. Screws are recorded only when «σπονδυλοδεσία» is written. Each operation gets a derived **construct**: `cage_only`, `screws_only`, `cage_and_screws`, `none`. Operations whose «Είδος» and text disagree are flagged for review, never overwritten automatically. | Confirmed by the surgeon: the group writes the cage and the screws separately. |
+| 2026-11-15 | Intradiscal hydrogel is one procedure (`intradiscal_hydrogel`) with a **product** field: DiscoGel or GelStix. IDET stays a separate code. | Confirmed by the surgeon: two products, one procedure. |
+| 2026-11-15 | **«Διαδερμική» = tubular MIS** (tubular retractor), not endoscopic, for discectomy, laminectomy/decompression, foraminotomy and interbody fusion. Procedures that are percutaneous by nature keep `percutaneous`. | Confirmed by the surgeon. |
+| 2026-11-15 | **Codes say what was done, never how.** «Διαδερμική δισκεκτομή» is `discectomy` + approach `tubular_MIS`; an open microdiscectomy is the same code with approach `open`. | Lets the two be compared directly; avoids an approach × procedure explosion of codes. |
+| 2026-11-15 | The procedure and diagnosis lists are **registry codes built from the group's own caseload**, separate from the erweb page names; each code points to at most one erweb page. | The public-site list is written for patients; the group's most frequent operation had no code in it. |
+| 2026-11-15 | One `vertebral_fracture` diagnosis with a required **cause** (osteoporotic, traumatic, pathological); one `disc_herniation` and one `spinal_stenosis` for all regions, region taken from the level. | The existing texts rarely say the cause or the region in words; the level always settles the region. |
+| 2026-11-15 | Complications of earlier surgery (implant failure, CSF leak, postoperative haemorrhage, stimulator malfunction) are diagnoses of class `iatrogenic_postoperative` that **link to the index operation**. | Reoperations are common in the caseload; this counts them from both sides. |
+| 2026-11-15 | Levels are **typed the way the group already writes them** (`Ο4/5`, `Α5/6/7`) and shown back in standard form; impossible levels are refused at entry. | Matches existing habit; the existing texts contain level typos that validation would have caught. |
+| 2026-11-14 | **Faceted classification**: one core procedure/diagnosis code plus independent closed facets (region, level, side, approach, route, compartment, technology, episode…). Type and level are never combined into one code. | Every facet becomes searchable on its own; lists stay short. |
+| 2026-11-14 | Side, approach route and technology are **required at entry**. | They are almost never written in the existing free text, so they cannot be imported. |
+| 2026-11-14 | Operations already logged in **APYweb are imported, then coded**: source key kept, free text kept verbatim, each code `uncoded` → `suggested` → `confirmed`. Only confirmed codes enter statistics. APYweb itself is never changed. | APYweb is a billing app with free-text pathology/operation fields. |
+| 2026-11-14 | **NeuroLog's own identifiers**: `P-XXXX-XXXX-C` (prefix, 8 random Crockford Base32 characters, mod-37 check). Not the ZPMS guid, not the APYweb id, not AMKA. | Short, reveals nothing, catches typos; no dependency on another system's keys. |
+| 2026-11-14 | **Ledger first, research second.** The ledger holds identified data (care provision); research uses pseudonymised exports with a new random ID per study. | The primary purpose is an operation ledger and audit; research is a downstream use with its own legal basis. |
+| 2026-11-14 | Name: **NeuroLog**. | See [naming.md](naming.md). |

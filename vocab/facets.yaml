@@ -1,0 +1,127 @@
+# NeuroLog classification facets: the closed value lists.
+# Human-readable source: docs/data-dictionary.md ("Procedure facets", "Diagnosis facets",
+# "Anatomical value lists"). Keep the two in step: a value is retired, never renamed or deleted.
+# Every facet also accepts `other` (with a note) and `n/a` (does not apply); blank = not yet entered.
+
+procedure:
+  domain: [cranial, spinal, peripheral_nerve, functional_pain, CSF]
+  action:
+    [decompression, discectomy, excision_resection, biopsy, evacuation_drainage, fusion,
+     fixation_without_fusion, arthroplasty, vertebral_augmentation, osteotomy_deformity_correction,
+     CSF_diversion, fenestration, clipping, vascular_excision, ablation, lesioning, stimulation_implant,
+     pump_implant, injection_block, neurolysis_release, nerve_repair_graft, nerve_transfer, dural_repair,
+     cranioplasty_reconstruction, device_revision, device_removal, hardware_removal, exploration]
+  side: [left, right, bilateral, midline]
+  approach_type:
+    [open, mini_open, tubular_MIS, percutaneous, endoscopic_uniportal, endoscopic_biportal,
+     endoscopic_endonasal, stereotactic_frame, stereotactic_frameless, keyhole]
+  approach_route:
+    spinal:
+      [anterior_cervical, anterior_retroperitoneal, lateral_transpsoas, oblique_antepsoas, posterior_midline,
+       paraspinal_Wiltse, transforaminal, interlaminar, transpedicular, costotransversectomy, transthoracic,
+       transoral]
+    cranial:
+      [pterional, supraorbital_eyebrow, frontal, bifrontal, temporal, parietal, occipital, interhemispheric,
+       transcallosal, transcortical, transsylvian, retrosigmoid, suboccipital_midline, far_lateral, telovelar,
+       supracerebellar_infratentorial, transsphenoidal, expanded_endonasal, burr_hole, twist_drill]
+  compartment:
+    spinal: [extradural, intradural_extramedullary, intramedullary]
+    cranial: [extra_axial, intra_axial, intraventricular, epidural, subdural, skull_bone]
+  spinal_column: [anterior, posterior, lateral, circumferential_360]
+  extent: [GTR, NTR, STR, partial, biopsy_only]
+  technology:
+    [none, microscope, exoscope, endoscope, navigation, robot, intraop_CT, intraop_MRI, intraop_US,
+     neuromonitoring, awake_mapping, 5-ALA, fluorescein, ICG, stereotactic_frame]
+  episode: [primary, revision_same_level, revision_adjacent_level, staged, return_to_theatre]
+  intent: [therapeutic, diagnostic, palliative, symptomatic]
+  level_kind: [segment, vertebra, root, range]
+  product:
+    intradiscal_hydrogel: [DiscoGel, GelStix]
+  coding_status: [uncoded, suggested, confirmed]
+
+# Derived per operation from its procedure rows (see "Cage and screws" in the data dictionary).
+operation:
+  construct: [cage_only, screws_only, cage_and_screws, none]
+  urgency: [elective, urgent, emergency]
+
+diagnosis:
+  pathology_class:
+    [degenerative, neoplastic_primary, neoplastic_metastatic, vascular, traumatic, infectious,
+     congenital_developmental, inflammatory, CSF_disorder, functional, pain, entrapment,
+     iatrogenic_postoperative]
+  clinical_syndrome:
+    [radiculopathy, myelopathy, cauda_equina, neurogenic_claudication, axial_pain, instability, deformity,
+     motor_deficit, raised_ICP, seizures, cranial_neuropathy, cognitive, asymptomatic_incidental]
+  acuity: [acute, subacute, chronic, acute_on_chronic]
+  recurrence: [first, recurrent, residual]
+  qualifiers:
+    disc_herniation:
+      zone: [central, paracentral_subarticular, foraminal, extraforaminal]
+      type: [protrusion, extrusion, sequestration, calcified]
+    spinal_stenosis:
+      type: [central, lateral_recess, foraminal, combined]
+    spondylolisthesis:
+      type: [degenerative, isthmic, dysplastic, traumatic, iatrogenic]
+      grade: [I, II, III, IV, V]          # Meyerding
+    vertebral_fracture:
+      cause: [osteoporotic, traumatic, pathological]   # required
+    hydrocephalus:
+      type: [normal_pressure, obstructive, communicating]
+    brain_tumour:
+      status: [provisional, histology_confirmed]
+    shunt_malfunction:
+      type: [obstruction, overdrainage, infection]
+
+anatomy:
+  vertebra: [C0, C1, C2, C3, C4, C5, C6, C7, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12,
+             L1, L2, L3, L4, L5, L6, S1, S2, S3, S4, S5, Co]     # L6 only with the transitional-vertebra flag
+  # Spine region is derived from the levels, never chosen by hand.
+  spine_region:
+    craniocervical: [C0, C2]
+    cervical: [C2, C7]
+    cervicothoracic: [C7, T2]
+    thoracic: [T1, T12]
+    thoracolumbar: [T11, L2]
+    lumbar: [L1, L5]
+    lumbosacral: [L5, S1]
+    sacral_coccygeal: [S1, Co]
+    sacroiliac_pelvis: []
+  cranial:
+    supratentorial_hemisphere: [frontal, temporal, parietal, occipital, insular, central]
+    deep_midline: [basal_ganglia, thalamus, corpus_callosum, pineal, hypothalamus]
+    ventricular: [lateral, third, fourth, aqueduct]
+    sellar_parasellar: [sella, suprasellar, cavernous_sinus]
+    skull_base: [anterior_fossa, middle_fossa, petroclival, foramen_magnum, CPA]
+    posterior_fossa: [cerebellar_hemisphere, vermis, midbrain, pons, medulla]
+    convexity_extra_axial: [convexity, parasagittal_falx, tentorium, venous_sinus]
+    skull_scalp: [calvarium, scalp, orbit]
+    vascular_territory: [ICA, ACA, MCA, PCA, vertebrobasilar]
+  peripheral_nerve:
+    brachial_plexus: [roots, trunks, cords, terminal]
+    median: [wrist_carpal_tunnel, forearm, elbow]
+    ulnar: [elbow_cubital_tunnel, wrist_Guyon]
+    radial: [arm_spiral_groove, elbow_posterior_interosseous]
+    sciatic: [buttock_piriformis, thigh]
+    common_peroneal: [fibular_head]
+    tibial: [tarsal_tunnel]
+    lateral_femoral_cutaneous: [inguinal_ligament]
+  functional_target:
+    [STN, GPi, VIM, ALIC_NAcc, anterior_thalamus, motor_cortex, dorsal_column, DRG, sacral_root_S3, vagus_nerve,
+     occipital_nerve, intrathecal, medial_branch, facet_joint, sacroiliac_joint, trigeminal_ganglion]
+
+# How the group writes levels, accepted at entry and shown back in standard form.
+level_notation:
+  letters: {Α: C, A: C, Θ: T, T: T, Ο: L, O: L, L: L, Ι: S, I: S, S: S}   # Greek: αυχενική, θωρακική, οσφυϊκή, ιερό
+  examples:
+    "Ο4/5": L4-L5
+    "Ο5/Ι1": L5-S1
+    "Α5/6/7": [C5-C6, C6-C7]
+    "Ο4/5,Ο5/Ι1": [L4-L5, L5-S1]
+  refuse: ["impossible vertebra (Ο7, Θ13)", "reversed (8/7)", "non-adjacent without transitional flag (Ο4/6)"]
+
+# How «Διαδερμική» (the group's own wording) is read on import.
+diadermiki:
+  tubular_MIS: [discectomy, laminectomy_decompression, foraminotomy, interbody_fusion]
+  percutaneous: [pedicle_screw_fixation]
+  percutaneous_by_nature: [vertebral_augmentation, intradiscal_hydrogel, intradiscal_thermal, spinal_injection,
+                           rf_neurotomy, trigeminal_percutaneous, spinal_biopsy]

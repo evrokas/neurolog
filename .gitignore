@@ -1,0 +1,11 @@
+# This repository is public. Seed extracts and anything derived from real records stay out of git.
+neurolog-seed/
+seed-results/
+seed_in/
+seed_out/
+private/
+*.sqlite
+*.sql.gz
+config/*.php
+!config/*.php.example
+.DS_Store

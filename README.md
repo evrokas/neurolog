@@ -67,9 +67,22 @@ The NeuroLog brand uses a geometric **N monogram**, inspired by neural pathways 
 
 ---
 
+## Documentation
+
+NeuroLog is in the **design phase**. The design documents are in [`docs/`](docs/README.md):
+
+| Document | What it holds |
+|---|---|
+| [Data dictionary](docs/data-dictionary.md) | Every field NeuroLog stores, the classification model, code lists and facets |
+| [Decision log](docs/decisions.md) | What was decided and why |
+| [Open questions](docs/open-questions.md) | What still needs an answer |
+| [Naming](docs/naming.md) | Why "NeuroLog" |
+| [APYweb seeding plan](docs/seeding/apyweb-seed-plan.md) | Read-only extraction plan to test the code lists against real wording |
+| [Code lists](vocab/) | Machine-readable procedures, diagnoses and facets |
+
 ## Project Status
 
-**Development status:** In development.
+**Development status:** Design phase. No application code yet.
 
 NeuroLog is an evolving project. Its functionality, interface and architecture may change as development progresses.
 
