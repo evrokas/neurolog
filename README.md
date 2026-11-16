@@ -184,9 +184,9 @@ Before submitting significant changes:
 
 ## License
 
-The licensing terms for NeuroLog have not yet been finalized.
+NeuroLog is licensed under the [Apache License, Version 2.0](LICENSE). You may use, copy, modify and distribute it, including commercially, under the terms of that license.
 
-Unless otherwise specified, all rights are reserved. No permission to copy, distribute, modify or commercially use this software is granted by this README.
+The license covers the code and documentation in this repository. It does not grant permission to use the NeuroLog name, logo or brand (Apache License 2.0, Section 6).
 
 ---
 
