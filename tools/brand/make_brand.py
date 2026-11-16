@@ -88,7 +88,7 @@ d.text((584, 405), 'Every Case. Every Detail. One Record.', font=ImageFont.truet
 sp.save(os.path.join(brand, 'neurolog-social-preview.png'), optimize=True)
 print('done', side)
 
-# 5. Logo variants required by vocab/docs/design-system.md §2.2.
+# 5. Logo variants required by docs/design-system.md §2.2.
 NAVY, WHITE = (0, 51, 153), (255, 255, 255)
 fsb = '/usr/share/fonts/opentype/inter/Inter-SemiBold.otf'
 
