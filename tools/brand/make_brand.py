@@ -87,3 +87,55 @@ d.text((584, 345), 'Surgical Activity Logbook', font=ImageFont.truetype(fr, 40),
 d.text((584, 405), 'Every Case. Every Detail. One Record.', font=ImageFont.truetype(fr, 30), fill=(0, 150, 200))
 sp.save(os.path.join(brand, 'neurolog-social-preview.png'), optimize=True)
 print('done', side)
+
+# 5. Logo variants required by docs/design-system.md §2.2.
+NAVY, WHITE = (0, 51, 153), (255, 255, 255)
+fsb = '/usr/share/fonts/opentype/inter/Inter-SemiBold.otf'
+
+def recolour_navy(img, colour):
+    """Dark-background symbol: the navy N becomes `colour`; the cyan nodes stay."""
+    x = np.asarray(img).astype(np.float32)
+    navy = (x[..., 2] - x[..., 1] > 60) & (x[..., 0] < 60)      # blue well above green = the N
+    out = x.copy(); out[navy, 0:3] = colour
+    return Image.fromarray(out.round().astype(np.uint8), 'RGBA')
+
+def mono(img, colour):
+    """One colour: everything drawn takes `colour`; the white rings and highlights become gaps."""
+    x = np.asarray(img).astype(np.float32)
+    whiteness = x[..., 0:3].min(axis=2) / 255.0
+    al = x[..., 3] * np.clip(1 - whiteness * 1.15, 0, 1)
+    out = np.zeros_like(x); out[..., 0:3] = colour; out[..., 3] = al
+    return Image.fromarray(out.round().astype(np.uint8), 'RGBA')
+
+def wordmark(symbol, text_colour, layout):
+    s = 360
+    sym = symbol.resize((s, s), Image.LANCZOS)
+    f_big = ImageFont.truetype(fb, 150 if layout == 'horizontal' else 120)
+    f_tag = ImageFont.truetype(fsb, 30)
+    tmp = ImageDraw.Draw(Image.new('RGBA', (1, 1)))
+    wb = tmp.textbbox((0, 0), 'NeuroLog', font=f_big); tb = tmp.textbbox((0, 0), 'SURGICAL ACTIVITY LOGBOOK', font=f_tag)
+    ww, wh = wb[2] - wb[0], wb[3] - wb[1]
+    if layout == 'horizontal':
+        W2, H2 = s + 40 + max(ww, tb[2]) + 20, s
+        out = Image.new('RGBA', (W2, H2), (0, 0, 0, 0)); out.alpha_composite(sym, (0, 0))
+        d2 = ImageDraw.Draw(out)
+        d2.text((s + 40 - wb[0], H2 // 2 - wh // 2 - 40 - wb[1]), 'NeuroLog', font=f_big, fill=text_colour)
+        d2.text((s + 46, H2 // 2 + wh // 2 - 10), 'SURGICAL ACTIVITY LOGBOOK', font=f_tag, fill=text_colour + (200,))
+    else:   # full: symbol above the wordmark
+        W2 = max(s, ww) + 40; H2 = s + 30 + wh + 70
+        out = Image.new('RGBA', (W2, H2), (0, 0, 0, 0)); out.alpha_composite(sym, ((W2 - s) // 2, 0))
+        d2 = ImageDraw.Draw(out)
+        d2.text(((W2 - ww) // 2 - wb[0], s + 30 - wb[1]), 'NeuroLog', font=f_big, fill=text_colour)
+        d2.text(((W2 - (tb[2] - tb[0])) // 2, s + 30 + wh + 25), 'SURGICAL ACTIVITY LOGBOOK', font=f_tag,
+                fill=text_colour + (200,))
+    return out
+
+sym = sized(1024)
+dark_sym = recolour_navy(sym, WHITE)
+dark_sym.resize((512, 512), Image.LANCZOS).save(os.path.join(brand, 'neurolog-logo-512-dark.png'), optimize=True)
+mono(sym, NAVY).resize((512, 512), Image.LANCZOS).save(os.path.join(brand, 'neurolog-logo-512-mono.png'), optimize=True)
+mono(sym, WHITE).resize((512, 512), Image.LANCZOS).save(os.path.join(brand, 'neurolog-logo-512-mono-white.png'), optimize=True)
+for layout in ('full', 'horizontal'):
+    wordmark(sym, NAVY, layout).save(os.path.join(brand, f'neurolog-logo-{layout}.png'), optimize=True)
+    wordmark(dark_sym, WHITE, layout).save(os.path.join(brand, f'neurolog-logo-{layout}-dark.png'), optimize=True)
+print('variants done')

@@ -81,6 +81,7 @@ NeuroLog is in the **design phase**. The design documents are in [`docs/`](docs/
 | [Naming](docs/naming.md) | Why "NeuroLog" |
 | [APYweb seeding plan](docs/seeding/apyweb-seed-plan.md) | Read-only extraction plan to test the code lists against real wording |
 | [Code lists](vocab/) | Machine-readable procedures, diagnoses and facets |
+| [Design system](docs/design-system.md) | Palette, typography, spacing and components for the interface |
 | [Brand assets](docs/brand.md) | Logo, favicons, social preview, colours |
 
 ## Project Status
