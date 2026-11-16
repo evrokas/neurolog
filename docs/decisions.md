@@ -5,6 +5,7 @@ re-argued later. Details live in [data-dictionary.md](data-dictionary.md).
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-11-16 | **Logo**: the navy N with a cyan node network (supplied by the user) is the project image on GitHub, in the web application and in the favicon of every page. Files and rules in [brand.md](brand.md). | User's choice. |
 | 2026-11-15 | In a «Διαδερμική σπονδυλοδεσία» the pedicle screws are placed **percutaneously**, not through the tubular approach. | Confirmed by the surgeon. Counting them as tubular would mix percutaneous instrumentation into tubular-MIS results. |
 | 2026-11-15 | **PLIF/TLIF means an interbody cage only** and never implies screws. Screws are recorded only when «σπονδυλοδεσία» is written. Each operation gets a derived **construct**: `cage_only`, `screws_only`, `cage_and_screws`, `none`. Operations whose «Είδος» and text disagree are flagged for review, never overwritten automatically. | Confirmed by the surgeon: the group writes the cage and the screws separately. |
 | 2026-11-15 | Intradiscal hydrogel is one procedure (`intradiscal_hydrogel`) with a **product** field: DiscoGel or GelStix. IDET stays a separate code. | Confirmed by the surgeon: two products, one procedure. |

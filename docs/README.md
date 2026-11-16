@@ -8,6 +8,7 @@ NeuroLog is in the **design phase**: no application code yet. These documents de
 | [decisions.md](decisions.md) | Decision log, newest first: what was decided and why. |
 | [open-questions.md](open-questions.md) | Questions still to be answered before building or importing. |
 | [naming.md](naming.md) | Why the name NeuroLog, and the names rejected. |
+| [brand.md](brand.md) | Logo files, favicons, HTML `<head>` snippet, colours, how to regenerate. |
 | [seeding/apyweb-seed-plan.md](seeding/apyweb-seed-plan.md) | Read-only plan, run on the APYweb server, that extracts how operations are actually written, to test the code lists against real data. |
 | [../vocab/](../vocab/) | Machine-readable code lists: `procedures.csv`, `diagnoses.csv`, `facets.yaml`. |
 

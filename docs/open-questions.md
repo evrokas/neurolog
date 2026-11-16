@@ -28,3 +28,10 @@ When one is answered, move it to [decisions.md](decisions.md).
 11. Authorship and data-use rules for studies on the shared data.
 12. Legal basis, ethics approval per hospital, DPIA and consent forms (see "Governance" in
     [data-dictionary.md](data-dictionary.md)).
+
+## Brand
+
+13. **Colours.** The logo uses navy `#003399` and cyan `#00C8F8`–`#00E8FF`; the palette in the README says Deep Navy
+    `#17365D` and Neuro Cyan `#20A6B2`. Which one does the interface follow?
+14. **Small favicon.** At 16 px the logo's nodes blur into dots. Keep it, or draw a simplified mark (the N with one
+    node) for 16 and 32 px? See [brand.md](brand.md).

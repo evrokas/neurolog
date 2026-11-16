@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/brand/neurolog-logo-512.png" width="180" alt="NeuroLog logo"></p>
+
 # NeuroLog
 
 ### Surgical Activity Logbook
@@ -52,7 +54,7 @@ Its visual identity is based on three primary principles:
 - Clarity
 - Reliability
 
-The NeuroLog brand uses a geometric **N monogram**, inspired by neural pathways and interconnected structures.
+The NeuroLog brand uses a geometric **N monogram**, inspired by neural pathways and interconnected structures. Logo files, favicons and usage: [docs/brand.md](docs/brand.md).
 
 ### Brand Palette
 
@@ -79,6 +81,7 @@ NeuroLog is in the **design phase**. The design documents are in [`docs/`](docs/
 | [Naming](docs/naming.md) | Why "NeuroLog" |
 | [APYweb seeding plan](docs/seeding/apyweb-seed-plan.md) | Read-only extraction plan to test the code lists against real wording |
 | [Code lists](vocab/) | Machine-readable procedures, diagnoses and facets |
+| [Brand assets](docs/brand.md) | Logo, favicons, social preview, colours |
 
 ## Project Status
 

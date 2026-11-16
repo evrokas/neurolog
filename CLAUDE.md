@@ -24,6 +24,12 @@ the user brings new information; record new decisions there (newest first, with 
 - Codes describe what was done, never the approach («Διαδερμική δισκεκτομή» = `discectomy` + `tubular_MIS`).
 - Clinical wording and clinical facts come from the surgeon; don't invent indications, outcomes or figures.
 
+## Brand
+
+- Logo and favicons: `assets/brand/` and `web/assets/`, regenerated only from
+  `assets/brand/source/neurolog-logo-original.jpg` with `tools/brand/make_brand.py`. Rules in `docs/brand.md`.
+- Every HTML page of the app carries the favicon `<head>` links from `docs/brand.md`.
+
 ## Related systems
 
 - **APYweb** (`evrokas/apyweb`): the practice's billing app; source of existing operations. Read-only from
