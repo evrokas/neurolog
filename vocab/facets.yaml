@@ -30,13 +30,19 @@ procedure:
   spinal_column: [anterior, posterior, lateral, circumferential_360]
   extent: [GTR, NTR, STR, partial, biopsy_only]
   technology:
-    [none, microscope, exoscope, endoscope, navigation, robot, intraop_CT, intraop_MRI, intraop_US,
+    [none, microscope, exoscope, endoscope, fluoroscopy, navigation, robot, intraop_CT, intraop_MRI, intraop_US,
      neuromonitoring, awake_mapping, 5-ALA, fluorescein, ICG, stereotactic_frame]
   episode: [primary, revision_same_level, revision_adjacent_level, staged, return_to_theatre]
   intent: [therapeutic, diagnostic, palliative, symptomatic]
   level_kind: [segment, vertebra, root, range]
   product:
     intradiscal_hydrogel: [DiscoGel, GelStix]
+  # trigeminal_percutaneous only (see "Trigeminal procedures" in the data dictionary)
+  trigeminal:
+    technique: [rf_thermocoagulation, pulsed_rf, balloon_compression, glycerol_rhizotomy]
+    branches_treated: [V1, V2, V3, non_selective]   # multi; non_selective for balloon and glycerol
+    branch_pattern: derived from branches_treated in order, e.g. "V2+V3"
+    lesion_fields: [branch, temperature_c, duration_s, cycles, stimulation_threshold_v, paraesthesia_in_target]
   coding_status: [uncoded, suggested, confirmed]
 
 # Derived per operation from its procedure rows (see "Cage and screws" in the data dictionary).
@@ -71,6 +77,18 @@ diagnosis:
       status: [provisional, histology_confirmed]
     shunt_malfunction:
       type: [obstruction, overdrainage, infection]
+    trigeminal_neuralgia:
+      branches_affected: [V1, V2, V3]                 # multi
+      tn_type: [classical, secondary, idiopathic]      # ICHD-3
+      concomitant_continuous_pain: [yes, no]
+      prior_treatments: [medication_only, MVD, RF, balloon, glycerol, radiosurgery]
+
+# Follow-up scores for trigeminal procedures.
+followup:
+  trigeminal:
+    bni_pain: [I, II, III, IV, V]          # Barrow Neurological Institute pain intensity
+    bni_numbness: [I, II, III, IV]         # BNI facial numbness
+    numbness_branches: [V1, V2, V3]        # multi, when bni_numbness > I
 
 anatomy:
   vertebra: [C0, C1, C2, C3, C4, C5, C6, C7, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12,
@@ -107,7 +125,8 @@ anatomy:
     lateral_femoral_cutaneous: [inguinal_ligament]
   functional_target:
     [STN, GPi, VIM, ALIC_NAcc, anterior_thalamus, motor_cortex, dorsal_column, DRG, sacral_root_S3, vagus_nerve,
-     occipital_nerve, intrathecal, medial_branch, facet_joint, sacroiliac_joint, trigeminal_ganglion]
+     occipital_nerve, intrathecal, medial_branch, facet_joint, sacroiliac_joint, trigeminal_ganglion,
+     glossopharyngeal_nerve]
 
 # How the group writes levels, accepted at entry and shown back in standard form.
 level_notation:

@@ -1,6 +1,6 @@
 # NeuroLog — Data Dictionary (draft v0.2)
 
-Draft v0.2 · 2026-11-15 · public copy (the working copy is a private living document; counts from the group's own operations are kept there, not here)
+Draft v0.2 · public copy of the private working document (rev 58); counts from the group's own operations are kept there, not here
 
 ## Purpose and scope
 
@@ -294,7 +294,7 @@ The 12-month follow-up is the one most often missed. Plan who chases it (secreta
 
 ## Controlled vocabularies
 
-The procedure and diagnosis lists below were built from the group's real caseload (APYweb operation and pathology texts, read-only, aggregated); the counts are kept in the private working copy. They are registry codes, separate from the erweb page names; each code names at most one erweb page, which the last column gives, so a statistic can still link to the matching patient page. Each value has a stable code plus a Greek and an English label; a value is retired, never deleted or renamed.
+The procedure and diagnosis lists below are built from the group's real caseload (APYweb operation and pathology texts, read-only, aggregated); the counts are kept in the private working copy. They are registry codes, separate from the erweb page names; each code names at most one erweb page, which the last column gives, so a statistic can still link to the matching patient page. Each value has a stable code plus a Greek and an English label; a value is retired, never deleted or renamed.
 
 **Codes say what was done, never how the surgeon got there.** «Διαδερμική δισκεκτομή» is `discectomy` with approach `tubular_MIS`, not a separate code; an open microdiscectomy is the same `discectomy` with approach `open`. In this practice «Διαδερμική» means tubular MIS through a tubular retractor, never endoscopic, for discectomy, laminectomy/decompression, foraminotomy and interbody fusion. Procedures that are percutaneous by nature (vertebral augmentation, intradiscal, injections, RF, trigeminal, biopsy) stay \`percutaneous\`. One fusion case is different: in «Διαδερμική σπονδυλοδεσία» the pedicle screws are placed percutaneously, so \`pedicle\_screw\_fixation\` gets approach \`percutaneous\`. In «Διαδερμική δισκεκτομή Ο4/5, TLIF» with «σπονδυλοδεσία», the discectomy and cage rows are tubular\_MIS and the screw row is percutaneous. The import reads it that way.
 
@@ -325,8 +325,8 @@ The procedure and diagnosis lists below were built from the group's real caseloa
 | spinal | posterior\_fossa\_decompression | Αποσυμπίεση οπίσθιας κρανιακής βόθρου | Chiari | posterior-fossa-decompression |
 | spinal | syrinx\_shunt | Shunt συριγγομυελίας |  | syringo-subarachnoid-shunt |
 | pain | spinal\_injection | Έγχυση / block | target: transforaminal, epidural, facet, medial branch, SI joint | spinal-injections |
-| pain | rf\_neurotomy | RF θερμοπηξία νεύρου | target: medial branch, SI joint, peripheral nerve | facet-joint-radiofrequency-neurotomy, radiofrequency-ablation |
-| pain | trigeminal\_percutaneous | Θερμοπηξία γασσερίου | qualifier: RF thermocoagulation, balloon, glycerol; branch | percutaneous-trigeminal-procedures |
+| pain | rf\_neurotomy | RF θερμοπηξία νεύρου | target: medial branch, SI joint, glossopharyngeal nerve, peripheral nerve | facet-joint-radiofrequency-neurotomy, radiofrequency-ablation |
+| pain | trigeminal\_percutaneous | Θερμοπηξία γασσερίου | technique + branches treated (V1/V2/V3, multi) + per-branch lesion; see Trigeminal procedures below | percutaneous-trigeminal-procedures |
 | pain | spinal\_cord\_stimulation | Νευροδιέγερση νωτιαίου μυελού | trial or implant | spinal-cord-stimulation |
 | pain | deep\_brain\_stimulation | DBS | target | deep-brain-stimulation |
 | pain | intrathecal\_pump | Αντλία | baclofen, morphine | programmable-pump-implantation |
@@ -364,6 +364,30 @@ The procedure and diagnosis lists below were built from the group's real caseloa
 
 **Flagged for review on import:** operations whose «Είδος» is «Διαδερμικό PLIF/TLIF» or «Διαδερμική σπονδυλοδεσία» but whose text names no cage or no screws (e.g. «Διαδερμική δισκεκτομή Ο5/Ι1» under «Διαδερμικό PLIF»). They are imported with construct `none` and `review = construct`, and a surgeon sets the construct from the patient file. The text is never overridden by the «Είδος» automatically.
 
+**Trigeminal procedures: which branches were treated.** A trigeminal procedure is one `trigeminal_percutaneous` row whose branch field holds every branch treated in that session, so "all V2 cases", "all V2+V3 cases" or "every case that touched V1" are each one search. The branches *affected* (diagnosis) and the branches *treated* (procedure) are recorded separately, because they are not always the same.
+
+| Where | Field | Type | Req | Values | Answers |
+| --- | --- | --- | --- | --- | --- |
+| Procedure row | technique | enum | C | rf\_thermocoagulation, pulsed\_rf, balloon\_compression, glycerol\_rhizotomy | Technique comparison |
+| Procedure row | branches\_treated | multi | C | V1, V2, V3; `non_selective` for balloon compression and glycerol | Branch-specific results and complications |
+| Procedure row | branch\_pattern | text | A | Derived, written in order: V2, V2+V3, V1+V2+V3, non\_selective | Grouping without multi-select logic |
+| Procedure row | lesion\_side | enum | C | left, right (bilateral only if both sides were treated in one session) | Side |
+| Procedure row | technology | multi | C | fluoroscopy, CT/navigation, neuromonitoring (sensory/motor stimulation) | Guidance |
+| Lesion (child of the row, one per branch) | branch, temperature\_c, duration\_s, cycles | enum, int, int, int | E | e.g. V2, 75 °C, 90 s, 2 | Dose-response, recurrence studies |
+| Lesion | stimulation\_threshold\_v, paraesthesia\_in\_target | dec, bool | E | Sensory threshold in volts; paraesthesia reached the painful area yes/no | Targeting quality |
+| Diagnosis (trigeminal\_neuralgia) | branches\_affected | multi | C | V1, V2, V3 | Where the pain is |
+| Diagnosis | tn\_type | enum | C | classical (neurovascular compression), secondary (MS, tumour), idiopathic | ICHD-3 grouping |
+| Diagnosis | concomitant\_continuous\_pain | bool | C |  | Predicts a worse outcome |
+| Diagnosis | prior\_treatments | multi | E | medication only, MVD, RF, balloon, glycerol, radiosurgery | Repeat-procedure analysis |
+| Follow-up | bni\_pain | enum | C | BNI pain intensity I–V | Pain outcome |
+| Follow-up | bni\_numbness | enum | C | BNI facial numbness I–IV | Sensory cost of the procedure |
+| Follow-up | numbness\_branches | multi | C if bni\_numbness > I | V1, V2, V3 | Where the numbness is |
+| Follow-up | recurrence\_date | date | C if recurrence | First return of pain needing treatment | Time to recurrence |
+
+Branch-specific complications are added to the Complication list: corneal hypoaesthesia / keratitis (V1), masticatory weakness (V3 motor root), anaesthesia dolorosa, dysaesthesia.
+
+Existing APYweb texts do not name the branch, and only some name the side. Imported trigeminal cases get `branches_treated` = unknown and `review = branches`; the branches come from the operative note.
+
 ### Diagnosis list
 
 Region comes from the level, so one code covers all spinal regions: «ΚΜΔ Ο5/Ι1» and «ΚΜΔ Α5/6» are both `disc_herniation`.
@@ -380,7 +404,7 @@ Region comes from the level, so one code covers all spinal regions: «ΚΜΔ Ο5
 | developmental | bertolotti\_syndrome, spondylolysis, tarlov\_cyst |  |  |
 | pain | radicular\_pain\_unspecified | Ισχιαλγία / βραχιοναλγία | root; use only when no structural cause is named |
 | pain | axial\_pain\_unspecified | Οσφυαλγία / ραχιαλγία |  |
-| pain | trigeminal\_neuralgia | Νευραλγία τριδύμου | classical, secondary; branch |
+| pain | trigeminal\_neuralgia | Νευραλγία τριδύμου | branches affected (V1/V2/V3, multi); classical, secondary, idiopathic; concomitant continuous pain |
 | pain | glossopharyngeal\_neuralgia | Νευραλγία γλωσσοφαρυγγικού |  |
 | pain | intercostal\_neuralgia | Μεσοπλεύριος νευραλγία |  |
 | traumatic / bone | vertebral\_fracture | Κάταγμα σπονδύλου | cause: osteoporotic, traumatic, pathological (required); AO Spine |
@@ -412,11 +436,12 @@ An `iatrogenic` diagnosis carries `index_op_id` (the earlier NeuroLog operation 
 | List | Values |
 | --- | --- |
 | Intradiscal hydrogel product | DiscoGel, GelStix |
-| Complication | Wound infection superficial / deep, CSF leak, incidental durotomy, haematoma (epidural / subdural / intracerebral), new motor deficit, new sensory deficit, C5 palsy, dysphagia, recurrent laryngeal palsy, hardware malposition, hardware failure, pseudarthrosis, adjacent-segment disease, recurrent disc herniation, shunt malfunction, shunt infection, seizure, hydrocephalus, DVT / PE, pneumonia, UTI, delirium, death (graded by Clavien-Dindo) |
+| Complication | Wound infection superficial / deep, CSF leak, incidental durotomy, haematoma (epidural / subdural / intracerebral), new motor deficit, new sensory deficit, C5 palsy, dysphagia, recurrent laryngeal palsy, hardware malposition, hardware failure, pseudarthrosis, adjacent-segment disease, recurrent disc herniation, shunt malfunction, shunt infection, seizure, hydrocephalus, corneal hypoaesthesia / keratitis, masticatory weakness, anaesthesia dolorosa, dysaesthesia, DVT / PE, pneumonia, UTI, delirium, death (graded by Clavien-Dindo) |
 | Hospital | From APYweb's clinic list, mapped once |
 | Surgeon, anaesthetist | Group members from APYweb's doctor list, plus `resident` and `external` |
 
 **Level entry.** Levels are typed the way the group already writes them, `Ο4/5`, `Α5/6/7`, `Ο4/5,Ο5/Ι1`, and shown back immediately in standard form (L4-L5; C5-C6, C6-C7; L4-L5 and L5-S1). Greek and Latin letters are both accepted. Impossible or reversed levels (Ο7, Θ13, 8/7, Ο4/6 without a transitional-vertebra flag) are refused at entry.
+
 ## Classification model
 
 Every operation and every diagnosis is classified as **one core concept plus independent facets**, each facet chosen from a closed list. Level, side and area are facets, never part of the core code.
@@ -451,7 +476,7 @@ One row per procedure performed. Facets 1–7 are required for every procedure; 
 | 10 | **Compartment** | Spine: extradural, intradural\_extramedullary, intramedullary; cranial: extra\_axial, intra\_axial, intraventricular, epidural, subdural, skull\_bone | extradural |
 | 11 | **Spinal column** | anterior, posterior, lateral, circumferential\_360 | posterior |
 | 12 | **Extent** | Resection: GTR, NTR, STR, partial, biopsy\_only; decompression: number of levels; fusion: number of segments | — |
-| 13 | **Technology** (multi) | microscope, exoscope, endoscope, navigation, robot, intraop\_CT, intraop\_MRI, intraop\_US, neuromonitoring, awake\_mapping, 5-ALA, fluorescein, ICG, stereotactic\_frame | microscope, neuromonitoring |
+| 13 | **Technology** (multi) | microscope, exoscope, endoscope, fluoroscopy, navigation, robot, intraop\_CT, intraop\_MRI, intraop\_US, neuromonitoring, awake\_mapping, 5-ALA, fluorescein, ICG, stereotactic\_frame | microscope, neuromonitoring |
 | 14 | **Episode** | primary, revision\_same\_level, revision\_adjacent\_level, staged (n of m), return\_to\_theatre | primary |
 | 15 | **Intent** | therapeutic, diagnostic, palliative, symptomatic | therapeutic |
 
@@ -559,7 +584,7 @@ Location is multi-select (a tumour can be frontal + insular). Side applies to ev
 | lateral\_femoral\_cutaneous | inguinal\_ligament |
 | other | named in note |
 
-**Functional / pain targets** (when Domain = functional\_pain): STN, GPi, VIM, ALIC/NAcc, anterior thalamus, motor cortex, dorsal column (cervical/thoracic level), DRG (level), sacral root S3, vagus nerve, occipital nerve, intrathecal (catheter tip level), medial branch (level), facet joint (level), sacroiliac joint, trigeminal ganglion.
+**Functional / pain targets** (when Domain = functional\_pain): STN, GPi, VIM, ALIC/NAcc, anterior thalamus, motor cortex, dorsal column (cervical/thoracic level), DRG (level), sacral root S3, vagus nerve, occipital nerve, intrathecal (catheter tip level), medial branch (level), facet joint (level), sacroiliac joint, trigeminal ganglion (with branch V1, V2, V3), glossopharyngeal nerve.
 
 ## Worked examples and seeding
 

@@ -15,6 +15,8 @@ When one is answered, move it to [decisions.md](decisions.md).
    `uncoded` and coded by hand from the patient file.
 5. **«Σύνδεση περιφερικού άκρου»**: what is connected (shunt catheter, nerve)?
 6. Import all APYweb operations, or only from a start date?
+7a. **Trigeminal branches of past cases.** Existing texts never name the branch treated. Fill them from the operative
+    notes before import, or import as `unknown` and fill later?
 
 ## Ledger
 
