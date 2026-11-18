@@ -176,6 +176,31 @@ if ($r['code'] === 302 && preg_match('#/operations/(O-[^/]+)$#', urldecode($r['l
     $st = $db->query("SELECT coding_status FROM procedures WHERE op_ref = {$op2['id']}")->fetch_assoc();
     check('the primary surgeon confirms suggested codes', $st['coding_status'] === 'confirmed');
 } else check("save another surgeon's case", false, "{$r['code']}");
+// quick line: the endpoint reads a line (CSRF in the header), a viewer may not use it, proposed rows stay suggested
+function req_json(string $url, string $jar, array $post, string $token): array {
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEJAR => $jar, CURLOPT_COOKIEFILE => $jar, CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query($post), CURLOPT_HTTPHEADER => ["X-CSRF-Token: $token"], CURLOPT_USERAGENT => 'neurolog-check-web']);
+    $body = (string)curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_close($ch);
+    return ['code' => $code, 'body' => $body];
+}
+$page = req("$base/operations/new", $js)['body'];
+$tok = preg_match('/<meta name="csrf-token" content="([^"]+)"/', $page, $mm) ? $mm[1] : '';
+$r = req_json("$base/operations/parse", $js, ['text' => 'Διαδερμική σπονδυλοδεσία Ο4/5/Ι1, PLIF Ο5/Ι1'], $tok);
+$d = json_decode($r['body'], true);
+check('quick line endpoint reads the line', $r['code'] === 200 && ($d['procedures'][0]['procedure_code'] ?? '') === 'pedicle_screw_fixation'
+      && ($d['procedures'][0]['approach_type'] ?? '') === 'percutaneous' && ($d['procedures'][1]['approach_route'] ?? '') === 'posterior_midline', substr($r['body'], 0, 200));
+check('quick line endpoint refuses a missing CSRF token', req_json("$base/operations/parse", $js, ['text' => 'x'], 'bad')['code'] === 403);
+check('viewer cannot use the quick line endpoint', req_json("$base/operations/parse", login_as($base, $users['viewer'], $pass), ['text' => 'x'], $tok)['code'] !== 200);
+$r = $opPost($js, '/operations/new', $mS, ['op' => ['quick_line' => 'Διαδερμική δισκεκτομή Ο4/5 αρ'], 'pr' => ['0' => ['proposed' => '1']]]);
+if ($r['code'] === 302 && preg_match('#/operations/(O-[^/]+)$#', urldecode($r['loc']), $m4)) {
+    $o4 = $db->query("SELECT id, quick_line FROM operations WHERE nl_id = '" . $db->real_escape_string(str_replace('-', '', $m4[1])) . "'")->fetch_assoc();
+    $created[] = (int)$o4['id'];
+    $st = $db->query("SELECT coding_status FROM procedures WHERE op_ref = {$o4['id']}")->fetch_assoc();
+    check('a proposed row the surgeon did not accept is saved as suggested', $st['coding_status'] === 'suggested');
+    check('the quick line is kept verbatim', $o4['quick_line'] === 'Διαδερμική δισκεκτομή Ο4/5 αρ');
+} else check('save with a proposed row', false, (string)$r['code']);
+
 // refused input is not saved and comes back with the messages
 $before = $db->query('SELECT COUNT(*) FROM operations')->fetch_row()[0];
 $r = $opPost($js, '/operations/new', $mS, ['pr' => ['0' => ['levels' => 'Ο7', 'approach_type' => '']]]);

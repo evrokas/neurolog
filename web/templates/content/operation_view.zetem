@@ -59,7 +59,8 @@
     </div>
     {% endforeach %}
 
-    {% if($op['op_note']): %}<h3>{{{t('Operative note')}}}</h3><p class="note">{{{$op['op_note']}}}</p>{% endif %}
+    {% if($op['quick_line']): %}<h3>{{{t('Quick line')}}}</h3><p class="note">{{ nl_tags_render($op['quick_line']) }}</p>{% endif %}
+    {% if($op['op_note']): %}<h3>{{{t('Operative note')}}}</h3><p class="note">{{ nl_tags_render($op['op_note']) }}</p>{% endif %}
 
     {% if($missing): %}
     <div class="notice"><strong>{{{t('Still missing for a complete record')}}}:</strong> {{{implode(', ', $missing)}}}</div>

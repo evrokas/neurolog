@@ -115,6 +115,12 @@ routes:
     handler: nl_page_operation_new_post
     method: post
     access: surgeon admin
+  operation_parse_post:
+    title: "Read the quick line"
+    url: "/operations/parse"
+    handler: nl_page_operation_parse_post
+    method: post
+    access: surgeon admin
   operation:
     title:
       gr: "Επέμβαση"

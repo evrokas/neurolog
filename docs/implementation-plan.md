@@ -36,7 +36,7 @@ export run on the APYweb server). See [open-questions.md](open-questions.md).
 | Milestone | State |
 | --- | --- |
 | M0 | Built 2026-11-18. Password sign-in and roles tested over real HTTP; ErnsAuth sign-in is wired (module, sign-in tab, `config/ernsauth.php.in`) but untested until a NeuroLog client is registered in ErnsAuth. Dashboard counters read 0 until M1. |
-| M2 | In progress. Done: level parser (PHP + JS, shared cases), chip pickers, level grid, the operation form (patient search or new patient, diagnoses with qualifiers, procedure rows with every facet, trigeminal branches, RF protocol into `rf_cycles`, construct), view page, confirm codes, hospitals and members pages, audit and change log; the four worked examples pass. Next: quick line + `@` tags, presets. |
+| M2 | In progress. Done: level parser (PHP + JS, shared cases), chip pickers, level grid, the operation form (patient search or new patient, diagnoses with qualifiers, procedure rows with every facet, trigeminal branches, RF protocol into `rf_cycles`, construct), view page, confirm codes, hospitals and members pages, audit and change log; the quick line and `@` tags (`web/quickline.php`, `vocab/aliases.yaml`): proposed rows are dashed and saved as suggested unless accepted; tags shown in the reading look. Next: presets. |
 | M1 | Built 2026-11-18. 15 tables from the data dictionary (`web/classes/yaml/`), 710 code values in 108 lists, NeuroLog IDs (`web/nl_id.php`). `update.sh` builds the database and loads the lists from nothing (tested on an empty database). Dashboard counters are real; admins see the code lists read-only. |
 
 ## Repository layout (from M0)

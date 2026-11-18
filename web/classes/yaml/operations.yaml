@@ -88,6 +88,9 @@ table:
   - name: op_note
     type: text
 
+  - name: quick_line
+    type: text
+
   - name: construct
     type: varchar(24)
 
@@ -133,6 +136,7 @@ table:
 # Data dictionary: "Operation" and "Import from APYweb and coding".
 # - hospital_ref       copy of the admission's hospital, so an imported operation without an admission still has one
 # - neuromonitoring    JSON list (multi)
+# - quick_line         the operation as typed on the quick line, kept verbatim (docs/plans/tags-and-chips.md B1)
 # - construct          derived from the procedure rows: cage_only | screws_only | cage_and_screws | none
 # - review_flag        why the case needs a person (e.g. «Είδος» and text disagree); never fixed automatically
 # - record_status      draft | complete | locked (locked changes need a reason, see change_log)

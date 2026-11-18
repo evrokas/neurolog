@@ -29,6 +29,10 @@ When one is answered, move it to [decisions.md](decisions.md).
     2026-11-18 from the procedure names; please review (e.g. vertebral_tumour_ablation = ablation, rf_neurotomy =
     lesioning, intradiscal_hydrogel = injection_block).
 
+18. **Words per code** (`vocab/aliases.yaml`, used by the quick line, the `@` tags and later the APYweb import):
+    drafted 2026-11-18 from general clinical vocabulary. Add the group's own abbreviations and spellings; remove any
+    word that means something else in the group's usage.
+
 ## Ledger
 
 9. Retention period, and what happens to a member's data if they leave the group.

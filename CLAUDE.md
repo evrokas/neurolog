@@ -43,7 +43,8 @@ the user brings new information; record new decisions there (newest first, with 
   `csrf_webforms` covers only framework webforms, not app routes (`bin/check_web.php` tests it).
 - Operations: `web/operations.php` (validation is pure and unit-tested, saving, derived fields, audit/change log),
   `web/operation_pages.php` (pages), `web/levels.php` + `web/js/levels.js` (one case file `tests/cases/levels.json`),
-  `web/js/chips.js` (chip pickers). Dev data: `php bin/seed_demo.php --link-surgeon=UNAME` (made-up names only).
+  `web/js/chips.js` (chip pickers), `web/quickline.php` (quick line and `@` tags; cases `tests/cases/quickline.json`;
+  words per code in `vocab/aliases.yaml`, general vocabulary only). Dev data: `php bin/seed_demo.php --link-surgeon=UNAME` (made-up names only).
 - `bin/check_schema.php` (in the runner) checks tables, columns, unique IDs and that `vocab/` and `nl_codes` agree.
 - Development uses made-up cases only. No web fonts or scripts from other hosts (the check enforces it on the sign-in page).
 

@@ -10,7 +10,8 @@
  *    procedure that has levels, plus the conditional fields (product, trigeminal technique/branches, RF protocol);
  *  - "missing" lists what a complete record still needs (blank = not yet entered; it never blocks a save);
  *  - codes are confirmed when the operation's own primary surgeon saves them, otherwise suggested
- *    (decisions 2026-11-18); a row saved unchanged keeps its status.
+ *    (decisions 2026-11-18); a row saved unchanged keeps its status; a row proposed by the quick line or a tag
+ *    (`proposed` = 1) and not accepted is saved as suggested, whoever saves it.
  */
 
 require_once __DIR__ . '/levels.php';
@@ -35,7 +36,7 @@ function nl_op_fields(): array {
         'blood_loss_ml' => ['int', [0, 20000]], 'transfusion_units' => ['int', [0, 100]],
         'neuromonitoring' => ['multi', 'field.operation.neuromonitoring'], 'antibiotic_prophylaxis' => ['code', 'field.operation.antibiotic_prophylaxis'],
         'drain' => ['bool', null], 'durotomy_incidental' => ['bool', null],
-        'admission_code' => ['text', 64], 'op_note' => ['text', 20000],
+        'admission_code' => ['text', 64], 'op_note' => ['text', 20000], 'quick_line' => ['text', 2000],
     ];
 }
 // required for a complete record (the rest is extended data)
@@ -232,6 +233,7 @@ function nl_op_validate(array $in, array $ctx): array {
         }
         if ($row['symptom_duration'] === null) $missing[] = 'diagnosis: symptom duration';
         if ($row['neuro_deficit'] === null) $missing[] = 'diagnosis: neurological deficit';
+        $row['_proposed'] = !empty($d['proposed']);
         $dxIndex[(string)$i] = count($dx);
         $dx[] = $row;
     }
@@ -336,6 +338,7 @@ function nl_op_validate(array $in, array $ctx): array {
         // which diagnosis this row treats
         $t = (string)($d['treats'] ?? '');
         $row['_treats'] = $t !== '' && isset($dxIndex[$t]) ? $dxIndex[$t] : null;
+        $row['_proposed'] = !empty($d['proposed']);
         $pr[] = $row;
     }
     if (!$pr) $err['pr'] = 'at least one procedure';
@@ -477,7 +480,8 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
         $status = function (array $row, array $prev, array $cols) use ($actorIsSurgeon, $uname, $now) {
             $sig = nl_row_signature($row, $cols);
             if (isset($prev[$sig])) return [$prev[$sig]['coding_status'], $prev[$sig]['coded_by'], $prev[$sig]['coded_at']];
-            return $actorIsSurgeon ? ['confirmed', $uname, $now] : ['suggested', null, null];
+            // a row proposed by the quick line or a tag and not accepted stays suggested, whoever saves it
+            return $actorIsSurgeon && empty($row['_proposed']) ? ['confirmed', $uname, $now] : ['suggested', null, null];
         };
         $dxIds = [];
         foreach ($v['dx'] as $k => $row) {

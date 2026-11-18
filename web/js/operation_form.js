@@ -37,6 +37,7 @@
   function setupRow(row) {
     C.initAll(row);
     row.querySelector('.row-remove').addEventListener('click', function () { removeRow(row); });
+    row.querySelector('.row-accept').addEventListener('click', function () { setProposed(row, false); });
     row.querySelectorAll('.levels-input').forEach(setupLevels);
     if (row.classList.contains('pr-row')) {
       var proc = row.querySelector('.chipf[data-list="procedure"] input');
@@ -217,6 +218,69 @@
     });
   }
 
+  // ---------- quick line and tags (docs/plans/tags-and-chips.md B1–B4): proposed rows, never confirmed here ----------
+  function setProposed(row, on) {
+    row.classList.toggle('is-proposed', on);
+    row.querySelector('input.proposed').value = on ? '1' : '';
+  }
+  function emptyRow(containerId, tplId, isEmpty) {
+    var rows = document.getElementById(containerId).querySelectorAll('.op-row');
+    for (var k = 0; k < rows.length; k++) if (isEmpty(rows[k])) return rows[k];
+    var btn = document.querySelector('.row-add[data-tpl="' + tplId + '"]'); addRow(btn);
+    rows = document.getElementById(containerId).querySelectorAll('.op-row');
+    return rows[rows.length - 1];
+  }
+  function chipOf(row, name) { return row.querySelector('.chipf:has(input[name$="[' + name + ']"])'); }
+  function fill(row, name, v) { var c = chipOf(row, name); if (c && v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)) C.set(c, Array.isArray(v) ? v : [v]); }
+  function applyParse(d, box) {
+    // rows proposed earlier and not yet accepted are replaced
+    form.querySelectorAll('.op-row.is-proposed').forEach(function (r) { if (r.parentNode.querySelectorAll('.op-row').length > 1) r.remove(); else { setProposed(r, false); r.querySelectorAll('.chipf').forEach(function (c) { C.set(c, []); }); r.querySelectorAll('.levels-input').forEach(function (i) { i.value = ''; i.dispatchEvent(new Event('input')); }); } });
+    (d.diagnoses || []).forEach(function (x) {
+      var row = emptyRow('dx-rows', 'dx-tpl', function (r) { return !C.value(r.querySelector('.chipf[data-list="diagnosis"]')).length; });
+      fill(row, 'diagnosis_code', x.diagnosis_code); qualifiers(row);
+      var li = row.querySelector('.levels-input'); if (x.levels) { li.value = x.levels; li.dispatchEvent(new Event('input')); }
+      fill(row, 'lesion_side', x.lesion_side);
+      setProposed(row, true);
+    });
+    (d.procedures || []).forEach(function (x) {
+      var row = emptyRow('pr-rows', 'pr-tpl', function (r) { return !C.value(r.querySelector('.chipf[data-list="procedure"]')).length; });
+      fill(row, 'procedure_code', x.procedure_code); procChanged(row);
+      var li = row.querySelector('.levels-input'); if (x.levels) { li.value = x.levels; li.dispatchEvent(new Event('input')); }
+      ['lesion_side', 'approach_type', 'approach_route', 'product', 'trigeminal_technique', 'branches_treated'].forEach(function (n) { fill(row, n, x[n]); });
+      procChanged(row);
+      setProposed(row, true);
+    });
+    refresh();
+    box.innerHTML = '';
+    var n = (d.procedures || []).length, m = (d.diagnoses || []).length;
+    var p = document.createElement('p');
+    p.textContent = n || m ? ('Proposed: ' + n + ' procedure' + (n === 1 ? '' : 's') + ', ' + m + ' diagnos' + (m === 1 ? 'is' : 'es') + '. Check them, add the technology, then accept.') : 'Nothing recognised.';
+    box.appendChild(p);
+    if (n || m) {
+      var all = document.createElement('button'); all.type = 'button'; all.className = 'btn small-btn'; all.textContent = '✓ Accept all';
+      all.addEventListener('click', function () { form.querySelectorAll('.op-row.is-proposed').forEach(function (r) { setProposed(r, false); }); });
+      box.appendChild(all);
+    }
+    if ((d.unplaced || []).length) { var u = document.createElement('p'); u.className = 'muted small'; u.textContent = 'Not read: ' + d.unplaced.join(' · '); box.appendChild(u); }
+    box.hidden = false;
+  }
+  function runParse(text, box) {
+    var tok = document.querySelector('meta[name="csrf-token"]'), fd = new FormData(); fd.append('text', text);
+    fetch(document.querySelector('.quick-line').dataset.url, { method: 'POST', body: fd, credentials: 'same-origin',
+      headers: { 'X-CSRF-Token': tok ? tok.content : '' } })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) { applyParse(d, box); })
+      .catch(function () { box.textContent = 'Could not read the line (signed out?).'; box.hidden = false; });
+  }
+  function setupQuick() {
+    var q = form.querySelector('.quick-input'), box = form.querySelector('.quick-result');
+    if (!q) return;
+    form.querySelector('.quick-go').addEventListener('click', function () { if (q.value.trim()) runParse(q.value, box); });
+    q.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); if (q.value.trim()) runParse(q.value, box); } });
+    var ns = form.querySelector('.note-suggest'), note = form.querySelector('.note-input');
+    if (ns) ns.addEventListener('click', function () { if (note.value.trim()) { runParse(note.value, box); box.scrollIntoView({ block: 'center' }); } });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     form = document.getElementById('op-form'); if (!form) return;
     C = window.NLChips; L = window.NLLevels;
@@ -226,6 +290,7 @@
     document.querySelectorAll('.row-add').forEach(function (b) { b.addEventListener('click', function () { addRow(b); }); });
     form.addEventListener('change', refresh);
     setupPatient();
+    setupQuick();
     refresh();
     var firstErr = form.querySelector('.field-error'); if (firstErr) firstErr.scrollIntoView({ block: 'center' });
   });

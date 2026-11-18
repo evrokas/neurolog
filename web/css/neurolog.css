@@ -251,3 +251,21 @@ form.inline { display: inline; }
 .status-tag { margin-left: auto; font-size: .75rem; color: var(--nl-text-muted); text-transform: uppercase; letter-spacing: .04em; }
 .note { white-space: pre-wrap; }
 @media (max-width: 700px) { .row-grid { grid-template-columns: 1fr; } .levels-grid-pop { width: calc(100vw - 32px); } }
+
+/* Quick line and proposed rows (dashed until accepted) */
+.quick-line { display: flex; gap: .5rem; }
+.quick-line .quick-input { flex: 1; font-size: 1rem; }
+.quick-result { padding: .6rem .8rem; border: 1px dashed #E0C88F; border-radius: var(--nl-radius); background: #FFFCF3; }
+.quick-result p { margin: .2rem 0; }
+.op-row.is-proposed { border: 1.5px dashed #D9A84E; background: #FFFCF6; }
+.op-row .row-accept { display: none; position: absolute; top: .4rem; right: 5.2rem; }
+.op-row.is-proposed .row-accept { display: inline-block; }
+/* reading look of tags in notes (ZPMS palette) */
+.tagv { border-radius: 3px; padding: 0 .1rem; }
+.tag-dx { color: #8C3B34; background: #FBEBEA; }
+.tag-lvl { color: #594796; background: #EFEBFA; }
+.tag-side, .tag-appr { color: #22686A; background: #E2F3F3; }
+.tag-impl { color: #7C5B1A; background: #F8F0DF; }
+
+/* the hidden attribute always wins over component display rules */
+[hidden] { display: none !important; }

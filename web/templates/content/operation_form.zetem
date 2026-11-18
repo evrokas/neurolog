@@ -70,6 +70,17 @@
             </div>
         </section>
 
+        <section class="op-section quick">
+            <h3>{{{t('Quick line')}}}</h3>
+            <div class="quick-line" data-url="{{rel_url('/operations/parse')}}">
+                <input type="text" name="op[quick_line]" class="quick-input wide-text" value="{{{$in['op']['quick_line'] ?? ''}}}" autocomplete="off"
+                       placeholder="Διαδερμική δισκεκτομή Ο4/5 αρ, TLIF   ·   tags: @δγ @επ @πλ @προσ @υλ">
+                <button type="button" class="btn quick-go">{{{t('Suggest')}}}</button>
+            </div>
+            <p class="muted small">{{{t('Type the operation as you write it; Enter fills suggested rows (dashed). Accept them, or change them; rows not accepted are saved as suggested.')}}}</p>
+            <div class="quick-result" hidden></div>
+        </section>
+
         <section class="op-section">
             <h3>{{{t('Diagnoses')}}}</h3>
             <div class="rows" id="dx-rows">
@@ -88,7 +99,8 @@
 
         <section class="op-section">
             <h3>{{{t('Operative note')}}}</h3>
-            <textarea name="op[op_note]" rows="5" class="wide-text">{{{$in['op']['op_note'] ?? ''}}}</textarea>
+            <textarea name="op[op_note]" rows="5" class="wide-text note-input">{{{$in['op']['op_note'] ?? ''}}}</textarea>
+            <button type="button" class="btn small-btn note-suggest">{{{t('Suggest from the tags in the note')}}}</button>
         </section>
 
         <div class="form-actions"><button type="submit" class="btn primary">{{{t('Save')}}}</button>

@@ -1,4 +1,5 @@
-<fieldset class="op-row dx-row" data-row="{{{$i}}}">
+<fieldset class="op-row dx-row{% if(!empty($r['proposed'])): %} is-proposed{% endif %}" data-row="{{{$i}}}">
+    <input type="hidden" class="proposed" name="dx[{{{$i}}}][proposed]" value="{{{empty($r['proposed']) ? '' : '1'}}}">
     <legend>{{{t('Diagnosis')}}} <span class="row-no"></span>
         {% if(($r['_status'] ?? '') === 'suggested'): %}<span class="badge badge-warning">{{{t('suggested')}}}</span>{% endif %}</legend>
     <div class="row-grid">
@@ -19,5 +20,6 @@
         <label>{{{t('Complicates operation (ID)')}}} <input type="text" name="dx[{{{$i}}}][index_op]" value="{{{$r['index_op'] ?? ''}}}" placeholder="O-XXXX-XXXX-X"> {{ nl_ferr($errors, "dx.$i.index_op") }}</label>
         <label class="wide">{{{t('Note')}}} <input type="text" name="dx[{{{$i}}}][note]" value="{{{$r['note'] ?? ''}}}"></label>
     </div>
+    <button type="button" class="btn small-btn row-accept">✓ {{{t('Accept')}}}</button>
     <button type="button" class="btn small-btn row-remove">{{{t('Remove')}}}</button>
 </fieldset>

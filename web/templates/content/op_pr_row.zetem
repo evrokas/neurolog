@@ -1,4 +1,5 @@
-<fieldset class="op-row pr-row" data-row="{{{$i}}}">
+<fieldset class="op-row pr-row{% if(!empty($r['proposed'])): %} is-proposed{% endif %}" data-row="{{{$i}}}">
+    <input type="hidden" class="proposed" name="pr[{{{$i}}}][proposed]" value="{{{empty($r['proposed']) ? '' : '1'}}}">
     <legend>{{{t('Procedure')}}} <span class="row-no"></span>
         {% if(($r['_status'] ?? '') === 'suggested'): %}<span class="badge badge-warning">{{{t('suggested')}}}</span>{% endif %}</legend>
     <div class="row-grid">
@@ -27,5 +28,6 @@
             <span class="muted small">{{{t('One line, cycles separated by ; (docs/rf-protocol.md)')}}}</span> {{ nl_ferr($errors, "pr.$i.rf_protocol") }}</label>
         <label>{{{t('Action')}}} {{ nl_chip("pr[$i][action]", 'procedure.action', $r['action'] ?? '', false, false, false, 'default of the procedure') }} {{ nl_ferr($errors, "pr.$i.action") }}</label>
     </div>
+    <button type="button" class="btn small-btn row-accept">✓ {{{t('Accept')}}}</button>
     <button type="button" class="btn small-btn row-remove">{{{t('Remove')}}}</button>
 </fieldset>

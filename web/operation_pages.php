@@ -307,3 +307,22 @@ function nl_show(array $lists, string $list, $v): string {
     $codes = str_starts_with((string)$v, '[') ? json_decode($v, true) : [$v];
     return implode(', ', array_map(fn($c) => $c === NL_NA ? 'n/a' : nl_label($lists, $list, $c), $codes));
 }
+
+/** vocab/facets.yaml `diadermiki`: how «Διαδερμική» is read per procedure. */
+function nl_diadermiki(): array {
+    static $d = null;
+    if ($d === null) {
+        if (!function_exists('yaml_parse_file')) require_once(__FWDIR__ . '/lib/yaml_compat.php');
+        $d = yaml_parse_file(__APPDIR__ . '/vocab/facets.yaml')['diadermiki'] ?? [];
+    }
+    return $d;
+}
+
+/** JSON: the quick line (or the operative note) read into SUGGESTED rows. Saves nothing; CSRF in the header. */
+function nl_page_operation_parse_post($params) {
+    csrfClass::requireValidJson();
+    header('Content-Type: application/json; charset=utf-8');
+    $text = mb_substr((string)($_POST['text'] ?? ''), 0, 20000);
+    echo json_encode(nl_quickline_parse($text, nl_aliases(__APPDIR__), nl_diadermiki()), JSON_UNESCAPED_UNICODE);
+    exit();
+}
