@@ -39,6 +39,12 @@ table:
   - name: seizure_outcome
     type: varchar(4)
 
+  - name: recurrence_date
+    type: date
+
+  - name: note
+    type: text
+
   - name: date_of_death
     type: date
 
@@ -73,4 +79,5 @@ table:
 
 # Follow-up visit of an operation at a fixed window from op_date.
 # - fu_window         6w | 3m | 12m | 24m | unscheduled (`window` is a reserved word)
+# - recurrence_date   first return of pain needing treatment (trigeminal)
 # - no_complications  "no complication" recorded explicitly, so silence never counts as a clean outcome

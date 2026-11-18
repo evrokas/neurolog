@@ -2,7 +2,7 @@
    Uses NLChips (chips.js) and NLLevels (levels.js). The server validates everything again; this only helps typing. */
 (function () {
   'use strict';
-  var form, C, L;
+  var form, C, L, IM = { spec: {}, companies: {}, products: {} };
 
   function procMeta(code) {
     var e = C.find('procedure', code);
@@ -15,7 +15,7 @@
     container.querySelectorAll('.op-row').forEach(function (r) { var n = parseInt(r.dataset.row, 10); if (n > max) max = n; });
     return max + 1;
   }
-  function addRow(btn) {
+  function addRow(btn, noFocus) {
     var tpl = document.getElementById(btn.dataset.tpl), into = document.getElementById(btn.dataset.into);
     var i = nextIndex(into);
     var html = tpl.innerHTML.replace(/__I__/g, String(i));
@@ -24,10 +24,12 @@
     into.appendChild(row);
     setupRow(row);
     refresh();
+    if (noFocus) return;
     var first = row.querySelector('.chip-text'); if (first) first.focus();
   }
   function removeRow(row) {
     var container = row.parentNode;
+    if (row.classList.contains('im-row')) { row.remove(); refresh(); return; }
     if (container.querySelectorAll('.op-row').length <= 1) { row.querySelectorAll('input[type=text], input[type=hidden]').forEach(function (i) { i.value = ''; });
       row.querySelectorAll('.chipf').forEach(function (c) { C.set(c, []); }); return; }
     row.remove();
@@ -45,6 +47,12 @@
       row.querySelectorAll('.chipf[data-list="procedure.trigeminal.technique"] input').forEach(function (i) { i.addEventListener('change', function () { procChanged(row); }); });
       row.querySelector('.levels-grid-btn').addEventListener('click', function (ev) { openGrid(row.querySelector('.levels-input'), ev.target); });
       procChanged(row);
+    } else if (row.classList.contains('im-row')) {
+      row.querySelector('.chipf[data-list="field.implant.category"] input').addEventListener('change', function () { implantParams(row); });
+      var co = row.querySelector('.im-company');
+      co.addEventListener('change', function () { productList(row); });
+      productList(row);
+      implantParams(row);
     } else {
       row.querySelector('.chipf[data-list="diagnosis"] input').addEventListener('change', function () { qualifiers(row); refresh(); });
       qualifiers(row);
@@ -95,6 +103,52 @@
       box.appendChild(lab);
       C.init(sp);
     });
+  }
+
+  // ---------- implants (M4): the parameters of the chosen category (vocab/implants.yaml) ----------
+  function implantParams(row) {
+    var box = row.querySelector('.im-params'), cat = C.value(row.querySelector('.chipf[data-list="field.implant.category"]'))[0] || '';
+    var prev = {};
+    try { prev = JSON.parse(box.dataset.values || '{}'); } catch (e) {}
+    box.querySelectorAll('[data-p]').forEach(function (el) {
+      var n = el.dataset.p;
+      prev[n] = el.classList.contains('chipf') ? (C.value(el)[0] || '') : el.value;
+    });
+    box.dataset.values = JSON.stringify(prev);
+    var errs = {}; try { errs = JSON.parse(box.dataset.errors || '{}'); } catch (e) {}
+    box.innerHTML = '';
+    var spec = IM.spec[cat] || {};
+    Object.keys(spec).forEach(function (name) {
+      var ps = spec[name], lab = document.createElement('label'), el;
+      var nm = box.dataset.name + '[' + name + ']', v = prev[name];
+      if (Array.isArray(v)) v = v.join(' ');
+      if (v === undefined || v === null) v = '';
+      lab.appendChild(document.createTextNode((ps.label || name.replace(/_(mm|ml|deg)$/, '').replace(/_/g, ' ')) + (ps.unit ? ' (' + ps.unit + ')' : '') + ' '));
+      if (ps.type === 'code') {
+        el = document.createElement('span'); el.className = 'chipf'; el.dataset.list = 'field.implant.' + ps.list;
+        var h = document.createElement('input'); h.type = 'hidden'; h.name = nm; h.value = String(v); el.appendChild(h);
+      } else if (ps.type === 'bool') {
+        el = document.createElement('select'); el.name = nm;
+        [['', '—'], ['1', 'yes'], ['0', 'no']].forEach(function (o) { var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1]; if (String(v) === o[0]) op.selected = true; el.appendChild(op); });
+      } else {
+        el = document.createElement('input'); el.type = 'text'; el.name = nm; el.value = String(v); el.autocomplete = 'off';
+        if (ps.type === 'num' || ps.type === 'int') { el.inputMode = ps.type === 'num' ? 'decimal' : 'numeric'; el.className = 'num-input'; el.placeholder = ps.min + '–' + ps.max; }
+        if (ps.type === 'grades') { el.placeholder = 'A A B …'; el.className = 'mono'; }
+        if (ps.type === 'text' && ps.max) el.maxLength = ps.max;
+      }
+      el.dataset.p = name;
+      if (ps.required || ps.block) lab.classList.add('req');
+      lab.appendChild(el);
+      var e = errs[box.dataset.name.replace(/^im\[(\w+)\]\[p\]$/, 'im.$1.p.') + name];
+      if (e) { var er = document.createElement('span'); er.className = 'field-error'; er.textContent = e; lab.appendChild(er); }
+      box.appendChild(lab);
+      if (el.classList.contains('chipf')) C.init(el);
+    });
+  }
+  function productList(row) {
+    var co = row.querySelector('.im-company').value, dl = row.querySelector('datalist');
+    dl.innerHTML = '';
+    (IM.products[co] || []).forEach(function (p) { var o = document.createElement('option'); o.value = p; dl.appendChild(o); });
   }
 
   // ---------- levels ----------
@@ -172,6 +226,31 @@
       if (!sel.value && names.length === 1) sel.value = names[0][0];
       sel.dataset.value = sel.value;
     });
+    var prNames = [];
+    form.querySelectorAll('.pr-row').forEach(function (r, k) {
+      var c = C.value(r.querySelector('.chipf[data-list="procedure"]'))[0];
+      prNames.push([r.dataset.row, (k + 1) + '. ' + (c ? C.label('procedure', c) : '…')]);
+    });
+    form.querySelectorAll('.im-row').forEach(function (r, k) {
+      r.querySelector('.row-no').textContent = String(k + 1);
+      var sel = r.querySelector('select.im-for'), cur = sel.value || sel.dataset.value || '';
+      sel.innerHTML = '<option value="">—</option>';
+      prNames.forEach(function (n) { var o = document.createElement('option'); o.value = n[0]; o.textContent = n[1]; if (n[0] === cur) o.selected = true; sel.appendChild(o); });
+      // screws belong to the screw fixation row, a cage to the interbody fusion (ACDF for an ACDF cage): link them
+      // when nothing is chosen yet, and copy that row's levels into an empty levels box
+      var cat = C.value(r.querySelector('.chipf[data-list="field.implant.category"]'))[0] || '';
+      var want = { pedicle_screw: 'pedicle_screw_fixation', lateral_mass_screw: 'pedicle_screw_fixation', cage_PLIF_TLIF: 'interbody_fusion',
+                   cage_ALIF_LLIF: 'interbody_fusion', cage_ACDF: 'acdf', vertebral_augmentation_cement: 'vertebral_augmentation' }[cat];
+      if (!sel.value && want) {
+        form.querySelectorAll('.pr-row').forEach(function (pr) {
+          if (sel.value || (C.value(pr.querySelector('.chipf[data-list="procedure"]'))[0] || '') !== want) return;
+          sel.value = pr.dataset.row;
+          var li = r.querySelector('.levels-input'), pl = pr.querySelector('.levels-input');
+          if (li && pl && !li.value.trim() && pl.value.trim()) { li.value = pl.value; li.dispatchEvent(new Event('input')); }
+        });
+      }
+      sel.dataset.value = sel.value;
+    });
     var cage = codes.indexOf('interbody_fusion') >= 0, screws = codes.indexOf('pedicle_screw_fixation') >= 0;
     var cons = form.querySelector('.construct');
     if (cons) cons.textContent = 'construct: ' + (cage && screws ? 'cage + screws' : cage ? 'cage only' : screws ? 'screws only' : 'none');
@@ -226,7 +305,7 @@
   function emptyRow(containerId, tplId, isEmpty) {
     var rows = document.getElementById(containerId).querySelectorAll('.op-row');
     for (var k = 0; k < rows.length; k++) if (isEmpty(rows[k])) return rows[k];
-    var btn = document.querySelector('.row-add[data-tpl="' + tplId + '"]'); addRow(btn);
+    var btn = document.querySelector('.row-add[data-tpl="' + tplId + '"]'); addRow(btn, true);
     rows = document.getElementById(containerId).querySelectorAll('.op-row');
     return rows[rows.length - 1];
   }
@@ -250,11 +329,22 @@
       procChanged(row);
       setProposed(row, true);
     });
+    (d.implants || []).forEach(function (x) {
+      addRow(document.querySelector('.row-add[data-tpl="im-tpl"]'), true);
+      var rows = document.getElementById('im-rows').querySelectorAll('.im-row'), row = rows[rows.length - 1];
+      row.querySelector('.im-params').dataset.values = JSON.stringify(x.params || {});   // before the category: it draws the fields
+      fill(row, 'implant_category', x.implant_category);
+      if (x.company_ref) { row.querySelector('.im-company').value = String(x.company_ref); productList(row); }
+      if (x.implant_count) row.querySelector('.im-count').value = String(x.implant_count);
+      var li = row.querySelector('.levels-input'); if (x.levels) { li.value = x.levels; li.dispatchEvent(new Event('input')); }
+      fill(row, 'side', x.side);
+      setProposed(row, true);
+    });
     refresh();
     box.innerHTML = '';
-    var n = (d.procedures || []).length, m = (d.diagnoses || []).length;
+    var n = (d.procedures || []).length + (d.implants || []).length, m = (d.diagnoses || []).length;
     var p = document.createElement('p');
-    p.textContent = n || m ? ('Proposed: ' + n + ' procedure' + (n === 1 ? '' : 's') + ', ' + m + ' diagnos' + (m === 1 ? 'is' : 'es') + '. Check them, add the technology, then accept.') : 'Nothing recognised.';
+    p.textContent = n || m ? ('Proposed: ' + n + ' procedure or implant row' + (n === 1 ? '' : 's') + ', ' + m + ' diagnos' + (m === 1 ? 'is' : 'es') + '. Check them, add the technology, then accept.') : 'Nothing recognised.';
     box.appendChild(p);
     if (n || m) {
       var all = document.createElement('button'); all.type = 'button'; all.className = 'btn small-btn'; all.textContent = '✓ Accept all';
@@ -288,8 +378,16 @@
     form.querySelectorAll('.preset-chip').forEach(function (b) {
       b.addEventListener('click', function () {
         var ps = presets.filter(function (x) { return String(x.id) === b.dataset.preset; })[0]; if (!ps) return;
-        var first = null;
-        ps.rows.forEach(function (x) {
+        var first = null, rows = Array.isArray(ps.rows) ? ps.rows : (ps.rows.procedures || []);
+        (Array.isArray(ps.rows) ? [] : (ps.rows.implants || [])).forEach(function (x) {
+          addRow(document.querySelector('.row-add[data-tpl="im-tpl"]'), true);
+          var all = document.getElementById('im-rows').querySelectorAll('.im-row'), row = all[all.length - 1];
+          row.querySelector('.im-params').dataset.values = JSON.stringify(x.params || {});
+          fill(row, 'implant_category', x.implant_category);
+          if (x.company_ref) { row.querySelector('.im-company').value = String(x.company_ref); productList(row); }
+          if (x.product) row.querySelector('.im-product').value = x.product;
+        });
+        rows.forEach(function (x) {
           var row = emptyRow('pr-rows', 'pr-tpl', function (r) { return !C.value(r.querySelector('.chipf[data-list="procedure"]')).length; });
           fill(row, 'procedure_code', x.procedure_code); procChanged(row);
           Object.keys(x).forEach(function (k) { if (k !== 'procedure_code') fill(row, k, x[k]); });
@@ -311,8 +409,11 @@
       ff.querySelectorAll('.levels-input').forEach(function (i) { C = window.NLChips; L = window.NLLevels; setupLevels(i); });
       ff.addEventListener('submit', function () { ff.querySelectorAll('input, select').forEach(function (i) { if (!i.value) i.disabled = true; }); });
     }
+    // complication and follow-up forms: chips only
+    document.querySelectorAll('.chip-form').forEach(function (f) { window.NLChips.initAll(f); var e = f.parentNode.querySelector('.field-error'); if (e) e.scrollIntoView({ block: 'center' }); });
     form = document.getElementById('op-form'); if (!form) return;
     C = window.NLChips; L = window.NLLevels;
+    try { IM = JSON.parse(document.getElementById('nl-implants').textContent); } catch (e) {}
     window.NL_LIST_NAMES = {};
     try { Object.keys(JSON.parse(document.getElementById('nl-lists').textContent)).forEach(function (k) { window.NL_LIST_NAMES[k] = 1; }); } catch (e) {}
     form.querySelectorAll('.op-row').forEach(setupRow);

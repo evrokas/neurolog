@@ -5,7 +5,8 @@ Guidance for Claude Code when working in this repository.
 ## Status
 
 NeuroLog has milestones **M0** (shell), **M1** (schema, code lists, NeuroLog IDs), **M2** (entering operations:
-chips, quick line, presets) and **M3** (search and filters, patient pages); milestones are in [`docs/implementation-plan.md`](docs/implementation-plan.md). Read
+chips, quick line, presets), **M3** (search and filters, patient pages) and **M4** (implants, complications,
+follow-up); milestones are in [`docs/implementation-plan.md`](docs/implementation-plan.md). Read
 [`docs/README.md`](docs/README.md) first, then [`docs/data-dictionary.md`](docs/data-dictionary.md) and
 [`docs/decisions.md`](docs/decisions.md) before proposing anything. Don't re-argue a decision in the log unless
 the user brings new information; record new decisions there (newest first, with the reason).
@@ -20,7 +21,7 @@ the user brings new information; record new decisions there (newest first, with 
 ## Conventions
 
 - Code lists live twice: tables in `docs/data-dictionary.md` and files in `vocab/` (`procedures.csv`,
-  `diagnoses.csv`, `complications.csv`, `facets.yaml`, `fields.yaml`). Change both in the same commit; quote
+  `diagnoses.csv`, `complications.csv`, `facets.yaml`, `fields.yaml`, `implants.yaml`, `followup.yaml`). Change both in the same commit; quote
   `yes`/`no` in YAML. `fw/bin/update.sh` reloads them into `nl_codes` (`bin/load_vocab.php`).
 - A code or facet value is **retired, never renamed or deleted**.
 - Codes describe what was done, never the approach («Διαδερμική δισκεκτομή» = `discectomy` + `tubular_MIS`).
@@ -50,6 +51,9 @@ the user brings new information; record new decisions there (newest first, with 
 - Finding: `web/search.php` (pure: filters from GET, SQL with bound parameters, the search line; procedure filters
   share one `EXISTS` so they match the same row) and `web/find_pages.php` (operation list, patients). Audit lists
   with filter names only, never values. Dev data: `php bin/seed_demo.php --link-surgeon=UNAME` (made-up names only).
+- M4: `web/implants.php` (implant rows; parameters per category in `vocab/implants.yaml`, stored as JSON in
+  `implants.params`), `web/outcomes.php` (complication, follow-up and score rules, pure) and `web/outcome_pages.php`;
+  windows and scores asked in `vocab/followup.yaml`. Implants carry company (`companies`) and sizes, never lot numbers.
 - `bin/check_schema.php` (in the runner) checks tables, columns, unique IDs and that `vocab/` and `nl_codes` agree.
 - Development uses made-up cases only. No web fonts or scripts from other hosts (the check enforces it on the sign-in page).
 

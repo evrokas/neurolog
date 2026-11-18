@@ -1,0 +1,69 @@
+# Parameters recorded per implant category (docs/plans/m4.md A; approved 2026-11-18).
+# One implant row = one group of identical implants (same category, company, product and size) with a count.
+# Types: num (decimal, with unit, min, max), int (min, max), bool, code (list: field.implant.<list>),
+#        grades (one Gertzbein-Robbins grade A–E per implant), text (max length).
+# required: the value is needed for a complete record; an empty value never blocks a save, a wrong one does.
+# Add a parameter here, never rename one (stored rows use the names). No lot or serial numbers (decision kept).
+
+screw: &screw
+  diameter_mm:      {type: num, unit: mm, min: 2, max: 12, required: true}
+  length_mm:        {type: num, unit: mm, min: 8, max: 150, required: true}
+  cannulated:       {type: bool}
+  cement_augmented: {type: bool}
+  robot_placed:     {type: bool}
+  breach:           {type: grades, list: breach, label: breach grade per screw (post-op CT)}
+
+cage: &cage
+  height_mm:   {type: num, unit: mm, min: 4, max: 24, required: true}
+  width_mm:    {type: num, unit: mm, min: 8, max: 60}
+  length_mm:   {type: num, unit: mm, min: 10, max: 70}
+  lordosis_deg: {type: num, unit: °, min: 0, max: 30}
+  material:    {type: code, list: cage_material, required: true}
+  expandable:  {type: bool}
+  graft:       {type: code, list: graft}
+
+categories:
+  pedicle_screw: *screw
+  lateral_mass_screw: *screw
+  rod:
+    diameter_mm: {type: num, unit: mm, min: 3, max: 8, required: true}
+    length_mm:   {type: num, unit: mm, min: 20, max: 600, required: true}
+    material:    {type: code, list: rod_material}
+    prebent:     {type: bool}
+  cage_PLIF_TLIF: *cage
+  cage_ALIF_LLIF: *cage
+  cage_ACDF: *cage
+  cervical_disc:
+    height_mm: {type: num, unit: mm, min: 4, max: 12, required: true}
+    footprint: {type: text, max: 32, label: footprint (size label or W×D mm)}
+  plate:
+    length_mm:      {type: num, unit: mm, min: 10, max: 200, required: true}
+    levels_spanned: {type: int, min: 1, max: 6}
+  interspinous_device:
+    size_mm: {type: num, unit: mm, min: 6, max: 20, required: true}
+  bone_graft_substitute:
+    substitute: {type: code, list: graft_substitute, required: true}
+    volume_ml:  {type: num, unit: mL, min: 0.5, max: 100}
+  vertebral_augmentation_cement:
+    volume_ml: {type: num, unit: mL, min: 0.5, max: 20, required: true, label: cement volume per level}
+    cavity:    {type: bool, label: balloon or cavity creation}
+  shunt_valve:
+    valve_type:  {type: code, list: valve_type, required: true}
+    setting:     {type: text, max: 32, required: true, label: setting or opening pressure (cmH₂O or performance level)}
+    shunt_route: {type: code, list: shunt_route, required: true}
+  external_drain:
+    site: {type: code, list: drain_site, required: true}
+  neurostimulator_lead:
+    lead_type: {type: code, list: lead_type, required: true}
+    contacts:  {type: int, min: 1, max: 32, required: true}
+  IPG:
+    rechargeable: {type: bool, required: true}
+    site:         {type: text, max: 32, label: implant site}
+  intrathecal_pump:
+    reservoir_ml: {type: int, min: 10, max: 60, required: true}
+    drug:         {type: code, list: pump_drug, required: true}
+  cranioplasty_implant:
+    material:    {type: code, list: cranioplasty_material, required: true}
+    custom_made: {type: bool}
+  other:
+    description: {type: text, max: 128, required: true, block: true}

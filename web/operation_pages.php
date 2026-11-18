@@ -12,6 +12,7 @@ function nl_op_ctx(PDO $db, array $keep = []): array {
         'hospitals' => array_fill_keys($db->query('SELECT id FROM hospitals')->fetchAll(PDO::FETCH_COLUMN), true),
         'ops' => $db->query('SELECT nl_id, id FROM operations WHERE deleted IS NULL')->fetchAll(PDO::FETCH_KEY_PAIR),
         'patients' => array_fill_keys($db->query('SELECT id FROM patients WHERE deleted IS NULL')->fetchAll(PDO::FETCH_COLUMN), true),
+        'companies' => array_fill_keys(array_map('intval', $db->query('SELECT id FROM companies')->fetchAll(PDO::FETCH_COLUMN)), true),
         'keep' => $keep,
     ];
 }
@@ -56,7 +57,11 @@ function nl_form_data(PDO $db): array {
     $hospitals = $db->query('SELECT id, name, active FROM hospitals ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
     $flags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
     $presets = array_map(fn($p) => ['id' => (int)$p['id'], 'name' => $p['name'], 'rows' => json_decode($p['rows_json'], true)], nl_presets($db));
-    return ['lists_json' => json_encode($js, $flags), 'freq_json' => json_encode((object)$freq, $flags), 'presets_json' => json_encode($presets, $flags), 'presets' => $presets,
+    $companies = nl_companies($db);
+    $products = [];
+    foreach ($db->query('SELECT DISTINCT company_ref, product FROM implants WHERE product IS NOT NULL AND company_ref IS NOT NULL ORDER BY product') as $r) $products[(int)$r['company_ref']][] = $r['product'];
+    $implantJs = ['spec' => nl_implant_spec(), 'companies' => $companies ?: new stdClass(), 'products' => $products ?: new stdClass()];
+    return ['lists_json' => json_encode($js, $flags), 'implants_json' => json_encode($implantJs, $flags), 'companies' => $companies, 'freq_json' => json_encode((object)$freq, $flags), 'presets_json' => json_encode($presets, $flags), 'presets' => $presets,
             'members' => $members, 'hospitals' => $hospitals, 'lists' => $lists, 'my_members' => $mine];
 }
 
@@ -83,6 +88,7 @@ function nl_op_as_input(PDO $db, array $op): array {
         $in['dx'][(string)$k] = $row;
     }
     $st = $db->prepare('SELECT * FROM procedures WHERE op_ref = ? ORDER BY sort'); $st->execute([$op['id']]);
+    $prPos = [];
     foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $k => $p) {
         if ($p['is_main']) $in['main_pr'] = (string)$k;
         $row = ['procedure_code' => $p['procedure_code'], 'levels' => $p['levels_list'] ? implode(', ', json_decode($p['levels_list'], true)) : '',
@@ -93,6 +99,17 @@ function nl_op_as_input(PDO $db, array $op): array {
                 '_status' => $p['coding_status']];
         foreach (nl_proc_fields() as $f => $_) $row[$f] = $p[$f] ?? '';
         $in['pr'][(string)$k] = $row;
+        $prPos[$p['id']] = (string)$k;
+    }
+    $in['im'] = [];
+    $st = $db->prepare('SELECT * FROM implants WHERE op_ref = ? ORDER BY sort'); $st->execute([$op['id']]);
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $k => $m) {
+        $in['im'][(string)$k] = ['implant_category' => $m['implant_category'], 'company_ref' => (string)($m['company_ref'] ?? ''), 'product' => $m['product'] ?? '',
+            'implant_count' => (string)$m['implant_count'], 'side' => $m['side'] ?? '',
+            'levels' => $m['levels_list'] ? implode(', ', json_decode($m['levels_list'], true)) : '',
+            'transitional' => in_array('L6', [$m['level_from'], $m['level_to']], true) ? '1' : '',
+            'p' => $m['params'] ? json_decode($m['params'], true) : [], 'for' => $m['procedure_ref'] !== null ? ($prPos[$m['procedure_ref']] ?? '') : '',
+            '_status' => $m['coding_status']];
     }
     return $in;
 }
@@ -100,7 +117,7 @@ function nl_op_as_input(PDO $db, array $op): array {
 /** Codes already stored on an operation (a retired value may stay on it). */
 function nl_op_keep(PDO $db, int $opId): array {
     $keep = [];
-    foreach (['procedures', 'diagnoses'] as $t) {
+    foreach (['procedures', 'diagnoses', 'implants'] as $t) {
         $st = $db->prepare("SELECT * FROM $t WHERE op_ref = ?"); $st->execute([$opId]);
         foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) foreach ($r as $v) {
             if (!is_string($v) || $v === '') continue;
@@ -129,6 +146,9 @@ function nl_render_form(PDO $db, array $in, array $errors, array $missing, ?arra
     $patient = ($in['patient_ref'] ?? '') !== '' ? nl_patient_brief($db, (int)$in['patient_ref']) : null;
     if (!$in['dx']) $in['dx'] = ['0' => []];
     if (!$in['pr']) $in['pr'] = ['0' => []];
+    $in['im'] ??= [];
+    // a company switched off but stored on this operation stays choosable
+    foreach ($in['im'] as $m) if (($m['company_ref'] ?? '') !== '' && !isset($data['companies'][(int)$m['company_ref']])) $data['companies'] = nl_companies($db, array_map('intval', array_column($in['im'], 'company_ref')));
     return Renderer::render('operation_form.zetem', $data + [
         'in' => $in, 'errors' => $errors, 'missing' => $missing, 'op' => $op, 'patient' => $patient,
         'action' => $op ? rel_url('/operations/' . nl_id_format($op['nl_id']) . '/edit') : rel_url('/operations/new'),
@@ -139,7 +159,7 @@ function nl_page_operation_new($params) {
     $db = dbConnection::getConnection();
     $mine = nl_my_member_ids($db);
     $in = ['patient_ref' => '', 'op' => ['op_date' => date('Y-m-d'), 'primary_surgeon_ref' => $mine ? (string)$mine[0] : '', 'reoperation' => 'primary'],
-           'dx' => [], 'pr' => [], 'main_dx' => '0', 'main_pr' => '0'];
+           'dx' => [], 'pr' => [], 'im' => [], 'main_dx' => '0', 'main_pr' => '0'];
     return nl_render_form($db, $in, [], [], null);
 }
 
@@ -156,7 +176,7 @@ function nl_operation_save_post(?array $op) {
     if ($refused = csrfClass::requireValid()) return $refused;
     $db = dbConnection::getConnection();
     $in = ['patient_ref' => (string)($_POST['patient_ref'] ?? ''), 'new_patient' => (array)($_POST['new_patient'] ?? []),
-           'op' => (array)($_POST['op'] ?? []), 'dx' => (array)($_POST['dx'] ?? []), 'pr' => (array)($_POST['pr'] ?? []),
+           'op' => (array)($_POST['op'] ?? []), 'dx' => (array)($_POST['dx'] ?? []), 'pr' => (array)($_POST['pr'] ?? []), 'im' => (array)($_POST['im'] ?? []),
            'main_dx' => (string)($_POST['main_dx'] ?? '0'), 'main_pr' => (string)($_POST['main_pr'] ?? '0')];
     if ($op) $in['patient_ref'] = (string)$op['patient_ref'];   // the patient of an existing operation is not changed here
     $v = nl_op_validate($in, nl_op_ctx($db, $op ? nl_op_keep($db, (int)$op['id']) : []));
@@ -196,9 +216,11 @@ function nl_page_operation($params) {
     $hosp = $db->query('SELECT id, name FROM hospitals')->fetchAll(PDO::FETCH_KEY_PAIR);
     $st = $db->prepare('SELECT * FROM diagnoses WHERE op_ref = ? ORDER BY sort'); $st->execute([$op['id']]); $dx = $st->fetchAll(PDO::FETCH_ASSOC);
     $st = $db->prepare('SELECT * FROM procedures WHERE op_ref = ? ORDER BY sort'); $st->execute([$op['id']]); $pr = $st->fetchAll(PDO::FETCH_ASSOC);
+    $st = $db->prepare('SELECT i.*, c.name AS company FROM implants i LEFT JOIN companies c ON c.id = i.company_ref WHERE i.op_ref = ? ORDER BY i.sort');
+    $st->execute([$op['id']]); $im = $st->fetchAll(PDO::FETCH_ASSOC);
     $cyc = [];
     foreach ($pr as $p) { $s = $db->prepare('SELECT * FROM rf_cycles WHERE procedure_ref = ? ORDER BY seq'); $s->execute([$p['id']]); $cyc[$p['id']] = $s->fetchAll(PDO::FETCH_ASSOC); }
-    $suggested = count(array_filter(array_merge($pr, $dx), fn($r) => $r['coding_status'] !== 'confirmed'));
+    $suggested = count(array_filter(array_merge($pr, $dx, $im), fn($r) => $r['coding_status'] !== 'confirmed'));
     $canConfirm = $suggested && in_array((int)$op['primary_surgeon_ref'], nl_my_member_ids($db), true);
     $in = nl_op_as_input($db, $op);
     $v = nl_op_validate($in, nl_op_ctx($db, nl_op_keep($db, (int)$op['id'])));
@@ -206,9 +228,10 @@ function nl_page_operation($params) {
     $st->execute(['operations', $op['id']]);
     return Renderer::render('operation_view.zetem', [
         'op' => $op, 'nl' => nl_id_format($op['nl_id']), 'patient' => nl_patient_brief($db, (int)$op['patient_ref']),
-        'dx' => $dx, 'pr' => $pr, 'cycles' => $cyc, 'lists' => $lists, 'names' => $names, 'hosp' => $hosp,
+        'dx' => $dx, 'pr' => $pr, 'im' => $im, 'cycles' => $cyc, 'lists' => $lists, 'names' => $names, 'hosp' => $hosp,
         'can_edit' => nl_can_edit(), 'can_confirm' => $canConfirm, 'suggested' => $suggested,
         'missing' => $v['missing'], 'history' => $st->fetchAll(PDO::FETCH_ASSOC),
+        'out' => nl_op_outcomes($db, $op), 'is_admin' => in_array('admin', nl_user_roles(), true),
     ]);
 }
 
@@ -277,6 +300,13 @@ function nl_select(string $name, array $rows, $value, ?string $kind = null): str
     return $h . '</select>';
 }
 
+/** <select> of implant companies [id => name]. */
+function nl_company_select(string $name, array $companies, $value): string {
+    $h = '<select name="' . nl_e($name) . '" class="im-company"><option value="">—</option>';
+    foreach ($companies as $id => $n) $h .= '<option value="' . (int)$id . '"' . ((string)$id === (string)$value ? ' selected' : '') . '>' . nl_e($n) . '</option>';
+    return $h . '</select>';
+}
+
 /** yes / no / not entered */
 function nl_yesno(string $name, $value): string {
     $h = '<select name="' . nl_e($name) . '">';
@@ -306,7 +336,7 @@ function nl_page_operation_parse_post($params) {
     csrfClass::requireValidJson();
     header('Content-Type: application/json; charset=utf-8');
     $text = mb_substr((string)($_POST['text'] ?? ''), 0, 20000);
-    echo json_encode(nl_quickline_parse($text, nl_aliases(__APPDIR__), nl_diadermiki()), JSON_UNESCAPED_UNICODE);
+    echo json_encode(nl_quickline_parse($text, nl_aliases(__APPDIR__), nl_diadermiki(), nl_companies(dbConnection::getConnection())), JSON_UNESCAPED_UNICODE);
     exit();
 }
 
@@ -338,8 +368,17 @@ function nl_page_operation_preset_post($params) {
         $rows[] = $r;
     }
     if (!$rows) { $kernel->addStatus('error', 'This operation has no procedure rows.'); header('location: ' . rel_url("/operations/$nl")); exit(); }
+    // implants: category, company, product and the non-size parameters (material, yes/no); sizes differ per patient
+    $spec = nl_implant_spec(); $ims = [];
+    $st = $db->prepare('SELECT * FROM implants WHERE op_ref = ? ORDER BY sort'); $st->execute([$op['id']]);
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $m) {
+        $pv = [];
+        foreach (json_decode($m['params'] ?? '', true) ?: [] as $k => $x) if (in_array($spec[$m['implant_category']][$k]['type'] ?? '', ['code', 'bool'], true)) $pv[$k] = $x;
+        $ims[] = array_filter(['implant_category' => $m['implant_category'], 'company_ref' => $m['company_ref'] !== null ? (int)$m['company_ref'] : null,
+                               'product' => $m['product'], 'params' => $pv ?: null], fn($x) => $x !== null);
+    }
     $db->prepare('INSERT INTO presets (name, rows_json, active, use_count, from_op_ref, cuser) VALUES (?,?,1,0,?,?)')
-       ->execute([$name, json_encode($rows, JSON_UNESCAPED_UNICODE), $op['id'], $kernel->getUserName()]);
+       ->execute([$name, json_encode($ims ? ['procedures' => $rows, 'implants' => $ims] : $rows, JSON_UNESCAPED_UNICODE), $op['id'], $kernel->getUserName()]);
     nl_audit($db, $kernel->getUserName(), 'create', 'presets', (int)$db->lastInsertId(), null, 'from ' . $op['nl_id']);
     $kernel->addStatus('notice', 'Preset «' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '» saved');
     header('location: ' . rel_url("/operations/$nl")); exit();
@@ -348,7 +387,7 @@ function nl_page_operation_preset_post($params) {
 /** The group's presets: rename, switch off/on. */
 function nl_page_presets($params) {
     $db = dbConnection::getConnection();
-    return Renderer::render('presets.zetem', ['presets' => nl_presets($db, false), 'lists' => nl_lists($db)]);
+    return Renderer::render('presets.zetem', ['presets' => nl_presets($db, false), 'lists' => nl_lists($db), 'companies' => nl_companies($db, array_map('intval', $db->query('SELECT id FROM companies')->fetchAll(PDO::FETCH_COLUMN)))]);
 }
 
 function nl_page_presets_post($params) {

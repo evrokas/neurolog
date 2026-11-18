@@ -235,20 +235,44 @@ Patients fill VAS/ODI/NDI/EQ-5D themselves (validated Greek versions); the surge
 
 ## Implants and technology
 
-One row per implant type used in an operation, plus the guidance technology. Record the category and maker, not lot numbers: traceability belongs to the hospital record, not the research registry.
+One row per **group of identical implants** used in an operation: same category, company, product and size, with
+its count (two 6.5×45 mm screws at L4 and two 6.5×50 mm at L5 are two rows). Record the company, the product and the
+sizes, not lot or serial numbers: traceability belongs to the hospital record, not the research registry (decision
+kept 2026-11-18).
 
 | Field | Type | Req | Values / units | Answers |
 | --- | --- | --- | --- | --- |
-| implant\_category | enum | C | pedicle\_screw, lateral\_mass\_screw, cage\_PLIF/TLIF, cage\_ALIF/LLIF, cage\_ACDF, cervical\_disc, plate, vertebral\_augmentation\_cement, shunt\_valve, external\_drain, neurostimulator\_lead, IPG, intrathecal\_pump, cranioplasty\_implant, other | Implant studies |
-| implant\_count | int | C |  | Construct size |
-| manufacturer | enum | E | Group list | Device comparisons |
-| valve\_type | enum | C if shunt | fixed, programmable, anti-siphon | Shunt failure studies |
-| valve\_setting | text | E | Opening pressure |  |
-| guidance | multi | C | none, fluoroscopy, navigation\_CT\_intraop, navigation\_preop, robot, ultrasound, exoscope, microscope, endoscope | Technique comparison |
-| screws\_robot\_placed | int | C if robot |  | Robot accuracy |
-| screw\_breach | enum | E | Gertzbein-Robbins grade per screw, from post-op CT (A–E) | Accuracy, navigation vs freehand |
-| fluoroscopy\_time\_s | int | E | Seconds | Radiation exposure |
-| adjuncts | multi | E | 5-ALA, fluorescein, ICG, intraop\_MRI, intraop\_US | Resection studies |
+| implant\_category | enum | C | pedicle\_screw, lateral\_mass\_screw, rod, cage\_PLIF/TLIF, cage\_ALIF/LLIF, cage\_ACDF, cervical\_disc, plate, interspinous\_device, bone\_graft\_substitute, vertebral\_augmentation\_cement, shunt\_valve, external\_drain, neurostimulator\_lead, IPG, intrathecal\_pump, cranioplasty\_implant, other | Implant studies |
+| company | ref | C | Group list of implant companies (admin page); switched off, never deleted | Device comparisons |
+| product | text | E | Product or system name as on the label | Device comparisons |
+| implant\_count | int | C | 1–50 | Construct size |
+| levels, side | levels, enum | C for spinal | Same notation as procedure rows | Where |
+| procedure | ref | E | The procedure row it belongs to (screws → screw fixation, cage → interbody fusion) | Links size to procedure |
+| parameters | per category | C/E | See below | Size and type studies |
+
+**Parameters per category** (fixed units; `vocab/implants.yaml` is the machine copy; a parameter is added, never renamed):
+
+| Category | Parameters (required for a complete record in bold) |
+| --- | --- |
+| pedicle / lateral mass screw | **diameter (mm)**, **length (mm)**, cannulated, cement-augmented, placed by robot, breach grade per screw from post-op CT (Gertzbein-Robbins A–E) |
+| rod | **diameter (mm)**, **length (mm)**, material (titanium, cobalt-chrome, PEEK), pre-bent |
+| cage (PLIF/TLIF, ALIF/LLIF, ACDF) | **height (mm)**, width (mm), length (mm), lordosis (°), **material** (PEEK, titanium, 3D-printed titanium, coated PEEK, allograft), expandable, graft inside |
+| cervical disc | **height (mm)**, footprint |
+| plate | **length (mm)**, levels spanned |
+| interspinous device | **size (mm)** |
+| bone graft substitute | **type** (DBM, ceramic, bioactive glass), volume (mL) |
+| vertebral augmentation cement | **volume per level (mL)**, balloon / cavity creation |
+| shunt valve | **valve type** (fixed, programmable, anti-siphon), **setting or opening pressure**, **route** (VP, VA, VPl, LP) |
+| external drain | **site** (ventricular, lumbar) |
+| neurostimulator lead | **lead type** (percutaneous, paddle, depth/DBS), **contacts** |
+| IPG | **rechargeable**, implant site |
+| intrathecal pump | **reservoir (mL)**, **drug** (baclofen, morphine, ziconotide) |
+| cranioplasty implant | **material** (autologous bone, PEEK, titanium mesh, PMMA, hydroxyapatite), custom-made |
+| other | **description** (required to save) |
+
+On the operation (not per implant): `fluoroscopy_time_s` (seconds; radiation exposure) and `adjuncts` (multi:
+5-ALA, fluorescein, ICG, intraop\_MRI, intraop\_US; resection studies). Guidance technology is the procedure row's
+`technology` field; the implant table no longer repeats it.
 
 ## Complications
 

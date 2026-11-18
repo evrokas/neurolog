@@ -82,6 +82,8 @@ $matrix = [
     '/codelists?list=procedure' => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
     '/status'      => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
     '/admin/users' => ['surgeon' => 'denied', 'admin' => 'ok', 'viewer' => 'denied'],
+    '/followups'   => ['surgeon' => 'ok', 'admin' => 'ok', 'viewer' => 'ok'],
+    '/settings/companies' => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
 ];
 foreach ($users as $role => $u) {
     $jar = tempnam(sys_get_temp_dir(), 'nlj');
@@ -113,13 +115,18 @@ register_shutdown_function(function () use ($db, &$created, &$hid, &$mS, &$mO) {
     foreach ($created as $oid) {
         $r = $db->query("SELECT patient_ref FROM operations WHERE id = $oid")->fetch_row();
         $db->query("DELETE c FROM rf_cycles c JOIN procedures p ON p.id = c.procedure_ref WHERE p.op_ref = $oid");
-        foreach (['procedures', 'diagnoses'] as $t) $db->query("DELETE FROM $t WHERE op_ref = $oid");
+        $db->query("DELETE FROM change_log WHERE entity = 'complications' AND entity_ref IN (SELECT id FROM complications WHERE op_ref = $oid)");
+        foreach (['procedures', 'diagnoses', 'implants', 'complications', 'scores'] as $t) $db->query("DELETE FROM $t WHERE op_ref = $oid");
+        $db->query("DELETE FROM change_log WHERE entity = 'followups' AND entity_ref IN (SELECT id FROM followups WHERE op_ref = $oid)");
+        $db->query("DELETE FROM followups WHERE op_ref = $oid");
         $db->query("DELETE FROM change_log WHERE entity = 'operations' AND entity_ref = $oid");
         $db->query("DELETE FROM operations WHERE id = $oid");
         if ($r) $db->query("DELETE FROM patients WHERE id = " . (int)$r[0] . " AND NOT EXISTS (SELECT 1 FROM operations WHERE patient_ref = " . (int)$r[0] . ")");
     }
     $db->query("DELETE FROM members WHERE id IN (" . (int)$mS . "," . (int)$mO . ")");
     $db->query("DELETE FROM hospitals WHERE id = " . (int)$hid);
+    $db->query("DELETE FROM companies WHERE name LIKE 'wt company%'");
+    $db->query("DELETE FROM presets WHERE name LIKE 'wt %'");
 });
 function login_as(string $base, string $u, string $pass): string {
     $jar = tempnam(sys_get_temp_dir(), 'nlj');
@@ -270,6 +277,104 @@ check('patient form saves and logs the change', $r['code'] === 302 && $db->query
       && $db->query("SELECT COUNT(*) FROM change_log WHERE entity = 'patients' AND nl_id = '$pnl' AND field = 'smoking'")->fetch_row()[0] >= 1);
 $db->query("DELETE FROM change_log WHERE entity = 'patients' AND nl_id = '$pnl'");
 check('patient list search works by name', str_contains(req("$base/patients?q=wt-test", $js)['body'], $pd));
+
+// ---- M4: implants with company and sizes, complications, follow-up, due list ----
+$ja = login_as($base, $users['admin'], $pass);
+$db->query("DELETE FROM companies WHERE name LIKE 'wt company%'");
+$r = req("$base/settings/companies", $ja, ['csrf_token' => token(req("$base/settings/companies", $ja)['body']), 'name' => 'wt company Alpha', 'active' => '1']);
+$coA = (int)($db->query("SELECT id FROM companies WHERE name = 'wt company Alpha'")->fetch_row()[0] ?? 0);
+check('admin adds an implant company', $r['code'] === 302 && $coA > 0);
+$r = req("$base/settings/companies", $ja, ['csrf_token' => token(req("$base/settings/companies", $ja)['body']), 'name' => 'WT company alpha', 'active' => '1']);
+check('the same company twice is refused', (int)$db->query("SELECT COUNT(*) FROM companies WHERE name_match = 'WT COMPANY ALPHA'")->fetch_row()[0] === 1);
+$r = req("$base/settings/companies", $js, ['csrf_token' => token(req("$base/operations/new", $js)['body']), 'name' => 'wt company by surgeon']);
+check('a surgeon cannot add a company', (int)$db->query("SELECT COUNT(*) FROM companies WHERE name = 'wt company by surgeon'")->fetch_row()[0] === 0);
+$fusion = ['pr' => ['0' => ['procedure_code' => 'pedicle_screw_fixation', 'levels' => 'Ο4, Ο5', 'lesion_side' => 'bilateral', 'approach_type' => 'percutaneous'],
+                    '1' => ['procedure_code' => 'interbody_fusion', 'levels' => 'Ο4/5', 'lesion_side' => 'left', 'approach_type' => 'tubular_MIS', 'technology' => '["microscope"]', 'approach_route' => 'transforaminal']],
+           'im' => ['0' => ['implant_category' => 'pedicle_screw', 'company_ref' => (string)$coA, 'product' => 'WT System', 'implant_count' => '4', 'levels' => 'Ο4, Ο5',
+                            'side' => 'bilateral', 'for' => '0', 'p' => ['diameter_mm' => '6,5', 'length_mm' => '45', 'breach' => 'A A B A']],
+                    '1' => ['implant_category' => 'cage_PLIF_TLIF', 'company_ref' => (string)$coA, 'implant_count' => '1', 'levels' => 'Ο4/5', 'for' => '1',
+                            'p' => ['height_mm' => '10', 'lordosis_deg' => '8', 'material' => 'PEEK']]]];
+$past = date('Y-m-d', strtotime('-90 days'));
+$r = $opPost($js, '/operations/new', $mS, $fusion + ['op' => ['op_date' => $past]]);
+$F = null;
+if ($r['code'] === 302 && preg_match('#/operations/(O-[^/]+)$#', urldecode($r['loc']), $mm)) {
+    $F = $mm[1];
+    $fid = (int)$db->query("SELECT id FROM operations WHERE nl_id = '" . str_replace('-', '', $F) . "'")->fetch_row()[0];
+    $created[] = $fid;
+}
+check('an operation with implants is saved', $F !== null, (string)$r['code']);
+if ($F) {
+    $im = $db->query("SELECT i.*, p.procedure_code FROM implants i LEFT JOIN procedures p ON p.id = i.procedure_ref WHERE i.op_ref = $fid ORDER BY i.sort")->fetch_all(MYSQLI_ASSOC);
+    $p0 = json_decode($im[0]['params'] ?? '{}', true);
+    check('screws stored with company, product, count, sizes and breach grades', count($im) === 2 && (int)$im[0]['company_ref'] === $coA && $im[0]['product'] === 'WT System'
+          && (int)$im[0]['implant_count'] === 4 && $p0['diameter_mm'] == 6.5 && $p0['length_mm'] == 45 && $p0['breach'] === ['A', 'A', 'B', 'A'], json_encode($im[0] ?? null));
+    check('implants linked to their procedure rows', $im[0]['procedure_code'] === 'pedicle_screw_fixation' && $im[1]['procedure_code'] === 'interbody_fusion');
+    check('implant rows confirmed for the primary surgeon', $im[0]['coding_status'] === 'confirmed');
+    $v = req("$base/operations/$F", $js)['body'];
+    check('operation page shows company and sizes', str_contains($v, 'wt company Alpha') && str_contains($v, 'diameter 6.5 mm') && str_contains($v, 'lordosis 8°') && clean($v));
+    check('edit form brings the implant rows back', str_contains(req("$base/operations/$F/edit", $js)['body'], '&quot;diameter_mm&quot;:6.5'));
+    $find = function (array $q) use ($base, $js) { preg_match_all('#/operations/(O-[0-9A-Z*~$=-]{11,13})"#', urldecode(req("$base/operations?" . http_build_query($q), $js)['body']), $mm); return array_unique($mm[1]); };
+    check('search by company', in_array($F, $find(['company' => (string)$coA]), true));
+    check('search by a size range (screw diameter 6–7 mm)', in_array($F, $find(['implant' => 'pedicle_screw', 'iparam' => 'diameter_mm', 'imin' => '6', 'imax' => '7']), true));
+    check('…and not outside it (7–8 mm)', !in_array($F, $find(['implant' => 'pedicle_screw', 'iparam' => 'diameter_mm', 'imin' => '7', 'imax' => '8']), true));
+    check('implant filters match one row (a cage is not 6.5 mm)', !in_array($F, $find(['implant' => 'cage_PLIF_TLIF', 'iparam' => 'diameter_mm', 'imin' => '6']), true));
+    // preset keeps the implants without sizes
+    req("$base/operations/$F/preset", $js, ['csrf_token' => token(req("$base/operations/$F", $js)['body']), 'name' => 'wt implant preset']);
+    $pj = json_decode((string)($db->query("SELECT rows_json FROM presets WHERE name = 'wt implant preset'")->fetch_row()[0] ?? ''), true);
+    check('a preset keeps company, product and material, not sizes', ($pj['implants'][1]['params']['material'] ?? '') === 'PEEK' && !isset($pj['implants'][0]['params']['diameter_mm'])
+          && ($pj['implants'][0]['product'] ?? '') === 'WT System', json_encode($pj['implants'] ?? null));
+    // complications: the reoperation of the same patient is linked both ways
+    $pref = (int)$db->query("SELECT patient_ref FROM operations WHERE id = $fid")->fetch_row()[0];
+    $r = $opPost($js, '/operations/new', $mS, ['patient_ref' => (string)$pref, 'op' => ['op_date' => date('Y-m-d', strtotime('-80 days'))]]);
+    $R = preg_match('#/operations/(O-[^/]+)$#', urldecode($r['loc']), $mm) ? $mm[1] : null;
+    if ($R) $created[] = (int)$db->query("SELECT id FROM operations WHERE nl_id = '" . str_replace('-', '', $R) . "'")->fetch_row()[0];
+    $t = token(req("$base/operations/$F/complications/new", $js)['body']);
+    $r = req("$base/operations/$F/complications/new", $js, ['csrf_token' => $t, 'c' => ['complication_type' => 'csf_leak', 'clavien_dindo' => 'IIIb', 'treatment' => 'reoperation',
+        'onset_date' => date('Y-m-d', strtotime('-85 days')), 'reoperation_op' => (string)$R, 'outcome_at_90d' => 'resolved', 'related_to_surgery' => 'definite']]);
+    $c = $db->query("SELECT * FROM complications WHERE op_ref = $fid")->fetch_assoc();
+    check('complication saved with derived timing and the reoperation', $r['code'] === 302 && $c && $c['timing'] === '48h_30d' && $c['reoperation_op_ref'] !== null, json_encode($c));
+    check('the reoperation shows the complication it treats', $R && str_contains(req("$base/operations/$R", $js)['body'], 'This operation treats complication'));
+    $r = $opPost($js, '/operations/new', $mS, ['op' => ['op_date' => date('Y-m-d', strtotime('-120 days'))]]);
+    $G = preg_match('#/operations/(O-[^/]+)$#', urldecode($r['loc']), $mm) ? $mm[1] : null;
+    if ($G) $created[] = (int)$db->query("SELECT id FROM operations WHERE nl_id = '" . str_replace('-', '', $G) . "'")->fetch_row()[0];
+    $r = req("$base/operations/$G/complications/new", $js, ['csrf_token' => $t, 'c' => ['complication_type' => 'csf_leak', 'clavien_dindo' => 'I', 'treatment' => 'none', 'onset_date' => date('Y-m-d')]]);
+    check('a complication more than 90 days after the operation is refused', $r['code'] === 422 && str_contains($r['body'], 'more than 90 days'));
+    $r = req("$base/operations/$F/complications/new", $js, ['csrf_token' => 'bad', 'c' => ['complication_type' => 'csf_leak', 'clavien_dindo' => 'I', 'treatment' => 'none']]);
+    check('complication save without CSRF is refused', $r['code'] === 403);
+    $jv3 = login_as($base, $users['viewer'], $pass);
+    check('viewer cannot open the complication form', req("$base/operations/$F/complications/new", $jv3)['code'] === 302);
+    check('search by complication and Clavien-Dindo grade', in_array($F, $find(['comp' => 'csf_leak', 'cd' => 'IIIa']), true) && !in_array($F, $find(['comp' => 'csf_leak', 'cd' => 'IVa']), true));
+    // follow-up 90 days after: the 3m window, lumbar scores, one per window, lock
+    $t = token(req("$base/operations/$F/followups/new", $js)['body']);
+    $fu = ['csrf_token' => $t, 'f' => ['visit_date' => date('Y-m-d'), 'status' => 'seen', 'neuro_status' => 'improved', 'no_complications' => '0'],
+           'sc' => ['vas_back' => ['value' => '2'], 'vas_leg' => ['value' => '1'], 'odi' => ['value' => '18'], 'eq5d' => ['reason' => 'not available', 'source' => 'patient']]];
+    $r = req("$base/operations/$F/followups/new", $js, $fu);
+    $f = $db->query("SELECT * FROM followups WHERE op_ref = $fid")->fetch_assoc();
+    check('follow-up saved in the 3m window with its scores', $r['code'] === 302 && ($f['fu_window'] ?? '') === '3m'
+          && (int)$db->query("SELECT COUNT(*) FROM scores WHERE followup_ref = " . (int)($f['id'] ?? 0))->fetch_row()[0] === 4, json_encode($f));
+    $r = req("$base/operations/$F/followups/new", $js, $fu);
+    check('a second 3m follow-up is refused', $r['code'] === 422);
+    $r = req("$base/operations/$F/followups/new", $js, array_replace_recursive($fu, ['f' => ['visit_date' => date('Y-m-d', strtotime('-80 days'))], 'sc' => ['odi' => ['value' => '140']]]));
+    check('an ODI of 140 is refused', $r['code'] === 422 && str_contains($r['body'], 'a whole number 0–100'));
+    $fnl = $f ? substr($f['nl_id'], 0, 1) . '-' . substr($f['nl_id'], 1, 4) . '-' . substr($f['nl_id'], 5, 4) . '-' . substr($f['nl_id'], 9, 1) : 'x';
+    req("$base/followups/$fnl/lock", $js, ['csrf_token' => $t]);
+    $r = req("$base/followups/$fnl/edit", $js, ['csrf_token' => $t, 'f' => ['status' => 'lost']]);
+    check('a locked follow-up cannot be edited', $r['code'] !== 302 && $db->query("SELECT status FROM followups WHERE id = " . (int)($f['id'] ?? 0))->fetch_row()[0] === 'seen', (string)$r['code']);
+    req("$base/followups/$fnl/lock", $js, ['csrf_token' => $t, 'unlock' => '1']);
+    check('a surgeon cannot unlock', $db->query("SELECT locked_at FROM followups WHERE id = " . (int)($f['id'] ?? 0))->fetch_row()[0] !== null);
+    req("$base/followups/$fnl/lock", $ja, ['csrf_token' => token(req("$base/settings/companies", $ja)['body']), 'unlock' => '1']);
+    check('an administrator unlocks', $db->query("SELECT locked_at FROM followups WHERE id = " . (int)($f['id'] ?? 0))->fetch_row()[0] === null);
+    $t = token(req("$base/operations/$F/baseline", $js)['body']);
+    $r = req("$base/operations/$F/baseline", $js, ['csrf_token' => $t, 'sc' => ['odi' => ['value' => '48'], 'vas_leg' => ['value' => '8']]]);
+    check('baseline scores saved', $r['code'] === 302 && (int)$db->query("SELECT COUNT(*) FROM scores WHERE op_ref = $fid AND followup_ref IS NULL")->fetch_row()[0] === 2);
+    $due = req("$base/followups?surgeon=$mS", $js)['body'];
+    check('due list: the missed 6w visit is overdue, the done 3m is not listed', str_contains($due, $F) && str_contains($due, 'overdue') && !preg_match('#<strong>3m</strong>[^
+]*
+[^
+]*' . preg_quote($F, '#') . '#', $due) && clean($due));
+    $b = $db->query("SELECT COUNT(*) FROM audit_log WHERE entity IN ('complications', 'followups') AND detail LIKE '%WT-Test%'")->fetch_row()[0];
+    check('no patient name in the M4 audit rows', (int)$b === 0);
+}
 
 // refused input is not saved and comes back with the messages
 $before = $db->query('SELECT COUNT(*) FROM operations')->fetch_row()[0];

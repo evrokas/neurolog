@@ -1,0 +1,42 @@
+# Follow-up windows and which scores are asked (docs/plans/m4.md C).
+# DRAFT for the surgeon to confirm (docs/open-questions.md Q19): the window limits are not in the data dictionary.
+# A visit dated inside a window gets that window; outside every window it is `unscheduled`.
+
+windows:                 # days after op_date: [first, last]
+  6w:  [28, 63]
+  3m:  [70, 120]
+  12m: [300, 430]
+  24m: [640, 820]
+due_soon_days: 14        # the due list shows a window this many days before it opens
+
+# 24m only for fusion and tumour cases (data dictionary "Outcomes and follow-up")
+long_windows_for: {construct: [cage_only, screws_only, cage_and_screws], action: [fusion], pathology_class: [neoplastic]}
+
+# score: [label, type (int|dec|code), min, max | code list]; ranges from the data dictionary
+scores:
+  vas_back:       [VAS back, int, 0, 10]
+  vas_leg:        [VAS leg, int, 0, 10]
+  vas_neck:       [VAS neck, int, 0, 10]
+  vas_arm:        [VAS arm, int, 0, 10]
+  odi:            [ODI %, int, 0, 100]
+  ndi:            [NDI %, int, 0, 100]
+  mjoa:           [mJOA, int, 0, 18]
+  kps:            [KPS, int, 0, 100]
+  mrs:            [mRS, int, 0, 6]
+  gcs:            [GCS, int, 3, 15]
+  eq5d:           [EQ-5D index, dec, -0.6, 1]
+  seizures_month: [Seizures per month, dec, 0, 1000]
+  bni_pain:       [BNI pain, code, field.followup.bni_pain]
+  bni_numbness:   [BNI numbness, code, field.followup.bni_numbness]
+
+# which scores a case is asked for, from its procedures and diagnoses (data dictionary "Diagnosis and baseline")
+asked:
+  lumbar:          [vas_back, vas_leg, odi, eq5d]        # a spinal procedure in the lumbar or lumbosacral region
+  cervical:        [vas_neck, vas_arm, ndi, eq5d]
+  thoracic:        [vas_back, eq5d]
+  myelopathy:      [mjoa]                                # diagnosis myelopathy
+  cranial:         [kps, mrs]
+  trauma:          [gcs]                                 # pathology class traumatic, or emergency urgency
+  epilepsy:        [seizures_month]                      # diagnosis epilepsy; Engel class is the visit's seizure outcome
+  trigeminal:      [bni_pain, bni_numbness]              # trigeminal procedure (at follow-up only)
+  pain:            [vas_back, eq5d]                      # functional pain procedures without spinal levels

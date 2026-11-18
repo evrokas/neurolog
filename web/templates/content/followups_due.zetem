@@ -1,0 +1,25 @@
+<div class="content">
+    <div class="page-head"><h2>{{{t('Follow-ups due')}}} <span class="muted small">{{{count($rows)}}}</span></h2></div>
+    <form method="get" action="{{rel_url('/followups')}}" class="inline-form">
+        <label>{{{t('Surgeon')}}} <select name="surgeon" onchange="this.form.submit()"><option value="all"{% if($who === 'all'): %} selected{% endif %}>{{{t('all')}}}</option>
+            {% foreach($members as $m): %}{% if($m['kind'] === 'surgeon'): %}<option value="{{{$m['id']}}}"{% if($who === (string)$m['id']): %} selected{% endif %}>{{{$m['name']}}}</option>{% endif %}{% endforeach %}</select></label>
+    </form>
+    <p class="muted small">{{{t('Windows from vocab/followup.yaml; shown from two weeks before they open. The 12-month visit is the one most often missed.')}}}</p>
+    <table class="list">
+        <thead><tr><th>{{{t('State')}}}</th><th>{{{t('Window')}}}</th><th>{{{t('Due')}}}</th><th>{{{t('Operation')}}}</th><th>{{{t('Patient')}}}</th><th>{{{t('Surgeon')}}}</th><th></th></tr></thead>
+        <tbody>
+        {% foreach($rows as $r): %}
+        <tr class="due-{{{$r['state']}}}{% if($r['window'] === '12m'): %} due-12m{% endif %}">
+            <td><span class="badge {{{$r['state'] === 'overdue' ? 'badge-danger' : ($r['state'] === 'due' ? 'badge-warning' : 'badge-info')}}}">{{{t($r['state'])}}}</span></td>
+            <td><strong>{{{$r['window']}}}</strong></td>
+            <td>{{{$r['from']}}} – {{{$r['to']}}}</td>
+            <td><a href="{{rel_url('/operations/' . $r['nl'])}}#outcomes"><code>{{{$r['nl']}}}</code></a> {{{$r['op_date']}}}</td>
+            <td><a href="{{rel_url('/patients/' . $r['pnl'])}}">{{{$r['patient']}}}</a></td>
+            <td>{{{$r['surgeon'] ?? ''}}}</td>
+            <td>{% if($can_edit): %}<a class="btn small-btn" href="{{rel_url('/operations/' . $r['nl'] . '/followups/new')}}?window={{{$r['window']}}}">{{{t('Record')}}}</a>{% endif %}</td>
+        </tr>
+        {% endforeach %}
+        {% if(!$rows): %}<tr><td colspan="7" class="muted">{{{t('Nothing due.')}}}</td></tr>{% endif %}
+        </tbody>
+    </table>
+</div>

@@ -13,6 +13,7 @@ require_once(__DIR__ . '/quickline.php');
 require_once(__DIR__ . '/operation_pages.php');
 require_once(__DIR__ . '/search.php');
 require_once(__DIR__ . '/find_pages.php');
+require_once(__DIR__ . '/outcome_pages.php');
 require_once(__DIR__ . '/settings_pages.php');
 require_once(__DIR__ . '/pages.php');
 

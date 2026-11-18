@@ -118,6 +118,12 @@ table:
   - name: deleted
     type: '@delete'
 
+  - name: fluoroscopy_time_s
+    type: int
+
+  - name: adjuncts
+    type: text
+
   - name: cdate
     type: '@cdate'
 

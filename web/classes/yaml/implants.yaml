@@ -8,35 +8,50 @@ table:
     type: int
     required: true
 
+  - name: sort
+    type: int
+
+  - name: procedure_ref
+    type: int
+
   - name: implant_category
     type: varchar(40)
 
   - name: implant_count
     type: int
 
-  - name: manufacturer
-    type: varchar(64)
-
-  - name: valve_type
-    type: varchar(16)
-
-  - name: valve_setting
-    type: varchar(64)
-
-  - name: guidance
-    type: text
-
-  - name: screws_robot_placed
+  - name: company_ref
     type: int
 
-  - name: screw_breach
+  - name: product
+    type: varchar(96)
+
+  - name: level_from
+    type: varchar(4)
+
+  - name: level_to
+    type: varchar(4)
+
+  - name: levels_list
     type: text
 
-  - name: fluoroscopy_time_s
-    type: int
+  - name: region
+    type: varchar(40)
 
-  - name: adjuncts
+  - name: side
+    type: varchar(12)
+
+  - name: params
     type: text
+
+  - name: coding_status
+    type: varchar(12)
+
+  - name: coded_by
+    type: varchar(32)
+
+  - name: coded_at
+    type: datetime
 
   - name: cdate
     type: '@cdate'
@@ -52,5 +67,7 @@ table:
 
 ...
 
-# Implant type and guidance used in an operation; category and maker, never lot numbers.
-# guidance, adjuncts: JSON lists; screw_breach: JSON list of Gertzbein-Robbins grades (A–E)
+# One group of identical implants used in an operation (docs/plans/m4.md A): category, company, product, count,
+# levels, side, and the parameters of its category (vocab/implants.yaml) as JSON, e.g. {"diameter_mm":6.5,"length_mm":45}.
+# No lot or serial numbers: traceability stays in the hospital record (decision kept 2026-11-18).
+# - procedure_ref  the procedure row the implant belongs to (optional)

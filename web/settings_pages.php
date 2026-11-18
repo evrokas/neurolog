@@ -1,6 +1,7 @@
 <?php
 /**
- * Admin lists the operation form needs: hospitals and group members (surgeons, anaesthetists, residents, external).
+ * Admin lists the operation form needs: hospitals, implant companies and group members (surgeons, anaesthetists,
+ * residents, external).
  * Rows are never deleted (operations refer to them); they are switched inactive instead.
  */
 
@@ -17,9 +18,11 @@ function nl_people_page(string $kind) {
 }
 
 function nl_people_cfg(string $kind): array {
-    return $kind === 'hospitals'
-        ? ['table' => 'hospitals', 'title' => 'Hospitals', 'url' => '/settings/hospitals']
-        : ['table' => 'members', 'title' => 'Group members', 'url' => '/settings/members'];
+    return match ($kind) {
+        'hospitals' => ['table' => 'hospitals', 'title' => 'Hospitals', 'url' => '/settings/hospitals'],
+        'companies' => ['table' => 'companies', 'title' => 'Implant companies', 'url' => '/settings/companies'],
+        default => ['table' => 'members', 'title' => 'Group members', 'url' => '/settings/members'],
+    };
 }
 
 function nl_people_post(string $kind) {
@@ -31,9 +34,15 @@ function nl_people_post(string $kind) {
     $id = (int)($_POST['id'] ?? 0);
     $name = trim((string)($_POST['name'] ?? ''));
     $err = [];
-    if ($name === '' || mb_strlen($name) > 128) $err['name'] = 'required, at most 128 characters';
+    $max = $kind === 'companies' ? 96 : 128;
+    if ($name === '' || mb_strlen($name) > $max) $err['name'] = "required, at most $max characters";
     $vals = ['name' => $name, 'apyweb_name' => trim((string)($_POST['apyweb_name'] ?? '')) ?: null, 'active' => !empty($_POST['active']) ? 1 : 0];
-    if ($kind === 'hospitals') {
+    if ($kind === 'companies') {
+        unset($vals['apyweb_name']);
+        $vals['name_match'] = nl_name_match($name);
+        $st = $db->prepare('SELECT id FROM companies WHERE name_match = ? AND id <> ?'); $st->execute([$vals['name_match'], $id]);
+        if ($st->fetchColumn()) $err['name'] = 'this company is already in the list';
+    } elseif ($kind === 'hospitals') {
         $vals['short_name'] = mb_substr(trim((string)($_POST['short_name'] ?? '')), 0, 32) ?: null;
     } else {
         $k = (string)($_POST['kind'] ?? '');
@@ -74,5 +83,7 @@ function nl_take_flash(): array {
 
 function nl_page_hospitals($p) { return nl_people_page('hospitals'); }
 function nl_page_hospitals_post($p) { return nl_people_post('hospitals'); }
+function nl_page_companies($p) { return nl_people_page('companies'); }
+function nl_page_companies_post($p) { return nl_people_post('companies'); }
 function nl_page_members($p) { return nl_people_page('members'); }
 function nl_page_members_post($p) { return nl_people_post('members'); }

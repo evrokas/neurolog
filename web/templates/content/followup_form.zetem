@@ -1,0 +1,61 @@
+{% attach_library('operation-form') %}
+<div class="content">
+    <div class="page-head">
+        <h2>{% if($baseline): %}{{{t('Scores before the operation')}}}{% elseif($fu): %}{{{t('Follow-up')}}} <code>{{{nl_id_format($fu['nl_id'])}}}</code>{% else: %}{{{t('New follow-up')}}}{% endif %}</h2>
+        <a class="btn" href="{{rel_url('/operations/' . $nl)}}#outcomes">{{{t('Cancel')}}}</a>
+    </div>
+    <p>{{{t('Operation')}}} <code>{{{$nl}}}</code> · {{{$op['op_date']}}} · {{{$patient['surname'] ?? ''}}} {{{$patient['given_name'] ?? ''}}}</p>
+    {% if($errors): %}<div class="notice notice-danger"><strong>{{{t('Not saved')}}}:</strong> {{{count($errors)}}} {{{t('fields need attention (marked below).')}}}</div>{% endif %}
+    {% if($missing): %}<div class="notice">{{{t('Still missing')}}}: {{{implode(', ', $missing)}}}</div>{% endif %}
+    <script type="application/json" id="nl-lists">{{ $lists_json }}</script>
+    <script type="application/json" id="nl-freq">{}</script>
+    <form method="post" class="chip-form" action="{{$baseline ? rel_url('/operations/' . $nl . '/baseline') : ($fu ? rel_url('/followups/' . nl_id_format($fu['nl_id']) . '/edit') : rel_url('/operations/' . $nl . '/followups/new'))}}">
+        {{ csrf_field() }}
+        {% if(!$baseline): %}
+        <section class="op-section">
+            <h3>{{{t('Visit')}}}</h3>
+            <div class="row-grid">
+                <label>{{{t('Visit date')}}} <input type="date" name="f[visit_date]" value="{{{$in['visit_date'] ?? ''}}}"> {{ nl_ferr($errors, 'visit_date') }}
+                    <span class="muted small">{{{t('The window follows from the date; outside every window the visit is unscheduled.')}}}</span></label>
+                <label>{{{t('Window (without a date)')}}} <select name="f[fu_window]"><option value="">—</option>
+                    {% foreach(array_merge($info['windows'], ['unscheduled']) as $w): %}<option value="{{{$w}}}"{% if(($in['fu_window'] ?? '') === $w): %} selected{% endif %}>{{{$w}}}{% if(isset($win_text[$w])): %} ({{{$win_text[$w]}}}){% endif %}{% if(in_array($w, $taken, true) && $w !== 'unscheduled'): %} · {{{t('recorded')}}}{% endif %}</option>{% endforeach %}</select> {{ nl_ferr($errors, 'fu_window') }}</label>
+                <label>{{{t('Status')}}} {{ nl_chip('f[status]', 'field.followup.status', $in['status'] ?? '', false, false, true) }} {{ nl_ferr($errors, 'status') }}</label>
+                <label>{{{t('Neurological status')}}} {{ nl_chip('f[neuro_status]', 'field.followup.neuro_status', $in['neuro_status'] ?? '') }} {{ nl_ferr($errors, 'neuro_status') }}</label>
+                <label>{{{t('Complications since the operation')}}} <select name="f[no_complications]">
+                    {% foreach(['' => '—', '1' => t('none'), '0' => t('yes, recorded on the operation')] as $k => $l): %}<option value="{{{$k}}}"{% if((string)($in['no_complications'] ?? '') === (string)$k): %} selected{% endif %}>{{{$l}}}</option>{% endforeach %}</select></label>
+                <label>{{{t('Patient satisfaction')}}} {{ nl_chip('f[patient_satisfaction]', 'field.followup.patient_satisfaction', $in['patient_satisfaction'] ?? '') }}</label>
+                <label>{{{t('Return to work')}}} {{ nl_chip('f[return_to_work]', 'field.followup.return_to_work', $in['return_to_work'] ?? '') }}</label>
+                {% if($info['fusion']): %}<label>{{{t('Fusion (CT)')}}} {{ nl_chip('f[fusion_status]', 'field.followup.fusion_status', $in['fusion_status'] ?? '') }} {{ nl_ferr($errors, 'fusion_status') }}</label>{% endif %}
+                {% if($info['tumour']): %}<label>{{{t('Tumour (RANO)')}}} {{ nl_chip('f[tumour_status]', 'field.followup.tumour_status', $in['tumour_status'] ?? '') }} {{ nl_ferr($errors, 'tumour_status') }}</label>{% endif %}
+                {% if($info['epilepsy']): %}<label>{{{t('Seizure outcome (Engel)')}}} {{ nl_chip('f[seizure_outcome]', 'field.followup.seizure_outcome', $in['seizure_outcome'] ?? '') }} {{ nl_ferr($errors, 'seizure_outcome') }}</label>{% endif %}
+                {% if($info['trigeminal']): %}
+                <label>{{{t('Numbness branches')}}} {{ nl_chip('f[numbness_branches]', 'field.followup.branches', $in['numbness_branches'] ?? '', true) }} {{ nl_ferr($errors, 'numbness_branches') }}</label>
+                <label>{{{t('Pain returned on')}}} <input type="date" name="f[recurrence_date]" value="{{{$in['recurrence_date'] ?? ''}}}"> {{ nl_ferr($errors, 'recurrence_date') }}</label>
+                {% endif %}
+                <label>{{{t('Date of death')}}} <input type="date" name="f[date_of_death]" value="{{{$in['date_of_death'] ?? ''}}}"> {{ nl_ferr($errors, 'date_of_death') }}</label>
+                <label class="wide">{{{t('Note')}}} <textarea name="f[note]" rows="2" class="wide-text">{{{$in['note'] ?? ''}}}</textarea></label>
+            </div>
+        </section>
+        {% endif %}
+        <section class="op-section">
+            <h3>{{{t('Scores')}}}</h3>
+            <p class="muted small">{{{t('A value, or the reason it was not done. Missing data is coded, never left blank.')}}}</p>
+            <table class="list scores">
+                <thead><tr><th>{{{t('Score')}}}</th><th>{{{t('Value')}}}</th><th>{{{t('Not done because')}}}</th><th>{{{t('Filled by')}}}</th></tr></thead>
+                <tbody>
+                {% foreach($scores as $code => $s): %}
+                <tr class="{{{$s['shown'] ? '' : 'score-more'}}}"{% if(!$s['shown']): %} hidden{% endif %}>
+                    <td>{{{$s['label']}}}{% if($s['asked']): %} <span class="muted small">*</span>{% endif %}</td>
+                    <td>{% if($s['type'] === 'code'): %}{{ nl_chip("sc[$code][value]", $s['min'], $sc[$code]['value'] ?? '') }}{% else: %}<input type="text" inputmode="decimal" class="num-input" name="sc[{{{$code}}}][value]" value="{{{$sc[$code]['value'] ?? ''}}}" placeholder="{{{$s['min']}}}–{{{$s['max']}}}">{% endif %} {{ nl_ferr($errors, "sc.$code.value") }}</td>
+                    <td><input type="text" name="sc[{{{$code}}}][reason]" value="{{{$sc[$code]['reason'] ?? ''}}}" maxlength="128"> {{ nl_ferr($errors, "sc.$code.reason") }}</td>
+                    <td>{{ nl_chip("sc[$code][source]", 'field.score.source', $sc[$code]['source'] ?? '') }}</td>
+                </tr>
+                {% endforeach %}
+                </tbody>
+            </table>
+            <button type="button" class="btn small-btn" onclick="document.querySelectorAll('tr.score-more').forEach(function (r) { r.hidden = false; }); this.remove();">{{{t('Other scores')}}}</button>
+            <p class="muted small">* {{{t('asked for this case')}}}</p>
+        </section>
+        <div class="form-actions"><button class="btn primary" type="submit">{{{t('Save')}}}</button></div>
+    </form>
+</div>

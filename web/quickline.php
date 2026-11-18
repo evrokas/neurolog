@@ -61,6 +61,8 @@ function nl_tags_find(string $text): array {
             $ve = $vs;
             while ($ve < $n) {
                 $c = $chars[$ve];
+                // a comma between two digits is a decimal comma (6,5 mm), not the end of the value
+                if ($c === ',' && $ve > $vs && ctype_digit($chars[$ve - 1]) && ctype_digit($chars[$ve + 1] ?? '')) { $ve++; continue; }
                 if (in_array($c, [',', '·', '·', ';', "\n", "\r"], true) || $c === '@') break;
                 if ($c === '.' && ($ve + 1 >= $n || preg_match('/\s/u', $chars[$ve + 1]))) break;
                 $ve++;
@@ -114,12 +116,61 @@ function nl_ql_approach(string $t): ?string {
 }
 
 /**
+ * An implant read from an @υλ tag (M4): category from the words, company from the group's list, sizes, count.
+ * Returns null when no category is recognised. $companies: [id => name]. $context: the whole line (normalised), for
+ * the cage route (ACDF, ALIF/LLIF, else PLIF/TLIF).
+ */
+function nl_ql_implant(string $text, array $companies, string $context = ''): ?array {
+    $t = nl_ql_norm($text);
+    $cat = null;
+    $rules = [
+        ['/(LATERAL MASS|ΠΛΑΓΙ\p{L}* ΜΑΖ)/u', 'lateral_mass_screw'], ['/(ΚΟΧΛΙ|ΒΙΔ|SCREW)/u', 'pedicle_screw'],
+        ['/(ΡΑΒΔ|(?<![\p{L}])RODS?(?![\p{L}]))/u', 'rod'], ['/(CAGE|ΚΛΩΒ)/u', 'cage'],
+        ['/(ΤΕΧΝΗΤ\p{L}* ΔΙΣΚ|DISC PROSTH|ΑΡΘΡΟΠΛΑΣΤ|ARTHROPLAST)/u', 'cervical_disc'], ['/(ΠΛΑΚ|PLATE)/u', 'plate'],
+        ['/(ΜΕΣΑΚΑΝΘ|INTERSPINOUS)/u', 'interspinous_device'], ['/(ΤΣΙΜΕΝΤ|CEMENT|PMMA)/u', 'vertebral_augmentation_cement'],
+        ['/(ΒΑΛΒΙΔ|VALVE|SHUNT)/u', 'shunt_valve'], ['/((?<![\p{L}])EVD(?![\p{L}])|ΕΞΩΤΕΡΙΚ\p{L}* ΠΑΡΟΧΕΤ)/u', 'external_drain'],
+        ['/(ΗΛΕΚΤΡΟΔ|(?<![\p{L}])LEADS?(?![\p{L}]))/u', 'neurostimulator_lead'], ['/((?<![\p{L}])IPG(?![\p{L}])|ΓΕΝΝΗΤΡ|ΓΕΝΝΗΤΡΙ)/u', 'IPG'],
+        ['/(ΑΝΤΛΙ|PUMP)/u', 'intrathecal_pump'], ['/(ΚΡΑΝΙΟΠΛΑΣΤ|CRANIOPLAST)/u', 'cranioplasty_implant'],
+        ['/(ΜΟΣΧΕΥΜ|GRAFT|ΥΠΟΚΑΤΑΣΤΑΤ|SUBSTITUTE|DBM)/u', 'bone_graft_substitute'],
+    ];
+    foreach ($rules as [$re, $c]) if (preg_match($re, $t)) { $cat = $c; break; }
+    if ($cat === null) return null;
+    if ($cat === 'cage') {
+        $ctx = $t . ' ' . nl_ql_norm($context);
+        $cat = preg_match('/(?<![\p{L}])ACDF(?![\p{L}])/u', $ctx) ? 'cage_ACDF'
+             : (preg_match('/(?<![\p{L}])(ALIF|LLIF|XLIF|OLIF)(?![\p{L}])/u', $ctx) ? 'cage_ALIF_LLIF' : 'cage_PLIF_TLIF');
+    }
+    $row = ['implant_category' => $cat, 'company_ref' => null, 'implant_count' => null, 'levels' => nl_ql_levels($t), 'side' => nl_ql_side($t),
+            'params' => [], 'source' => $text];
+    // company: the longest name found in the text
+    $best = 0;
+    foreach ($companies as $id => $name) {
+        $n = nl_ql_norm($name);
+        if (mb_strlen($n) > $best && preg_match('/(?<![\p{L}\p{N}])' . preg_quote($n, '/') . '(?![\p{L}\p{N}])/u', $t)) { $row['company_ref'] = (int)$id; $best = mb_strlen($n); }
+    }
+    $num = '(\d+(?:[.,]\d+)?)';
+    $x = '\s*[XΧ×*]\s*';
+    if (preg_match("/(?<![\\d.,])$num$x$num(?:[XΧ×*]$num)?(?:\s*MM)?/u", $t, $m)) {
+        $a = (float)str_replace(',', '.', $m[1]); $b = (float)str_replace(',', '.', $m[2]); $c = isset($m[3]) ? (float)str_replace(',', '.', $m[3]) : null;
+        if (in_array($cat, ['pedicle_screw', 'lateral_mass_screw', 'rod'], true)) $row['params'] = ['diameter_mm' => $a, 'length_mm' => $b];
+        elseif (str_starts_with($cat, 'cage_')) $row['params'] = $c !== null ? ['height_mm' => $a, 'width_mm' => $b, 'length_mm' => $c] : ['width_mm' => $a, 'length_mm' => $b];
+        $t = str_replace($m[0], ' ', $t);
+    }
+    if (str_starts_with($cat, 'cage_') && !isset($row['params']['height_mm']) && preg_match("/(?<![\\d.,X])$num\s*MM/u", $t, $m)) $row['params']['height_mm'] = (float)str_replace(',', '.', $m[1]);
+    if (str_starts_with($cat, 'cage_') && preg_match("/$num\s*(°|ΜΟΙΡ|DEG)/u", $t, $m)) $row['params']['lordosis_deg'] = (float)str_replace(',', '.', $m[1]);
+    if ($cat === 'vertebral_augmentation_cement' && preg_match("/$num\s*(ML|CC)/u", $t, $m)) $row['params']['volume_ml'] = (float)str_replace(',', '.', $m[1]);
+    // count: «x4», «4 κοχλίες», «4 screws»
+    if (preg_match('/(?<![\p{L}\d.,])[XΧ×]\s*(\d{1,2})(?![\d.,])/u', $t, $m) || preg_match('/(?<![\d.,])(\d{1,2})\s*(ΚΟΧΛΙ|ΒΙΔ|SCREW|ΡΑΒΔ|ROD|CAGE|ΚΛΩΒ|ΗΛΕΚΤΡΟΔ|LEAD)/u', $t, $m)) $row['implant_count'] = (int)$m[1];
+    return $row;
+}
+
+/**
  * Parse a quick line. $diadermiki: vocab/facets.yaml `diadermiki` (tubular_MIS, percutaneous, percutaneous_by_nature).
  * Returns ['procedures' => [...], 'diagnoses' => [...], 'unplaced' => [part texts nothing was read from], 'tags' => n].
  */
-function nl_quickline_parse(string $text, array $aliases, array $diadermiki): array {
+function nl_quickline_parse(string $text, array $aliases, array $diadermiki, array $companies = []): array {
     $text = trim($text);
-    $out = ['procedures' => [], 'diagnoses' => [], 'unplaced' => [], 'tags' => 0];
+    $out = ['procedures' => [], 'diagnoses' => [], 'implants' => [], 'unplaced' => [], 'tags' => 0];
     if ($text === '') return $out;
     // 1. explicit tags: read them, then blank them out of the text
     $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
@@ -222,6 +273,12 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki): ar
         foreach ($aliases as [$w, $list, $c]) if ($list === 'diagnosis' && preg_match('/(?<![\p{L}\p{N}])' . preg_quote($w, '/') . '/u', $tn)) { $code = $c; break; }
         if ($code) $out['diagnoses'][] = ['diagnosis_code' => $code, 'levels' => nl_ql_levels($tn) ?: $lineLevels, 'lesion_side' => nl_ql_side($tn) ?? $lineSide, 'source' => $t];
         else $out['unplaced'][] = '@δγ ' . $t;
+    }
+    // 4. tagged implants (M4): proposed implant rows; a tag that names only a hydrogel product is the product above
+    foreach ($tagged['impl'] as $t) {
+        $im = nl_ql_implant($t, $companies, $rest);
+        if ($im) { if ($im['levels'] === '') $im['levels'] = $lineLevels; $out['implants'][] = $im; }
+        elseif (!preg_match('/DISCOGEL|GELSTI/u', nl_ql_norm($t))) $out['unplaced'][] = '@υλ ' . $t;
     }
     // procedures with no levels yet take the line's levels (e.g. «@επ Ο4/5» written last)
     foreach ($out['procedures'] as &$p) if ($p['levels'] === '' && $lineLevels !== '' && $p['procedure_code'] !== 'trigeminal_percutaneous') $p['levels'] = $lineLevels;

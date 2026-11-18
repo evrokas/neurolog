@@ -33,6 +33,11 @@ When one is answered, move it to [decisions.md](decisions.md).
     drafted 2026-11-18 from general clinical vocabulary. Add the group's own abbreviations and spellings; remove any
     word that means something else in the group's usage.
 
+19. **Follow-up windows and scores per case** (`vocab/followup.yaml`), drafted 2026-11-18 for M4: windows in days
+    after the operation 6w = 28–63, 3m = 70–120, 12m = 300–430, 24m = 640–820, shown on the due list 14 days early;
+    which scores each case is asked for follows the data dictionary ("C if lumbar / cervical / cranial /
+    myelopathy / epilepsy", BNI for trigeminal). Please confirm the window limits and the score sets.
+
 ## Ledger
 
 9. Retention period, and what happens to a member's data if they leave the group.

@@ -14,6 +14,7 @@
     <script type="application/json" id="nl-lists">{{ $lists_json }}</script>
     <script type="application/json" id="nl-freq">{{ $freq_json }}</script>
     <script type="application/json" id="nl-presets">{{ $presets_json }}</script>
+    <script type="application/json" id="nl-implants">{{ $implants_json }}</script>
 
     <form method="post" action="{{$action}}" id="op-form" novalidate>
         {{ csrf_field() }}
@@ -105,6 +106,20 @@
         </section>
 
         <section class="op-section">
+            <h3>{{{t('Implants')}}}</h3>
+            <p class="muted small">{{{t('One row per group of identical implants (same company, product and size), with its count.')}}}
+               {% if(!$companies): %}<strong>{{{t('No companies yet: an administrator adds them under Admin › Implant companies.')}}}</strong>{% endif %}</p>
+            <div class="rows" id="im-rows">
+                {% foreach($in['im'] as $i => $r): %}{% include op_im_row.zetem %}{% endforeach %}
+            </div>
+            <button type="button" class="btn row-add" data-tpl="im-tpl" data-into="im-rows">+ {{{t('Implant')}}}</button>
+            <div class="row-grid">
+                <label>{{{t('Fluoroscopy time (s)')}}} <input type="number" min="0" name="op[fluoroscopy_time_s]" value="{{{$in['op']['fluoroscopy_time_s'] ?? ''}}}"> {{ nl_ferr($errors, 'op.fluoroscopy_time_s') }}</label>
+                <label class="wide">{{{t('Adjuncts')}}} {{ nl_chip('op[adjuncts]', 'field.operation.adjuncts', $in['op']['adjuncts'] ?? '', true) }} {{ nl_ferr($errors, 'op.adjuncts') }}</label>
+            </div>
+        </section>
+
+        <section class="op-section">
             <h3>{{{t('Operative note')}}}</h3>
             <textarea name="op[op_note]" rows="5" class="wide-text note-input">{{{$in['op']['op_note'] ?? ''}}}</textarea>
             <button type="button" class="btn small-btn note-suggest">{{{t('Suggest from the tags in the note')}}}</button>
@@ -117,5 +132,6 @@
     {% $i = '__I__'; $r = []; %}
     <template id="dx-tpl">{% include op_dx_row.zetem %}</template>
     <template id="pr-tpl">{% include op_pr_row.zetem %}</template>
+    <template id="im-tpl">{% include op_im_row.zetem %}</template>
     <div class="levels-grid-pop" hidden></div>
 </div>

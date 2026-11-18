@@ -1,0 +1,33 @@
+{% attach_library('operation-form') %}
+<div class="content">
+    <div class="page-head">
+        <h2>{% if($comp): %}{{{t('Complication')}}} <code>{{{nl_id_format($comp['nl_id'])}}}</code>{% else: %}{{{t('New complication')}}}{% endif %}</h2>
+        <a class="btn" href="{{rel_url('/operations/' . $nl)}}#outcomes">{{{t('Cancel')}}}</a>
+    </div>
+    <p>{{{t('Operation')}}} <code>{{{$nl}}}</code> · {{{$op['op_date']}}} · {{{$patient['surname'] ?? ''}}} {{{$patient['given_name'] ?? ''}}}</p>
+    <p class="muted small">{{{t('Up to 90 days after the operation. A later problem (implant failure, CSF leak…) is a diagnosis of the later operation, linked to this one.')}}}</p>
+    {% if($errors): %}<div class="notice notice-danger"><strong>{{{t('Not saved')}}}:</strong> {{{count($errors)}}} {{{t('fields need attention (marked below).')}}}</div>{% endif %}
+    {% if($missing): %}<div class="notice">{{{t('Still missing')}}}: {{{implode(', ', $missing)}}}</div>{% endif %}
+    <script type="application/json" id="nl-lists">{{ $lists_json }}</script>
+    <script type="application/json" id="nl-freq">{}</script>
+    <form method="post" action="{{$comp ? rel_url('/complications/' . nl_id_format($comp['nl_id']) . '/edit') : rel_url('/operations/' . $nl . '/complications/new')}}" class="chip-form">
+        {{ csrf_field() }}
+        <div class="row-grid">
+            <label class="wide">{{{t('Complication')}}} {{ nl_chip('c[complication_type]', 'complication', $in['complication_type'] ?? '', false, false, true) }} {{ nl_ferr($errors, 'complication_type') }}</label>
+            <label>{{{t('Onset date')}}} <input type="date" name="c[onset_date]" value="{{{$in['onset_date'] ?? ''}}}"> {{ nl_ferr($errors, 'onset_date') }}</label>
+            <label>{{{t('Timing')}}} {{ nl_chip('c[timing]', 'field.complication.timing', $in['timing'] ?? '', false, false, false, 'from the onset date') }} {{ nl_ferr($errors, 'timing') }}</label>
+            <label>Clavien-Dindo {{ nl_chip('c[clavien_dindo]', 'field.complication.clavien_dindo', $in['clavien_dindo'] ?? '', false, false, true) }} {{ nl_ferr($errors, 'clavien_dindo') }}</label>
+            <label>{{{t('Treatment')}}} {{ nl_chip('c[treatment]', 'field.complication.treatment', $in['treatment'] ?? '', false, false, true) }} {{ nl_ferr($errors, 'treatment') }}</label>
+            <label>{{{t('Reoperation (its operation ID)')}}} <input type="text" name="c[reoperation_op]" value="{{{$in['reoperation_op'] ?? ''}}}" placeholder="O-XXXX-XXXX-X"> {{ nl_ferr($errors, 'reoperation_op') }}</label>
+            <label>{{{t('Outcome at 90 days')}}} {{ nl_chip('c[outcome_at_90d]', 'field.complication.outcome_at_90d', $in['outcome_at_90d'] ?? '') }} {{ nl_ferr($errors, 'outcome_at_90d') }}</label>
+            <label>{{{t('Related to surgery')}}} {{ nl_chip('c[related_to_surgery]', 'field.complication.related_to_surgery', $in['related_to_surgery'] ?? '') }} {{ nl_ferr($errors, 'related_to_surgery') }}</label>
+            <label>{{{t('Detected by')}}} {{ nl_chip('c[detected_by]', 'field.complication.detected_by', $in['detected_by'] ?? '') }} {{ nl_ferr($errors, 'detected_by') }}</label>
+            <label class="wide">{{{t('Note')}}} <textarea name="c[note]" rows="3" class="wide-text">{{{$in['note'] ?? ''}}}</textarea> {{ nl_ferr($errors, 'note') }}</label>
+        </div>
+        <div class="form-actions"><button class="btn primary" type="submit">{{{t('Save')}}}</button></div>
+    </form>
+    {% if($comp): %}
+    <form method="post" action="{{rel_url('/complications/' . nl_id_format($comp['nl_id']) . '/delete')}}" class="inline" onsubmit="return confirm('Remove this complication?');">
+        {{ csrf_field() }}<button class="btn small-btn" type="submit">{{{t('Remove this complication')}}}</button></form>
+    {% endif %}
+</div>

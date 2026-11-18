@@ -4,9 +4,11 @@
     <form method="post" action="{{rel_url($cfg['url'])}}" class="form-grid inline-form">
         {{ csrf_field() }}
         {% if($edit): %}<input type="hidden" name="id" value="{{{$edit['id']}}}">{% endif %}
-        <label>{{{t('Name')}}}<input type="text" name="name" value="{{{$v['name'] ?? ''}}}" required maxlength="128">
+        <label>{{{t('Name')}}}<input type="text" name="name" value="{{{$v['name'] ?? ''}}}" required maxlength="{{{$kind === 'companies' ? 96 : 128}}}">
             {% if(isset($errors['name'])): %}<span class="field-error">{{{$errors['name']}}}</span>{% endif %}</label>
-        {% if($kind === 'hospitals'): %}
+        {% if($kind === 'companies'): %}
+        <span class="muted small">{{{t('Switch a company off instead of deleting it: operations keep it.')}}}</span>
+        {% elseif($kind === 'hospitals'): %}
         <label>{{{t('Short name')}}}<input type="text" name="short_name" value="{{{$v['short_name'] ?? ''}}}" maxlength="32"></label>
         {% else: %}
         <label>{{{t('Kind')}}}<select name="kind" required><option value=""></option>
@@ -17,19 +19,19 @@
             <span class="muted small">{{{t('A surgeon confirms the codes of the operations where this member is the primary surgeon.')}}}</span>
             {% if(isset($errors['uname'])): %}<span class="field-error">{{{$errors['uname']}}}</span>{% endif %}</label>
         {% endif %}
-        <label>{{{t('Name in APYweb')}}}<input type="text" name="apyweb_name" value="{{{$v['apyweb_name'] ?? ''}}}" maxlength="255"></label>
+        {% if($kind !== 'companies'): %}<label>{{{t('Name in APYweb')}}}<input type="text" name="apyweb_name" value="{{{$v['apyweb_name'] ?? ''}}}" maxlength="255"></label>{% endif %}
         <label class="check"><input type="checkbox" name="active" value="1"{% if(!empty($v['active'])): %} checked{% endif %}> {{{t('Active')}}}</label>
         <div><button class="btn primary" type="submit">{% if($edit): %}{{{t('Save')}}}{% else: %}{{{t('Add')}}}{% endif %}</button>
             {% if($edit): %}<a class="btn" href="{{rel_url($cfg['url'])}}">{{{t('Cancel')}}}</a>{% endif %}</div>
     </form>
     <table class="list">
-        <thead><tr><th>{{{t('Name')}}}</th>{% if($kind === 'members'): %}<th>{{{t('Kind')}}}</th><th>{{{t('Account')}}}</th>{% else: %}<th>{{{t('Short name')}}}</th>{% endif %}<th>APYweb</th><th></th></tr></thead>
+        <thead><tr><th>{{{t('Name')}}}</th>{% if($kind === 'members'): %}<th>{{{t('Kind')}}}</th><th>{{{t('Account')}}}</th>{% elseif($kind === 'hospitals'): %}<th>{{{t('Short name')}}}</th>{% endif %}{% if($kind !== 'companies'): %}<th>APYweb</th>{% endif %}<th></th></tr></thead>
         <tbody>
         {% foreach($rows as $r): %}
             <tr{% if(!$r['active']): %} class="retired"{% endif %}>
                 <td>{{{$r['name']}}}</td>
-                {% if($kind === 'members'): %}<td>{{{$r['kind']}}}</td><td>{{{$r['uname'] ?? ''}}}</td>{% else: %}<td>{{{$r['short_name'] ?? ''}}}</td>{% endif %}
-                <td>{{{$r['apyweb_name'] ?? ''}}}</td>
+                {% if($kind === 'members'): %}<td>{{{$r['kind']}}}</td><td>{{{$r['uname'] ?? ''}}}</td>{% elseif($kind === 'hospitals'): %}<td>{{{$r['short_name'] ?? ''}}}</td>{% endif %}
+                {% if($kind !== 'companies'): %}<td>{{{$r['apyweb_name'] ?? ''}}}</td>{% endif %}
                 <td><a href="{{rel_url($cfg['url'])}}?edit={{{$r['id']}}}">{{{t('Edit')}}}</a></td>
             </tr>
         {% endforeach %}

@@ -1,13 +1,14 @@
 <div class="content">
     <h2>{{{t('Presets')}}}</h2>
-    <p class="muted">{{{t('Shared by the group. A preset adds its procedure rows to the operation form; levels, side and location are always asked. Make one with «Save as preset» on an operation.')}}}</p>
+    <p class="muted">{{{t('Shared by the group. A preset adds its procedure and implant rows to the operation form; levels, side, location and implant sizes are always asked. Make one with «Save as preset» on an operation.')}}}</p>
     <table class="list">
         <thead><tr><th>{{{t('Name')}}}</th><th>{{{t('Rows')}}}</th><th>{{{t('Used')}}}</th><th>{{{t('Active')}}}</th><th></th></tr></thead>
         <tbody>
         {% foreach($presets as $p): %}
         <tr{% if(!$p['active']): %} class="retired"{% endif %}>
             <td><input type="text" name="name" form="pf{{{$p['id']}}}" value="{{{$p['name']}}}" maxlength="80" required></td>
-            <td class="small">{% foreach(json_decode($p['rows_json'], true) as $r): %}<div>{{{nl_label($lists, 'procedure', $r['procedure_code'] ?? '')}}}{% if(!empty($r['approach_type'])): %} · {{{str_replace('_', ' ', $r['approach_type'])}}}{% endif %}{% if(!empty($r['approach_route'])): %} · {{{str_replace('_', ' ', $r['approach_route'])}}}{% endif %}</div>{% endforeach %}</td>
+            {% $pj = json_decode($p['rows_json'], true); $prow = array_is_list($pj) ? $pj : ($pj['procedures'] ?? []); $pim = array_is_list($pj) ? [] : ($pj['implants'] ?? []); %}
+            <td class="small">{% foreach($pim as $m): %}<div>▪ {{{nl_label($lists, 'field.implant.category', $m['implant_category'] ?? '')}}}{% if(!empty($m['company_ref'])): %} · {{{$companies[$m['company_ref']] ?? ''}}}{% endif %}{% if(!empty($m['product'])): %} · {{{$m['product']}}}{% endif %}</div>{% endforeach %}{% foreach($prow as $r): %}<div>{{{nl_label($lists, 'procedure', $r['procedure_code'] ?? '')}}}{% if(!empty($r['approach_type'])): %} · {{{str_replace('_', ' ', $r['approach_type'])}}}{% endif %}{% if(!empty($r['approach_route'])): %} · {{{str_replace('_', ' ', $r['approach_route'])}}}{% endif %}</div>{% endforeach %}</td>
             <td>{{{$p['use_count']}}}</td>
             <td><input type="checkbox" name="active" value="1" form="pf{{{$p['id']}}}"{% if($p['active']): %} checked{% endif %}></td>
             <td><form method="post" action="{{rel_url('/presets')}}" id="pf{{{$p['id']}}}">{{ csrf_field() }}<input type="hidden" name="id" value="{{{$p['id']}}}"><button class="btn small-btn" type="submit">{{{t('Save')}}}</button></form></td>

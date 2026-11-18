@@ -88,7 +88,7 @@ Development follows [the implementation plan](docs/implementation-plan.md); mile
 
 ## Project Status
 
-**Development status:** M0 and M1 built: sign-in, roles, design-system styles, database schema, code lists, NeuroLog IDs, tests. Operations are entered from M2.
+**Development status:** M0–M4 built: sign-in and roles, schema and code lists, entering operations (chips, quick line, presets), search and patient pages, implants with company and sizes, complications, follow-up with scores and a due list. M2–M4 await the surgeons' acceptance; development uses made-up cases only. Next: M5 (import from APYweb).
 
 NeuroLog is an evolving project. Its functionality, interface and architecture may change as development progresses.
 

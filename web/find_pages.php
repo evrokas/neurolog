@@ -8,15 +8,19 @@ const NL_PAGE_SIZE = 100;
 
 function nl_filter_ctx(PDO $db): array {
     return [nl_lists($db), $db->query('SELECT id, name FROM members ORDER BY name')->fetchAll(PDO::FETCH_KEY_PAIR),
-            $db->query('SELECT id, name FROM hospitals ORDER BY name')->fetchAll(PDO::FETCH_KEY_PAIR)];
+            $db->query('SELECT id, name FROM hospitals ORDER BY name')->fetchAll(PDO::FETCH_KEY_PAIR),
+            $db->query('SELECT id, name FROM companies ORDER BY name')->fetchAll(PDO::FETCH_KEY_PAIR)];
 }
 
 /** Human label of one filter value (for the chips). */
-function nl_filter_label(string $k, $v, array $lists, array $members, array $hospitals): string {
+function nl_filter_label(string $k, $v, array $lists, array $members, array $hospitals, array $companies = []): string {
     $spec = nl_filter_spec()[$k][1];
     switch ($spec) {
         case ':member': return $members[$v] ?? (string)$v;
         case ':hospital': return $hospitals[$v] ?? (string)$v;
+        case ':company': return $companies[$v] ?? (string)$v;
+        case ':iparam': return str_replace('_', ' ', (string)$v);
+        case ':num': return rtrim(rtrim(number_format((float)$v, 2, '.', ''), '0'), '.');
         case ':patient': return nl_id_format($v);
         case ':region': case ':route': case ':coding': return str_replace('_', ' ', (string)$v);
         case ':level': case ':date': case ':branch': return (string)$v;
@@ -27,7 +31,7 @@ function nl_filter_label(string $k, $v, array $lists, array $members, array $hos
 function nl_page_operations($params) {
     global $kernel;
     $db = dbConnection::getConnection();
-    [$lists, $members, $hospitals] = nl_filter_ctx($db);
+    [$lists, $members, $hospitals, $companies] = nl_filter_ctx($db);
     // the search line becomes filters, then the page reloads with them in the address (bookmarkable)
     $s = trim((string)($_GET['s'] ?? ''));
     if ($s !== '') {
@@ -37,7 +41,7 @@ function nl_page_operations($params) {
         $keep = array_intersect_key($_GET, array_flip(['surgeon', 'hospital', 'coding']));
         header('location: ' . rel_url('/operations') . '?' . http_build_query($r['filters'] + $keep)); exit();
     }
-    $f = nl_filters_from_get($_GET, $lists, $members, $hospitals);
+    $f = nl_filters_from_get($_GET, $lists, $members, $hospitals, $companies);
     [$where, $args] = nl_filters_sql($f);
     $page = max(1, (int)($_GET['page'] ?? 1));
     $st = $db->prepare("SELECT COUNT(*) FROM operations o WHERE $where"); $st->execute($args);
@@ -65,15 +69,25 @@ function nl_page_operations($params) {
     $chips = [];
     foreach ($f as $k => $v) {
         $rest = $f; unset($rest[$k]);
-        $chips[] = ['label' => nl_filter_spec()[$k][0], 'value' => nl_filter_label($k, $v, $lists, $members, $hospitals),
+        $chips[] = ['label' => nl_filter_spec()[$k][0], 'value' => nl_filter_label($k, $v, $lists, $members, $hospitals, $companies),
                     'href' => rel_url('/operations') . ($rest ? '?' . http_build_query($rest) : '')];
     }
     $data = nl_form_data($db);
     return Renderer::render('operations_list.zetem', [
         'rows' => $rows, 'total' => $total, 'page' => $page, 'pages' => max(1, (int)ceil($total / NL_PAGE_SIZE)),
         'f' => $f, 'chips' => $chips, 'qs' => $f, 'lists' => $lists, 'members' => $data['members'], 'hospitals' => $data['hospitals'],
-        'lists_json' => $data['lists_json'], 'can_edit' => nl_can_edit(),
+        'lists_json' => $data['lists_json'], 'can_edit' => nl_can_edit(), 'companies' => $companies, 'iparams' => nl_iparams(),
     ]);
+}
+
+/** Numeric implant parameters for the filter panel: name => label with unit. */
+function nl_iparams(): array {
+    $out = [];
+    foreach (nl_implant_spec() as $params) foreach ($params as $n => $ps) {
+        if (in_array($ps['type'], ['num', 'int'], true)) $out[$n] = str_replace('_', ' ', preg_replace('/_(mm|ml|deg)$/', '', $n)) . (isset($ps['unit']) ? " ({$ps['unit']})" : '');
+    }
+    ksort($out);
+    return $out;
 }
 
 // ---------- patients ----------

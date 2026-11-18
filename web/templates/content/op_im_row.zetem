@@ -1,0 +1,19 @@
+<fieldset class="op-row im-row{% if(!empty($r['proposed'])): %} is-proposed{% endif %}" data-row="{{{$i}}}">
+    <input type="hidden" class="proposed" name="im[{{{$i}}}][proposed]" value="{{{empty($r['proposed']) ? '' : '1'}}}">
+    <legend>{{{t('Implant')}}} <span class="row-no"></span>
+        {% if(($r['_status'] ?? '') === 'suggested'): %}<span class="badge badge-warning">{{{t('suggested')}}}</span>{% endif %}</legend>
+    <div class="row-grid">
+        <label class="wide">{{{t('Category')}}} {{ nl_chip("im[$i][implant_category]", 'field.implant.category', $r['implant_category'] ?? '', false, false, true) }} {{ nl_ferr($errors, "im.$i.implant_category") }}</label>
+        <label>{{{t('Company')}}} {{ nl_company_select("im[$i][company_ref]", $companies, $r['company_ref'] ?? '') }} {{ nl_ferr($errors, "im.$i.company_ref") }}</label>
+        <label>{{{t('Product')}}} <input type="text" name="im[{{{$i}}}][product]" class="im-product" value="{{{$r['product'] ?? ''}}}" maxlength="96" autocomplete="off" list="im-products-{{{$i}}}"><datalist id="im-products-{{{$i}}}"></datalist> {{ nl_ferr($errors, "im.$i.product") }}</label>
+        <label>{{{t('Count')}}} <input type="number" min="1" max="50" name="im[{{{$i}}}][implant_count]" class="im-count" value="{{{$r['implant_count'] ?? '1'}}}"> {{ nl_ferr($errors, "im.$i.implant_count") }}</label>
+        <label class="im-levels">{{{t('Levels')}}} <input type="text" class="levels-input" name="im[{{{$i}}}][levels]" value="{{{$r['levels'] ?? ''}}}" placeholder="Ο4, Ο5" autocomplete="off">
+            <label class="check small"><input type="checkbox" name="im[{{{$i}}}][transitional]" value="1" class="transitional"{% if(!empty($r['transitional'])): %} checked{% endif %}> L6</label>
+            <span class="levels-out"></span> {{ nl_ferr($errors, "im.$i.levels") }}</label>
+        <label>{{{t('Side')}}} {{ nl_chip("im[$i][side]", 'procedure.side', $r['side'] ?? '') }} {{ nl_ferr($errors, "im.$i.side") }}</label>
+        <label>{{{t('For procedure')}}} <select name="im[{{{$i}}}][for]" class="im-for" data-value="{{{$r['for'] ?? ''}}}"><option value="">—</option></select></label>
+    </div>
+    <div class="row-grid im-params" data-name="im[{{{$i}}}][p]" data-values="{{{json_encode($r['p'] ?? new stdClass(), JSON_UNESCAPED_UNICODE)}}}" data-errors="{{{json_encode(array_filter($errors, fn($k) => str_starts_with($k, "im.$i.p."), ARRAY_FILTER_USE_KEY) ?: new stdClass())}}}"></div>
+    <button type="button" class="btn small-btn row-accept">✓ {{{t('Accept')}}}</button>
+    <button type="button" class="btn small-btn row-remove">{{{t('Remove')}}}</button>
+</fieldset>

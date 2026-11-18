@@ -5,6 +5,9 @@
  *     technology, branch, rf_mode, coding
  *   diagnosis facets (one diagnosis row): dx, dxlevel
  *   operation: from, to (dates), surgeon, hospital, construct, patient (P- ID)
+ *   implant facets (one implant row): implant (category), company, iparam + imin/imax (a parameter of
+ *     vocab/implants.yaml within a range, e.g. cage height_mm 10–12)
+ *   complications (M4): comp (type), cd (Clavien-Dindo grade or worse)
  * A level filter also finds ranges that cover it (L4-L5 finds L3-L5) and, for a vertebra, the segments around it.
  * The search line (`s`) is read with the quick-line parser (same words and notation) plus a year, and becomes the
  * filters above. Pure functions; the SQL uses bound parameters only.
@@ -12,6 +15,7 @@
 
 require_once __DIR__ . '/levels.php';
 require_once __DIR__ . '/quickline.php';
+require_once __DIR__ . '/implants.php';
 
 /** key => [label, list (for labels and validation) or type] */
 function nl_filter_spec(): array {
@@ -24,11 +28,14 @@ function nl_filter_spec(): array {
         'dx' => ['diagnosis', 'diagnosis'], 'dxlevel' => ['diagnosis level', ':level'],
         'from' => ['from', ':date'], 'to' => ['to', ':date'], 'surgeon' => ['surgeon', ':member'], 'hospital' => ['hospital', ':hospital'],
         'construct' => ['construct', 'operation.construct'], 'patient' => ['patient', ':patient'],
+        'implant' => ['implant', 'field.implant.category'], 'company' => ['company', ':company'],
+        'iparam' => ['implant parameter', ':iparam'], 'imin' => ['from', ':num'], 'imax' => ['to', ':num'],
+        'comp' => ['complication', 'complication'], 'cd' => ['Clavien-Dindo ≥', 'field.complication.clavien_dindo'],
     ];
 }
 
 /** Valid filters from GET values; unknown keys and bad values are dropped (never an error page). */
-function nl_filters_from_get(array $get, array $lists, array $members = [], array $hospitals = []): array {
+function nl_filters_from_get(array $get, array $lists, array $members = [], array $hospitals = [], array $companies = []): array {
     $f = [];
     foreach (nl_filter_spec() as $k => [$label, $type]) {
         $v = trim((string)($get[$k] ?? ''));
@@ -59,6 +66,15 @@ function nl_filters_from_get(array $get, array $lists, array $members = [], arra
             case ':hospital':
                 if (ctype_digit($v) && isset($hospitals[(int)$v])) $f[$k] = (int)$v;
                 break;
+            case ':company':
+                if (ctype_digit($v) && isset($companies[(int)$v])) $f[$k] = (int)$v;
+                break;
+            case ':iparam':
+                foreach (nl_implant_spec() as $params) if (isset($params[$v]) && in_array($params[$v]['type'], ['num', 'int'], true)) { $f[$k] = $v; break; }
+                break;
+            case ':num':
+                if (($n = nl_num($v)) !== null) $f[$k] = $n;
+                break;
             case ':patient':
                 if (($id = nl_id_normalize($v, 'P')) !== null) $f[$k] = $id;
                 break;
@@ -66,6 +82,7 @@ function nl_filters_from_get(array $get, array $lists, array $members = [], arra
                 if (isset($lists[$type][$v])) $f[$k] = $v;
         }
     }
+    if (!isset($f['iparam'])) unset($f['imin'], $f['imax']);   // a range needs its parameter
     return $f;
 }
 
@@ -106,6 +123,21 @@ function nl_filters_sql(array $f): array {
     if (isset($f['dx'])) { $dw[] = 'd.diagnosis_code = ?'; $p[] = $f['dx']; }
     if (isset($f['dxlevel'])) { $dw[] = 'JSON_OVERLAPS(d.levels_list, ?)'; $p[] = json_encode(nl_level_candidates($f['dxlevel'])); }
     if ($dw) $w[] = 'EXISTS (SELECT 1 FROM diagnoses d WHERE d.op_ref = o.id AND ' . implode(' AND ', $dw) . ')';
+    // one implant row must satisfy all implant filters together
+    $iw = [];
+    if (isset($f['implant'])) { $iw[] = 'i.implant_category = ?'; $p[] = $f['implant']; }
+    if (isset($f['company'])) { $iw[] = 'i.company_ref = ?'; $p[] = $f['company']; }
+    if (isset($f['iparam'])) {
+        $path = '$.' . $f['iparam'];   // a known parameter name (checked in nl_filters_from_get)
+        $iw[] = "JSON_EXTRACT(i.params, '$path') IS NOT NULL";
+        if (isset($f['imin'])) { $iw[] = "CAST(JSON_EXTRACT(i.params, '$path') AS DECIMAL(10,2)) >= ?"; $p[] = $f['imin']; }
+        if (isset($f['imax'])) { $iw[] = "CAST(JSON_EXTRACT(i.params, '$path') AS DECIMAL(10,2)) <= ?"; $p[] = $f['imax']; }
+    }
+    if ($iw) $w[] = 'EXISTS (SELECT 1 FROM implants i WHERE i.op_ref = o.id AND ' . implode(' AND ', $iw) . ')';
+    $cw = [];
+    if (isset($f['comp'])) { $cw[] = 'c.complication_type = ?'; $p[] = $f['comp']; }
+    if (isset($f['cd'])) { $cw[] = "FIELD(c.clavien_dindo, 'I','II','IIIa','IIIb','IVa','IVb','V') >= FIELD(?, 'I','II','IIIa','IIIb','IVa','IVb','V')"; $p[] = $f['cd']; }
+    if ($cw) $w[] = 'EXISTS (SELECT 1 FROM complications c WHERE c.op_ref = o.id AND c.deleted IS NULL AND ' . implode(' AND ', $cw) . ')';
     if (isset($f['from'])) { $w[] = 'o.op_date >= ?'; $p[] = $f['from']; }
     if (isset($f['to'])) { $w[] = 'o.op_date <= ?'; $p[] = $f['to']; }
     if (isset($f['surgeon'])) { $w[] = 'o.primary_surgeon_ref = ?'; $p[] = $f['surgeon']; }

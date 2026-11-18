@@ -15,6 +15,7 @@
  */
 
 require_once __DIR__ . '/levels.php';
+require_once __DIR__ . '/implants.php';
 require_once __DIR__ . '/../tools/rf_protocol/rf_protocol.php';
 
 // procedures.csv uses short domain names; the facet list (vocab/facets.yaml procedure.domain) the long ones
@@ -37,6 +38,7 @@ function nl_op_fields(): array {
         'neuromonitoring' => ['multi', 'field.operation.neuromonitoring'], 'antibiotic_prophylaxis' => ['code', 'field.operation.antibiotic_prophylaxis'],
         'drain' => ['bool', null], 'durotomy_incidental' => ['bool', null],
         'admission_code' => ['text', 64], 'op_note' => ['text', 20000], 'quick_line' => ['text', 2000],
+        'fluoroscopy_time_s' => ['int', [0, 36000]], 'adjuncts' => ['multi', 'field.operation.adjuncts'],
     ];
 }
 // required for a complete record (the rest is extended data)
@@ -241,7 +243,7 @@ function nl_op_validate(array $in, array $ctx): array {
     elseif (!array_sum(array_column($dx, 'is_main'))) $dx[0]['is_main'] = 1;
 
     // ---------- procedures ----------
-    $pr = [];
+    $pr = []; $prIndex = [];
     $mainPr = (string)($in['main_pr'] ?? '0');
     foreach (($in['pr'] ?? []) as $i => $d) {
         $code = trim((string)($d['procedure_code'] ?? ''));
@@ -339,11 +341,21 @@ function nl_op_validate(array $in, array $ctx): array {
         $t = (string)($d['treats'] ?? '');
         $row['_treats'] = $t !== '' && isset($dxIndex[$t]) ? $dxIndex[$t] : null;
         $row['_proposed'] = !empty($d['proposed']);
+        $prIndex[(string)$i] = count($pr);
         $pr[] = $row;
     }
     if (!$pr) $err['pr'] = 'at least one procedure';
     elseif (!array_sum(array_column($pr, 'is_main'))) $pr[0]['is_main'] = 1;
     foreach ($pr as $row) if ($row['_treats'] === null && $dx) { $missing[] = 'procedure: diagnosis it treats'; break; }
+
+    // ---------- implants (M4) ----------
+    [$im, $imErr, $imMissing] = nl_implants_validate((array)($in['im'] ?? []), $ctx);
+    $err += $imErr; $missing = array_merge($missing, $imMissing);
+    foreach ($im as &$row) $row['_for'] = $row['_for'] !== null && isset($prIndex[$row['_for']]) ? $prIndex[$row['_for']] : null;
+    unset($row);
+    $codes = array_column($pr, 'procedure_code'); $cats = array_column($im, 'implant_category');
+    if (array_intersect($cats, ['pedicle_screw']) && !in_array('pedicle_screw_fixation', $codes, true)) $missing[] = 'check: pedicle screws recorded but no screw fixation procedure';
+    if (array_intersect($cats, ['cage_PLIF_TLIF', 'cage_ALIF_LLIF']) && !in_array('interbody_fusion', $codes, true)) $missing[] = 'check: a cage recorded but no interbody fusion procedure';
 
     // patient
     $patient = null;
@@ -364,7 +376,7 @@ function nl_op_validate(array $in, array $ctx): array {
         }
     }
 
-    return ['ok' => !$err, 'op' => $op, 'dx' => $dx, 'pr' => $pr, 'patient' => $patient, 'construct' => nl_construct($pr),
+    return ['ok' => !$err, 'op' => $op, 'dx' => $dx, 'pr' => $pr, 'im' => $im, 'patient' => $patient, 'construct' => nl_construct($pr),
             'errors' => $err, 'missing' => array_values(array_unique($missing))];
 }
 
@@ -466,13 +478,16 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
         }
 
         // rows: previous status by content
-        $prevPr = $prevDx = [];
-        $oldPrRows = $oldDxRows = [];
+        $prevPr = $prevDx = $prevIm = [];
+        $oldPrRows = $oldDxRows = $oldImRows = [];
         if ($old) {
             $st = $pdo->prepare('SELECT * FROM procedures WHERE op_ref = ? ORDER BY sort'); $st->execute([$opId]); $oldPrRows = $st->fetchAll(PDO::FETCH_ASSOC);
             $st = $pdo->prepare('SELECT * FROM diagnoses WHERE op_ref = ? ORDER BY sort'); $st->execute([$opId]); $oldDxRows = $st->fetchAll(PDO::FETCH_ASSOC);
             foreach ($oldPrRows as $r) $prevPr[nl_row_signature($r, NL_PR_COLS)] = $r;
             foreach ($oldDxRows as $r) $prevDx[nl_row_signature($r, NL_DX_COLS)] = $r;
+            $st = $pdo->prepare('SELECT * FROM implants WHERE op_ref = ? ORDER BY sort'); $st->execute([$opId]); $oldImRows = $st->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($oldImRows as $r) $prevIm[nl_row_signature($r, NL_IM_COLS)] = $r;
+            $pdo->prepare('DELETE FROM implants WHERE op_ref = ?')->execute([$opId]);
             $pdo->prepare('DELETE c FROM rf_cycles c JOIN procedures p ON p.id = c.procedure_ref WHERE p.op_ref = ?')->execute([$opId]);
             $pdo->prepare('DELETE FROM procedures WHERE op_ref = ?')->execute([$opId]);
             $pdo->prepare('DELETE FROM diagnoses WHERE op_ref = ?')->execute([$opId]);
@@ -492,6 +507,7 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
                 ->execute(array_values($vals));
             $dxIds[$k] = (int)$pdo->lastInsertId();
         }
+        $prIds = [];
         $ins = $pdo->prepare('INSERT INTO rf_cycles (procedure_ref, seq, target, side, mode, temp_c, duration_s, voltage_v, current_ma, frequency_hz, pulse_width_ms, impedance_ohm, response)
                               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
         foreach ($v['pr'] as $k => $row) {
@@ -502,6 +518,7 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
             $pdo->prepare('INSERT INTO procedures (' . implode(',', array_keys($vals)) . ') VALUES (' . implode(',', array_fill(0, count($vals), '?')) . ')')
                 ->execute(array_values($vals));
             $prId = (int)$pdo->lastInsertId();
+            $prIds[$k] = $prId;
             foreach ($row['_cycles'] as $c) {
                 $ins->execute([$prId, $c['seq'], $c['target'], $c['side'] ? substr($c['side'], 0, 1) : null, strtoupper(substr($c['mode'], 0, 1)),
                     $c['temp_c'] ?? null, isset($c['duration_s']) ? (int)round($c['duration_s']) : null, $c['voltage_v'] ?? null, $c['current_ma'] ?? null,
@@ -509,12 +526,23 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
                     isset($c['response']) ? (array_search($c['response'], RF_RESPONSES, true) ?: null) : null]);
             }
         }
+        foreach ($v['im'] ?? [] as $k => $row) {
+            [$cs, $cb, $ca] = $status($row, $prevIm, NL_IM_COLS);
+            $vals = ['op_ref' => $opId, 'sort' => $k, 'procedure_ref' => $row['_for'] !== null ? ($prIds[$row['_for']] ?? null) : null]
+                  + array_intersect_key($row, array_flip(NL_IM_COLS))
+                  + ['coding_status' => $cs, 'coded_by' => $cb, 'coded_at' => $ca, 'cuser' => $uname];
+            $pdo->prepare('INSERT INTO implants (' . implode(',', array_keys($vals)) . ') VALUES (' . implode(',', array_fill(0, count($vals), '?')) . ')')
+                ->execute(array_values($vals));
+        }
         if ($old) {
             $sum = fn(array $rows, string $col) => implode(' | ', array_map(fn($r) => ($r[$col] ?? '') . ' ' . ($r['levels_list'] ?? '') . ' ' . ($r['lesion_side'] ?? ''), $rows));
             $oPr = $sum($oldPrRows, 'procedure_code'); $nPr = $sum($v['pr'], 'procedure_code');
             if ($oPr !== $nPr) nl_change($pdo, $uname, 'operations', $opId, $nlId, 'procedures', $oPr, $nPr);
             $oDx = $sum($oldDxRows, 'diagnosis_code'); $nDx = $sum($v['dx'], 'diagnosis_code');
             if ($oDx !== $nDx) nl_change($pdo, $uname, 'operations', $opId, $nlId, 'diagnoses', $oDx, $nDx);
+            $isum = fn(array $rows) => implode(' | ', array_map(fn($r) => ($r['implant_category'] ?? '') . ' x' . ($r['implant_count'] ?? '') . ' ' . ($r['company_ref'] ?? '') . ' ' . ($r['product'] ?? '') . ' ' . ($r['levels_list'] ?? '') . ' ' . ($r['params'] ?? ''), $rows));
+            $oIm = $isum($oldImRows); $nIm = $isum($v['im'] ?? []);
+            if ($oIm !== $nIm) nl_change($pdo, $uname, 'operations', $opId, $nlId, 'implants', $oIm, $nIm);
         }
         $pdo->commit();
         return $opId;
@@ -527,7 +555,7 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
 /** Confirm the suggested codes of an operation (only its primary surgeon may; the caller checks). */
 function nl_op_confirm(PDO $pdo, int $opId, string $nlId, string $uname): int {
     $now = date('Y-m-d H:i:s'); $n = 0;
-    foreach (['procedures', 'diagnoses'] as $t) {
+    foreach (['procedures', 'diagnoses', 'implants'] as $t) {
         $st = $pdo->prepare("UPDATE $t SET coding_status = 'confirmed', coded_by = ?, coded_at = ? WHERE op_ref = ? AND coding_status <> 'confirmed'");
         $st->execute([$uname, $now, $opId]); $n += $st->rowCount();
     }

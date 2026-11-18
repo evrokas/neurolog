@@ -1,0 +1,33 @@
+---
+table:
+  name: companies
+  class: companiesClass
+
+  fields:
+  - name: name
+    type: varchar(96)
+    required: true
+
+  - name: name_match
+    type: varchar(96)
+
+  - name: active
+    type: boolean
+    default: 1
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Implant companies of the group (admin list, like hospitals). A company is switched off (active = 0), never deleted.
+# - name_match  uppercase without accents, for matching a name typed in the quick line

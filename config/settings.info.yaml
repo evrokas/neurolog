@@ -170,6 +170,86 @@ routes:
     handler: nl_page_operation_confirm_post
     method: post
     access: surgeon
+  complication_new:
+    title: "New complication"
+    url: "/operations/{id}/complications/new"
+    handler: nl_page_complication_new
+    method: get
+    access: surgeon admin
+  complication_new_post:
+    title: "New complication"
+    url: "/operations/{id}/complications/new"
+    handler: nl_page_complication_new_post
+    method: post
+    access: surgeon admin
+  complication_edit:
+    title: "Complication"
+    url: "/complications/{id}/edit"
+    handler: nl_page_complication_edit
+    method: get
+    access: surgeon admin
+  complication_edit_post:
+    title: "Complication"
+    url: "/complications/{id}/edit"
+    handler: nl_page_complication_edit_post
+    method: post
+    access: surgeon admin
+  complication_delete_post:
+    title: "Complication"
+    url: "/complications/{id}/delete"
+    handler: nl_page_complication_delete_post
+    method: post
+    access: surgeon admin
+  followup_new:
+    title: "New follow-up"
+    url: "/operations/{id}/followups/new"
+    handler: nl_page_followup_new
+    method: get
+    access: surgeon admin
+  followup_new_post:
+    title: "New follow-up"
+    url: "/operations/{id}/followups/new"
+    handler: nl_page_followup_new_post
+    method: post
+    access: surgeon admin
+  followup_edit:
+    title: "Follow-up"
+    url: "/followups/{id}/edit"
+    handler: nl_page_followup_edit
+    method: get
+    access: surgeon admin
+  followup_edit_post:
+    title: "Follow-up"
+    url: "/followups/{id}/edit"
+    handler: nl_page_followup_edit_post
+    method: post
+    access: surgeon admin
+  followup_lock_post:
+    title: "Follow-up"
+    url: "/followups/{id}/lock"
+    handler: nl_page_followup_lock_post
+    method: post
+    access: surgeon admin
+  baseline:
+    title: "Scores before the operation"
+    url: "/operations/{id}/baseline"
+    handler: nl_page_baseline
+    method: get
+    access: surgeon admin
+  baseline_post:
+    title: "Scores before the operation"
+    url: "/operations/{id}/baseline"
+    handler: nl_page_baseline_post
+    method: post
+    access: surgeon admin
+  followups_due:
+    title:
+      gr: "Επανεκτιμήσεις"
+      en: "Follow-ups due"
+    url: "/followups"
+    handler: nl_page_followups_due
+    method: get
+    access: surgeon viewer admin
   patient_search:
     title: "Patient search"
     url: "/patients/search"
@@ -210,6 +290,20 @@ routes:
     title: "Hospitals"
     url: "/settings/hospitals"
     handler: nl_page_hospitals_post
+    method: post
+    access: admin
+  companies:
+    title:
+      gr: "Εταιρείες υλικών"
+      en: "Implant companies"
+    url: "/settings/companies"
+    handler: nl_page_companies
+    method: get
+    access: admin
+  companies_post:
+    title: "Implant companies"
+    url: "/settings/companies"
+    handler: nl_page_companies_post
     method: post
     access: admin
   members:
@@ -307,6 +401,12 @@ menu:
         en: 'Operations'
       url: '/operations'
       access: surgeon viewer admin
+    - followups_due:
+      text:
+        gr: 'Επανεκτιμήσεις'
+        en: 'Follow-ups due'
+      url: '/followups'
+      access: surgeon viewer admin
     - presets:
       text:
         gr: 'Πρότυπα'
@@ -346,6 +446,11 @@ menu:
             gr: 'Νοσοκομεία'
             en: 'Hospitals'
           url: '/settings/hospitals'
+        - companies:
+          text:
+            gr: 'Εταιρείες υλικών'
+            en: 'Implant companies'
+          url: '/settings/companies'
         - members:
           text:
             gr: 'Μέλη ομάδας'

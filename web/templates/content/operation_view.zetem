@@ -59,8 +59,59 @@
     </div>
     {% endforeach %}
 
+    <h3>{{{t('Implants')}}}</h3>
+    {% foreach($im as $m): %}
+    <div class="coded-row{% if($m['coding_status'] !== 'confirmed'): %} is-suggested{% endif %}">
+        <span class="chip" data-family="implant">{{{nl_label($lists, 'field.implant.category', $m['implant_category'])}}}</span>
+        <strong>×{{{$m['implant_count']}}}</strong>
+        <span>{{{$m['company'] ?? t('company not entered')}}}{% if($m['product']): %} · {{{$m['product']}}}{% endif %}</span>
+        {% if($m['levels_list']): %}<span class="chip chip-level">{{{implode(', ', json_decode($m['levels_list'], true))}}}</span>{% endif %}
+        {% if($m['side']): %}<span class="muted">{{{nl_show($lists, 'procedure.side', $m['side'])}}}</span>{% endif %}
+        <span class="small">{{{nl_implant_params_text($m['params'], $m['implant_category'])}}}</span>
+        <span class="status-tag">{{{$m['coding_status']}}}</span>
+    </div>
+    {% endforeach %}
+    {% if(!$im): %}<p class="muted">{{{t('none recorded')}}}</p>{% endif %}
+    {% if($op['fluoroscopy_time_s'] !== null || $op['adjuncts']): %}<p class="muted small">{% if($op['fluoroscopy_time_s'] !== null): %}{{{t('Fluoroscopy')}}} {{{$op['fluoroscopy_time_s']}}} s{% endif %}{% if($op['adjuncts']): %} · {{{t('Adjuncts')}}}: {{{nl_show($lists, 'field.operation.adjuncts', $op['adjuncts'])}}}{% endif %}</p>{% endif %}
+
     {% if($op['quick_line']): %}<h3>{{{t('Quick line')}}}</h3><p class="note">{{ nl_tags_render($op['quick_line']) }}</p>{% endif %}
     {% if($op['op_note']): %}<h3>{{{t('Operative note')}}}</h3><p class="note">{{ nl_tags_render($op['op_note']) }}</p>{% endif %}
+
+    <h3 id="outcomes">{{{t('Complications')}}}</h3>
+    {% foreach($out['treats'] as $tr): %}<p class="notice">{{{t('This operation treats complication')}}} <code>{{{nl_id_format($tr['nl_id'])}}}</code> ({{{nl_label($lists, 'complication', $tr['complication_type'])}}}) {{{t('of operation')}}} <a href="{{rel_url('/operations/' . nl_id_format($tr['op_nl']))}}#outcomes"><code>{{{nl_id_format($tr['op_nl'])}}}</code></a>.</p>{% endforeach %}
+    {% foreach($out['comps'] as $c): %}
+    <div class="coded-row">
+        <span class="chip" data-family="complication">{{{nl_label($lists, 'complication', $c['complication_type'])}}}</span>
+        <strong>{{{$c['clavien_dindo'] ?? ''}}}</strong>
+        <span class="muted">{{{$c['onset_date'] ?? ''}}} · {{{nl_show($lists, 'field.complication.timing', $c['timing'])}}} · {{{nl_show($lists, 'field.complication.treatment', $c['treatment'])}}}{% if($c['outcome_at_90d']): %} · {{{nl_show($lists, 'field.complication.outcome_at_90d', $c['outcome_at_90d'])}}}{% endif %}</span>
+        {% if($c['reop_nl']): %}<a href="{{rel_url('/operations/' . nl_id_format($c['reop_nl']))}}">→ {{{t('reoperation')}}} <code>{{{nl_id_format($c['reop_nl'])}}}</code></a>{% endif %}
+        {% if($can_edit): %}<a class="small" href="{{rel_url('/complications/' . nl_id_format($c['nl_id']) . '/edit')}}">{{{t('Edit')}}}</a>{% endif %}
+    </div>
+    {% endforeach %}
+    {% if(!$out['comps']): %}<p class="muted">{{{t('none recorded')}}}{% if(!array_filter($out['fus'], fn($f) => $f['no_complications'] === '1' || $f['no_complications'] === 1)): %} · {{{t('"no complication" not yet stated at a follow-up')}}}{% endif %}</p>{% endif %}
+    {% if($can_edit): %}<p><a class="btn small-btn" href="{{rel_url('/operations/' . $nl . '/complications/new')}}">+ {{{t('Complication')}}}</a></p>{% endif %}
+
+    <h3>{{{t('Follow-up')}}}</h3>
+    <table class="list fu-table">
+        <thead><tr><th>{{{t('Window')}}}</th><th>{{{t('Date')}}}</th><th>{{{t('Status')}}}</th><th>{{{t('Scores')}}}</th><th></th></tr></thead>
+        <tbody>
+        <tr><td>{{{t('baseline')}}}</td><td>{{{$op['op_date']}}}</td><td></td>
+            <td class="small">{% if(empty($out['scores']['base'])): %}<span class="muted">{{{t('none')}}}</span>{% else: %}{{{nl_scores_line($out['scores']['base'])}}}{% endif %}</td>
+            <td>{% if($can_edit): %}<a class="small" href="{{rel_url('/operations/' . $nl . '/baseline')}}">{{{t('Edit')}}}</a>{% endif %}</td></tr>
+        {% foreach($out['fus'] as $f): %}
+        <tr><td><strong>{{{$f['fu_window']}}}</strong></td><td>{{{$f['visit_date'] ?? '—'}}}</td><td>{{{$f['status']}}}{% if($f['locked_at']): %} 🔒{% endif %}</td>
+            <td class="small">{{{nl_scores_line($out['scores'][$f['id']] ?? [])}}}</td>
+            <td>{% if($can_edit && !$f['locked_at']): %}<a class="small" href="{{rel_url('/followups/' . nl_id_format($f['nl_id']) . '/edit')}}">{{{t('Edit')}}}</a>
+                <form method="post" action="{{rel_url('/followups/' . nl_id_format($f['nl_id']) . '/lock')}}" class="inline">{{ csrf_field() }}<button class="btn small-btn" type="submit">{{{t('Lock')}}}</button></form>{% endif %}
+                {% if($f['locked_at'] && $is_admin): %}<form method="post" action="{{rel_url('/followups/' . nl_id_format($f['nl_id']) . '/lock')}}" class="inline">{{ csrf_field() }}<input type="hidden" name="unlock" value="1"><button class="btn small-btn" type="submit">{{{t('Unlock')}}}</button></form>{% endif %}</td></tr>
+        {% endforeach %}
+        {% foreach($out['due'] as $w => $d): %}
+        <tr class="due-{{{$d['state']}}}"><td>{{{$w}}}</td><td class="muted">{{{$d['from']}}} – {{{$d['to']}}}</td><td><span class="badge {{{$d['state'] === 'overdue' ? 'badge-danger' : ($d['state'] === 'due' ? 'badge-warning' : 'badge-info')}}}">{{{t($d['state'])}}}</span></td><td></td>
+            <td>{% if($can_edit): %}<a class="btn small-btn" href="{{rel_url('/operations/' . $nl . '/followups/new')}}?window={{{$w}}}">{{{t('Record')}}}</a>{% endif %}</td></tr>
+        {% endforeach %}
+        </tbody>
+    </table>
+    {% if($can_edit): %}<p><a class="btn small-btn" href="{{rel_url('/operations/' . $nl . '/followups/new')}}">+ {{{t('Follow-up')}}}</a> <span class="muted small">{{{t('Windows of this case')}}}: {{{implode(', ', $out['info']['windows'])}}}</span></p>{% endif %}
 
     {% if($missing): %}
     <div class="notice"><strong>{{{t('Still missing for a complete record')}}}:</strong> {{{implode(', ', $missing)}}}</div>

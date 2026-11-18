@@ -37,11 +37,17 @@
                 <label>{{{t('Hospital')}}} {{ nl_select('hospital', $hospitals, $f['hospital'] ?? '') }}</label>
                 <label>{{{t('From')}}} <input type="date" name="from" value="{{{$f['from'] ?? ''}}}"></label>
                 <label>{{{t('To')}}} <input type="date" name="to" value="{{{$f['to'] ?? ''}}}"></label>
+                <label>{{{t('Implant')}}} {{ nl_chip('implant', 'field.implant.category', $f['implant'] ?? '') }}</label>
+                <label>{{{t('Company')}}} {{ nl_company_select('company', $companies, $f['company'] ?? '') }}</label>
+                <label>{{{t('Implant parameter')}}} <select name="iparam"><option value="">—</option>{% foreach($iparams as $pn => $pl): %}<option value="{{{$pn}}}"{% if(($f['iparam'] ?? '') === $pn): %} selected{% endif %}>{{{$pl}}}</option>{% endforeach %}</select></label>
+                <label>{{{t('from')}}} <input type="text" name="imin" inputmode="decimal" value="{{{$f['imin'] ?? ''}}}" class="num-input"> {{{t('to')}}} <input type="text" name="imax" inputmode="decimal" value="{{{$f['imax'] ?? ''}}}" class="num-input"></label>
+                <label>{{{t('Complication')}}} {{ nl_chip('comp', 'complication', $f['comp'] ?? '') }}</label>
+                <label>{{{t('Clavien-Dindo or worse')}}} {{ nl_chip('cd', 'field.complication.clavien_dindo', $f['cd'] ?? '') }}</label>
                 <label>{{{t('Codes')}}} <select name="coding"><option value="">{{{t('all')}}}</option>
                     <option value="confirmed"{% if(($f['coding'] ?? '') === 'confirmed'): %} selected{% endif %}>{{{t('confirmed only')}}}</option>
                     <option value="suggested"{% if(($f['coding'] ?? '') === 'suggested'): %} selected{% endif %}>{{{t('to confirm')}}}</option></select></label>
             </div>
-            <p class="muted small">{{{t('The procedure filters (procedure, level, side, approach, route, technology, RF, branches) must all match the same procedure row. A level also finds ranges that cover it.')}}}</p>
+            <p class="muted small">{{{t('The procedure filters (procedure, level, side, approach, route, technology, RF, branches) must all match the same procedure row, and the implant filters the same implant row. A level also finds ranges that cover it.')}}}</p>
             <button class="btn primary" type="submit">{{{t('Apply')}}}</button>
         </form>
     </details>

@@ -28,6 +28,7 @@ operation:
   antibiotic_prophylaxis: [standard, extended, none, unknown]
   record_status: [draft, complete, locked]
   source: [manual, apyweb]
+  adjuncts: [5-ALA, fluorescein, ICG, intraop_MRI, intraop_US]          # multi; moved from implants (M4)
 
 diagnosis:
   symptom_duration: [lt_6w, 6w_3m, 3m_12m, gt_12m, unknown]
@@ -41,13 +42,21 @@ score:
   source: [patient, surgeon, nurse]
 
 implant:
-  category: [pedicle_screw, lateral_mass_screw, cage_PLIF_TLIF, cage_ALIF_LLIF, cage_ACDF, cervical_disc, plate,
-             vertebral_augmentation_cement, shunt_valve, external_drain, neurostimulator_lead, IPG, intrathecal_pump,
-             cranioplasty_implant, other]
+  # implant groups (docs/plans/m4.md A); the parameters of each category are in vocab/implants.yaml
+  category: [pedicle_screw, lateral_mass_screw, rod, cage_PLIF_TLIF, cage_ALIF_LLIF, cage_ACDF, cervical_disc, plate,
+             interspinous_device, bone_graft_substitute, vertebral_augmentation_cement, shunt_valve, external_drain,
+             neurostimulator_lead, IPG, intrathecal_pump, cranioplasty_implant, other]
+  breach: [A, B, C, D, E]                  # Gertzbein-Robbins, one grade per screw
+  rod_material: [titanium, cobalt_chrome, PEEK, other]
+  cage_material: [PEEK, titanium, titanium_3D_printed, PEEK_titanium_coated, allograft, other]
+  graft: [autograft, allograft, substitute, none]
+  graft_substitute: [DBM, ceramic, bioactive_glass, other]
   valve_type: [fixed, programmable, anti_siphon]
-  guidance: [none, fluoroscopy, navigation_CT_intraop, navigation_preop, robot, ultrasound, exoscope, microscope, endoscope]   # multi
-  screw_breach: [A, B, C, D, E]          # Gertzbein-Robbins
-  adjuncts: [5-ALA, fluorescein, ICG, intraop_MRI, intraop_US]                                                                 # multi
+  shunt_route: [VP, VA, VPl, LP]           # ventriculo-peritoneal, -atrial, -pleural, lumbo-peritoneal
+  drain_site: [ventricular, lumbar]
+  lead_type: [percutaneous, paddle, depth_DBS]
+  pump_drug: [baclofen, morphine, ziconotide, other]
+  cranioplasty_material: [autologous_bone, PEEK, titanium_mesh, PMMA, hydroxyapatite, other]
 
 complication:
   timing: [intraoperative, lt_48h, 48h_30d, 31d_90d]
@@ -66,6 +75,9 @@ followup:
   fusion_status: [fused, partial, pseudarthrosis, not_assessed]
   tumour_status: [stable, progression, recurrence, not_assessed]
   seizure_outcome: [I, II, III, IV]       # Engel
+  bni_pain: [I, II, IIIa, IIIb, IV, V]
+  bni_numbness: [I, II, III, IV]
+  branches: [V1, V2, V3]                  # numbness_branches, multi
 
 member:
   kind: [surgeon, anaesthetist, resident, external]
