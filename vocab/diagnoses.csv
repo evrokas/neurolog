@@ -1,47 +1,47 @@
-code,class,label_el,qualifiers
-disc_herniation,degenerative,Κήλη μεσοσπονδυλίου δίσκου (ΚΜΔ),"zone, type; recurrent yes/no"
-spinal_stenosis,degenerative,Στένωση,"central, lateral recess, foraminal"
-spondylolisthesis,degenerative,Σπονδυλολίσθηση,"degenerative, isthmic; Meyerding"
-segmental_instability,degenerative,Αστάθεια,
-degenerative_disc_disease,degenerative,Εκφυλιστική δισκοπάθεια,
-myelopathy,degenerative,Μυελοπάθεια,mJOA; cause in a second diagnosis
-facet_joint_syndrome,degenerative,Σύνδρομο αρθρώσεων facet,
-bertolotti_syndrome,developmental,,
-spondylolysis,developmental,,
-tarlov_cyst,developmental,,
-radicular_pain_unspecified,pain,Ισχιαλγία / βραχιοναλγία,root; use only when no structural cause is named
-axial_pain_unspecified,pain,Οσφυαλγία / ραχιαλγία,
-trigeminal_neuralgia,pain,Νευραλγία τριδύμου,"branches affected (V1/V2/V3, multi); classical, secondary, idiopathic; concomitant continuous pain"
-glossopharyngeal_neuralgia,pain,Νευραλγία γλωσσοφαρυγγικού,
-intercostal_neuralgia,pain,Μεσοπλεύριος νευραλγία,
-vertebral_fracture,traumatic / bone,Κάταγμα σπονδύλου,"cause: osteoporotic, traumatic, pathological (required); AO Spine"
-traumatic_brain_injury,traumatic,Κρανιοεγκεφαλική κάκωση,GCS
-subdural_collection,vascular / haemorrhage,Υποσκληρίδιο αιμάτωμα / ύγρωμα,"acute, subacute, chronic, hygroma"
-intracerebral_haematoma,vascular / haemorrhage,,
-epidural_haematoma,vascular / haemorrhage,,
-subarachnoid_haemorrhage,vascular / haemorrhage,,
-aneurysm,vascular,,as in Diagnosis facets
-avm,vascular,,as in Diagnosis facets
-davf,vascular,,as in Diagnosis facets
-cavernoma,vascular,,as in Diagnosis facets
-brain_tumour,neoplastic,Όγκος εγκεφάλου (εξεργασία),"status: provisional until histology, then WHO type + grade (glioma, meningioma, metastasis, lymphoma…)"
-spinal_tumour,neoplastic,Όγκος σπονδυλικής στήλης,"compartment; primary or metastatic; histology (plasmacytoma, lymphoma…)"
-leptomeningeal_carcinomatosis,neoplastic,Καρκινωματώδης μηνιγγίτιδα,
-radiation_necrosis,neoplastic,Μετακτινική νέκρωση,
-hydrocephalus,CSF,Υδροκέφαλος,"normal pressure, obstructive, communicating"
-shunt_malfunction,CSF,Δυσλειτουργία βαλβίδας,"obstruction, overdrainage, infection"
-chiari,CSF,,
-syringomyelia,CSF,,
-iih,CSF,,
-spinal_infection,infectious,Απόστημα / σπονδυλοδισκίτιδα,"epidural abscess, discitis"
-nerve_entrapment,entrapment,Παγίδευση νεύρου,nerve + site (ΣΚΣ = carpal tunnel); severity
-movement_disorder,functional,,
-epilepsy,functional,,
-spasticity,functional,,
-hemifacial_spasm,functional,,
-implant_failure,iatrogenic,Αποτυχία υλικών,"loosening, cage migration, breakage; links to index operation"
-csf_leak,iatrogenic,Διαφυγή ΕΝΥ,links to index operation
-postoperative_haemorrhage,iatrogenic,Μετεγχειρητική αιμορραγία,links to index operation
-stimulator_malfunction,iatrogenic,Δυσλειτουργία διεγέρτη,"DBS, SCS"
-soft_tissue_lesion,soft tissue,Λίπωμα κ.λπ.,
-other_diagnosis,other,Άλλη,note required
+code,class,label_el,label_en,qualifiers
+disc_herniation,degenerative,Κήλη μεσοσπονδυλίου δίσκου (ΚΜΔ),Disc herniation,"zone, type; recurrent yes/no"
+spinal_stenosis,degenerative,Στένωση,Spinal stenosis,"central, lateral recess, foraminal"
+spondylolisthesis,degenerative,Σπονδυλολίσθηση,Spondylolisthesis,"degenerative, isthmic; Meyerding"
+segmental_instability,degenerative,Αστάθεια,Segmental instability,
+degenerative_disc_disease,degenerative,Εκφυλιστική δισκοπάθεια,Degenerative disc disease,
+myelopathy,degenerative,Μυελοπάθεια,Myelopathy,mJOA; cause in a second diagnosis
+facet_joint_syndrome,degenerative,Σύνδρομο αρθρώσεων facet,Facet joint syndrome,
+bertolotti_syndrome,developmental,,Bertolotti syndrome,
+spondylolysis,developmental,,Spondylolysis,
+tarlov_cyst,developmental,,Tarlov cyst,
+radicular_pain_unspecified,pain,Ισχιαλγία / βραχιοναλγία,"Radicular pain, unspecified (sciatica / brachialgia)",root; use only when no structural cause is named
+axial_pain_unspecified,pain,Οσφυαλγία / ραχιαλγία,"Axial pain, unspecified (low back / neck pain)",
+trigeminal_neuralgia,pain,Νευραλγία τριδύμου,Trigeminal neuralgia,"branches affected (V1/V2/V3, multi); classical, secondary, idiopathic; concomitant continuous pain"
+glossopharyngeal_neuralgia,pain,Νευραλγία γλωσσοφαρυγγικού,Glossopharyngeal neuralgia,
+intercostal_neuralgia,pain,Μεσοπλεύριος νευραλγία,Intercostal neuralgia,
+vertebral_fracture,traumatic / bone,Κάταγμα σπονδύλου,Vertebral fracture,"cause: osteoporotic, traumatic, pathological (required); AO Spine"
+traumatic_brain_injury,traumatic,Κρανιοεγκεφαλική κάκωση,Traumatic brain injury,GCS
+subdural_collection,vascular / haemorrhage,Υποσκληρίδιο αιμάτωμα / ύγρωμα,Subdural haematoma / hygroma,"acute, subacute, chronic, hygroma"
+intracerebral_haematoma,vascular / haemorrhage,,Intracerebral haematoma,
+epidural_haematoma,vascular / haemorrhage,,Epidural haematoma,
+subarachnoid_haemorrhage,vascular / haemorrhage,,Subarachnoid haemorrhage,
+aneurysm,vascular,,Intracranial aneurysm,as in Diagnosis facets
+avm,vascular,,Arteriovenous malformation (AVM),as in Diagnosis facets
+davf,vascular,,Dural arteriovenous fistula (DAVF),as in Diagnosis facets
+cavernoma,vascular,,Cavernoma,as in Diagnosis facets
+brain_tumour,neoplastic,Όγκος εγκεφάλου (εξεργασία),Brain tumour,"status: provisional until histology, then WHO type + grade (glioma, meningioma, metastasis, lymphoma…)"
+spinal_tumour,neoplastic,Όγκος σπονδυλικής στήλης,Spinal tumour,"compartment; primary or metastatic; histology (plasmacytoma, lymphoma…)"
+leptomeningeal_carcinomatosis,neoplastic,Καρκινωματώδης μηνιγγίτιδα,Leptomeningeal carcinomatosis,
+radiation_necrosis,neoplastic,Μετακτινική νέκρωση,Radiation necrosis,
+hydrocephalus,CSF,Υδροκέφαλος,Hydrocephalus,"normal pressure, obstructive, communicating"
+shunt_malfunction,CSF,Δυσλειτουργία βαλβίδας,Shunt malfunction,"obstruction, overdrainage, infection"
+chiari,CSF,,Chiari malformation,
+syringomyelia,CSF,,Syringomyelia,
+iih,CSF,,Idiopathic intracranial hypertension,
+spinal_infection,infectious,Απόστημα / σπονδυλοδισκίτιδα,Spinal infection (epidural abscess / spondylodiscitis),"epidural abscess, discitis"
+nerve_entrapment,entrapment,Παγίδευση νεύρου,Peripheral nerve entrapment,nerve + site (ΣΚΣ = carpal tunnel); severity
+movement_disorder,functional,,Movement disorder,
+epilepsy,functional,,Epilepsy,
+spasticity,functional,,Spasticity,
+hemifacial_spasm,functional,,Hemifacial spasm,
+implant_failure,iatrogenic,Αποτυχία υλικών,Implant failure,"loosening, cage migration, breakage; links to index operation"
+csf_leak,iatrogenic,Διαφυγή ΕΝΥ,CSF leak,links to index operation
+postoperative_haemorrhage,iatrogenic,Μετεγχειρητική αιμορραγία,Postoperative haemorrhage,links to index operation
+stimulator_malfunction,iatrogenic,Δυσλειτουργία διεγέρτη,Neurostimulator malfunction,"DBS, SCS"
+soft_tissue_lesion,soft tissue,Λίπωμα κ.λπ.,Soft tissue lesion (lipoma etc.),
+other_diagnosis,other,Άλλη,Other diagnosis,note required
