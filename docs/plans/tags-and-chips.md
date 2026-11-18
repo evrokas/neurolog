@@ -1,4 +1,4 @@
-# Tags and chips in NeuroLog — subplan (DRAFT, for approval)
+# Tags and chips in NeuroLog — subplan (approved 2026-11-18)
 
 Adapted from ZPMS's clinical tags (`evrokas/zpms`, `docs/CLINICAL_TAGS_PLAN.md`: inline `@δγ`/`@επ` tags in
 notes, Greek-keyboard suggestions from fixed lists plus previous entries, a reading look, extracted values for the
@@ -36,7 +36,7 @@ give every fact two homes, the note and the field, which can disagree. So in Neu
    *suggested*, solid = *confirmed*.
 7. **Preset chips** (MedScribe's case-feature chips): a row of the surgeon's frequent combinations above the
    procedure rows, e.g. «Διαδερμική δισκεκτομή» = discectomy + tubular_MIS + microscope. One click adds the rows with
-   those facets; the levels and side are still asked. Presets are kept per surgeon (a small table), created from an
+   those facets; the levels and side are still asked. Presets are shared by the group (a small table), created from an
    existing operation with «save as preset».
 
 ## B. Tags: typing the group's own wording (M2, reused by M5)
@@ -82,8 +82,8 @@ give every fact two homes, the note and the field, which can disagree. So in Neu
 | 4. Preset chips | M2 | «save as preset» and one-click reuse work |
 | 5. Filter chips and tag search | M3 | "left L4-L5 tubular discectomies in 2026" typed as one line |
 
-## Decisions needed from you
+## Decisions (2026-11-18)
 
-1. Agree that tags **suggest** coded values and never confirm them (the text stays verbatim)?
-2. The tag names in B4 (`@δγ @επ @πλ @προσ @υλ`): keep, rename, or drop explicit tags and rely on the parser only?
-3. Presets per surgeon, or shared by the group?
+1. Tags and the quick line only **suggest** values (dashed chips); a surgeon confirms them. The text stays verbatim.
+2. Tag names kept: `@δγ` diagnosis, `@επ` levels, `@πλ` side, `@προσ` approach, `@υλ` implant.
+3. Presets are **shared by the group**, not per surgeon (A7 above: «kept per surgeon» is superseded).

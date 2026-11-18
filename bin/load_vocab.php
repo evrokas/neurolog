@@ -42,11 +42,12 @@ function nl_vocab_rows(string $root): array {
         return $out;
     };
     foreach ($csv('procedures.csv') as $i => $r) {
-        $add('procedure', $r['code'], $i, ['parent' => $r['domain'], 'label_el' => $r['label_el'], 'notes' => $r['notes'],
-            'extra' => array_filter(['erweb_page' => trim($r['erweb_page'], " —-")])]);
+        $add('procedure', $r['code'], $i, ['parent' => $r['domain'], 'label_el' => $r['label_el'], 'label_en' => $r['label_en'] ?? '',
+            'notes' => $r['notes'], 'extra' => array_filter(['action' => $r['action'] ?? '', 'level_kind' => $r['level_kind'] ?? '',
+            'erweb_page' => trim($r['erweb_page'], " —-")])]);
     }
     foreach ($csv('diagnoses.csv') as $i => $r) {
-        $add('diagnosis', $r['code'], $i, ['parent' => $r['class'], 'label_el' => $r['label_el'],
+        $add('diagnosis', $r['code'], $i, ['parent' => $r['class'], 'label_el' => $r['label_el'], 'label_en' => $r['label_en'] ?? '',
             'extra' => array_filter(['qualifiers' => $r['qualifiers']])]);
     }
     foreach ($csv('complications.csv') as $i => $r) {
