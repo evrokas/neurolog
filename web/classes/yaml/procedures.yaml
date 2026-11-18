@@ -1,0 +1,124 @@
+---
+table:
+  name: procedures
+  class: proceduresClass
+
+  fields:
+  - name: op_ref
+    type: int
+    required: true
+
+  - name: sort
+    type: int
+
+  - name: procedure_code
+    type: varchar(64)
+
+  - name: is_main
+    type: boolean
+    default: 0
+
+  - name: diagnosis_ref
+    type: int
+
+  - name: domain
+    type: varchar(24)
+
+  - name: action
+    type: varchar(40)
+
+  - name: region
+    type: varchar(24)
+
+  - name: level_kind
+    type: varchar(12)
+
+  - name: level_from
+    type: varchar(4)
+
+  - name: level_to
+    type: varchar(4)
+
+  - name: levels_list
+    type: text
+
+  - name: location
+    type: text
+
+  - name: lesion_side
+    type: varchar(12)
+
+  - name: approach_type
+    type: varchar(32)
+
+  - name: approach_route
+    type: varchar(40)
+
+  - name: approach_side
+    type: varchar(12)
+
+  - name: compartment
+    type: varchar(32)
+
+  - name: spinal_column
+    type: varchar(24)
+
+  - name: extent
+    type: varchar(16)
+
+  - name: technology
+    type: text
+
+  - name: episode
+    type: varchar(32)
+
+  - name: intent
+    type: varchar(16)
+
+  - name: product
+    type: varchar(64)
+
+  - name: trigeminal_technique
+    type: varchar(32)
+
+  - name: branches_treated
+    type: text
+
+  - name: branch_pattern
+    type: varchar(32)
+
+  - name: rf_protocol
+    type: text
+
+  - name: rf_mode
+    type: varchar(24)
+
+  - name: coding_status
+    type: varchar(12)
+
+  - name: coded_by
+    type: varchar(32)
+
+  - name: coded_at
+    type: datetime
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Procedure row: one procedure performed in an operation, with its facets.
+# Data dictionary: "Procedure (child of Operation)", "Trigeminal procedures", docs/rf-protocol.md.
+# - procedure_code   code from list "procedure" (column not named `procedure`: reserved word in MySQL)
+# - levels_list, location, technology, branches_treated   JSON lists (multi)
+# - rf_protocol      canonical form from tools/rf_protocol (one line, all cycles); rf_cycles holds the expansion
+# - coding_status    uncoded | suggested | confirmed; only confirmed rows enter statistics

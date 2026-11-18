@@ -1,0 +1,54 @@
+---
+table:
+  name: rf_cycles
+  class: rf_cyclesClass
+
+  fields:
+  - name: procedure_ref
+    type: int
+    required: true
+
+  - name: seq
+    type: int
+    required: true
+
+  - name: target
+    type: varchar(8)
+
+  - name: side
+    type: varchar(1)
+
+  - name: mode
+    type: varchar(1)
+
+  - name: temp_c
+    type: decimal(4,1)
+
+  - name: duration_s
+    type: int
+
+  - name: voltage_v
+    type: decimal(6,2)
+
+  - name: current_ma
+    type: decimal(6,2)
+
+  - name: frequency_hz
+    type: decimal(6,1)
+
+  - name: pulse_width_ms
+    type: decimal(5,1)
+
+  - name: impedance_ohm
+    type: int
+
+  - name: response
+    type: varchar(4)
+
+  - name: cdate
+    type: '@cdate'
+
+...
+
+# One RF cycle of a procedure row, expanded from procedures.rf_protocol (repeats expanded). Derived; rebuilt on save.
+# mode: T thermal, P pulsed, S stimulation; response: ok | no | mot

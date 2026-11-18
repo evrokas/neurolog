@@ -1,0 +1,69 @@
+---
+table:
+  name: admissions
+  class: admissionsClass
+
+  fields:
+  - name: nl_id
+    type: varchar(10) UNIQUE
+    required: true
+
+  - name: patient_ref
+    type: int
+    required: true
+
+  - name: hospital_ref
+    type: int
+
+  - name: admission_date
+    type: date
+
+  - name: discharge_date
+    type: date
+
+  - name: urgency
+    type: varchar(16)
+
+  - name: admission_route
+    type: varchar(24)
+
+  - name: discharge_destination
+    type: varchar(24)
+
+  - name: icu_days
+    type: int
+
+  - name: readmission_30d
+    type: boolean
+
+  - name: readmission_reason
+    type: varchar(64)
+
+  - name: source
+    type: varchar(16)
+
+  - name: source_key
+    type: varchar(80) UNIQUE
+
+  - name: imported_at
+    type: datetime
+
+  - name: deleted
+    type: '@delete'
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Admission: one hospital stay; may hold several operations.
+# Data dictionary: "Admission". *_ref columns hold the id of the referenced row.

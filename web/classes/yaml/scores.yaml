@@ -1,0 +1,47 @@
+---
+table:
+  name: scores
+  class: scoresClass
+
+  fields:
+  - name: op_ref
+    type: int
+    required: true
+
+  - name: followup_ref
+    type: int
+
+  - name: score
+    type: varchar(32)
+    required: true
+
+  - name: value
+    type: decimal(7,2)
+
+  - name: value_code
+    type: varchar(8)
+
+  - name: not_done_reason
+    type: varchar(128)
+
+  - name: score_source
+    type: varchar(16)
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# One score value of an operation: baseline (followup_ref NULL) or at a follow-up.
+# - score       code from list field.score (vas_back, odi, ndi, mjoa, kps, mrs, gcs, eq5d, seizures_month, bni_pain, bni_numbness…)
+# - value       numeric scores; value_code for graded ones (BNI I–V, Engel I–IV)
+# - not_done_reason  missing data is coded, never blank

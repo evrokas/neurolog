@@ -1,6 +1,6 @@
 # NeuroLog design documents
 
-These documents define what NeuroLog records and how. The application is built milestone by milestone ([implementation-plan.md](implementation-plan.md)); M0 is done.
+These documents define what NeuroLog records and how. The application is built milestone by milestone ([implementation-plan.md](implementation-plan.md)); M0 and M1 are done.
 
 | Document | What it holds |
 | --- | --- |
@@ -13,7 +13,7 @@ These documents define what NeuroLog records and how. The application is built m
 | [design-system.md](design-system.md) | Visual design system for the interface: palette, typography, spacing, components. |
 | [brand.md](brand.md) | Logo files, favicons, HTML `<head>` snippet, colours, how to regenerate. |
 | [seeding/apyweb-seed-plan.md](seeding/apyweb-seed-plan.md) | Read-only plan, run on the APYweb server, that extracts how operations are actually written, to test the code lists against real data. |
-| [../vocab/](../vocab/) | Machine-readable code lists: `procedures.csv`, `diagnoses.csv`, `facets.yaml`. |
+| [../vocab/](../vocab/) | Machine-readable code lists: `procedures.csv`, `diagnoses.csv`, `complications.csv`, `facets.yaml` (classification facets), `fields.yaml` (value lists of single fields). Loaded into the app's `nl_codes` table. |
 
 ## In one paragraph
 

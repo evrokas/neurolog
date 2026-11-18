@@ -71,7 +71,7 @@ The NeuroLog brand uses a geometric **N monogram**, inspired by neural pathways 
 
 ## Documentation
 
-Development follows [the implementation plan](docs/implementation-plan.md); milestone **M0 (shell)** is built. The design documents are in [`docs/`](docs/README.md):
+Development follows [the implementation plan](docs/implementation-plan.md); milestones **M0 (shell)** and **M1 (schema, code lists, IDs)** are built. The design documents are in [`docs/`](docs/README.md):
 
 | Document | What it holds |
 |---|---|
@@ -88,7 +88,7 @@ Development follows [the implementation plan](docs/implementation-plan.md); mile
 
 ## Project Status
 
-**Development status:** M0 shell built: sign-in, roles, dashboard, design-system styles, tests. Operations are entered from M2.
+**Development status:** M0 and M1 built: sign-in, roles, design-system styles, database schema, code lists, NeuroLog IDs, tests. Operations are entered from M2.
 
 NeuroLog is an evolving project. Its functionality, interface and architecture may change as development progresses.
 
@@ -116,6 +116,9 @@ fw/bin/update.sh --core-tables=all --web-tables=all --core-diff=yes --web-diff=y
 php bin/seed_users.php --user=NAME --role=admin      # asks for the password; roles: admin, surgeon, viewer
 bin/run_tests.sh
 ```
+
+`update.sh` creates the tables from `web/classes/yaml/` and loads the code lists from `vocab/` (through
+`bin/post-update.sh`); re-run it after pulling a change to either.
 
 For ErnsAuth sign-in: copy `config/ernsauth.php.in` to `config/ernsauth.php`, fill in the address and API key, and
 clone the client library to `lib/ernsauth` (see the comment in that file). Without both, the sign-in page offers

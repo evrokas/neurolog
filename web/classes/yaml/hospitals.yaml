@@ -1,0 +1,36 @@
+---
+table:
+  name: hospitals
+  class: hospitalsClass
+
+  fields:
+  - name: name
+    type: varchar(128)
+    required: true
+
+  - name: short_name
+    type: varchar(32)
+
+  - name: apyweb_name
+    type: varchar(255)
+
+  - name: active
+    type: boolean
+    default: 1
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Hospitals of the group (admin list).
+# - apyweb_name  the clinic name as written in APYweb, for the one-time mapping on import (M5)

@@ -1,0 +1,38 @@
+<div class="content codelists">
+    <div class="page-head">
+        <h2>{{{t('Code lists')}}}{% if($list !== ''): %}: <code>{{{$list}}}</code>{% endif %}</h2>
+        {% if($list !== ''): %}<a class="btn" href="{{rel_url('/codelists')}}">{{{t('All lists')}}}</a>{% endif %}
+    </div>
+    <p class="muted">{{{t('Loaded from vocab/ by bin/load_vocab.php. A value is retired, never renamed or deleted, so older records keep their meaning.')}}}</p>
+
+    {% if($list === ''): %}
+    <table class="list">
+        <thead><tr><th>{{{t('List')}}}</th><th>{{{t('Values')}}}</th><th>{{{t('Retired')}}}</th></tr></thead>
+        <tbody>
+        {% foreach($lists as $l): %}
+            <tr>
+                <td><a href="{{rel_url('/codelists')}}?list={{{rawurlencode($l['list'])}}}">{{{$l['list']}}}</a></td>
+                <td>{{{$l['active']}}}</td>
+                <td>{% if($l['retired'] > 0): %}<span class="badge badge-warning">{{{$l['retired']}}}</span>{% endif %}</td>
+            </tr>
+        {% endforeach %}
+        </tbody>
+    </table>
+    {% else: %}
+    <table class="list">
+        <thead><tr><th>{{{t('Code')}}}</th><th>{{{t('Group')}}}</th><th>{{{t('Greek')}}}</th><th>{{{t('English')}}}</th><th>{{{t('Notes')}}}</th><th></th></tr></thead>
+        <tbody>
+        {% foreach($values as $v): %}
+            <tr{% if($v['retired_at']): %} class="retired"{% endif %}>
+                <td><code>{{{$v['code']}}}</code></td>
+                <td>{{{$v['parent'] ?? ''}}}</td>
+                <td>{{{$v['label_el'] ?? ''}}}</td>
+                <td>{{{$v['label_en'] ?? ''}}}</td>
+                <td class="muted">{{{$v['notes'] ?? ''}}}</td>
+                <td>{% if($v['retired_at']): %}<span class="badge badge-warning">{{{t('retired')}}}</span>{% elseif($v['origin'] === 'admin'): %}<span class="badge badge-info">{{{t('added here')}}}</span>{% endif %}</td>
+            </tr>
+        {% endforeach %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>

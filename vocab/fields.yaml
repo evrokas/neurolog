@@ -1,0 +1,71 @@
+# Value lists of single fields in the data dictionary tables (Patient, Admission, Operation, Diagnosis and
+# baseline, Implants, Complications, Outcomes). Loaded as lists "field.<table>.<field>".
+# Human-readable source: docs/data-dictionary.md (the "Values / units" column). Keep the two in step;
+# a value is retired, never renamed or deleted. Every enum also accepts `unknown`.
+
+patient:
+  sex: [male, female, unknown]
+  match_status: [new, matched_by_hand, possible_duplicate]
+  smoking: [never, former, current, unknown]
+  diabetes: [none, diet, oral, insulin, unknown]
+  anticoagulant: [none, antiplatelet, DOAC, warfarin, LMWH, other, unknown]
+  research_consent: ['yes', 'no', not_asked]
+
+admission:
+  urgency: [elective, urgent, emergency, unknown]           # urgent < 72 h, emergency < 24 h
+  admission_route: [outpatient, ED, transfer, inpatient_referral, unknown]
+  discharge_destination: [home, rehab, other_hospital, nursing_home, died, unknown]
+  readmission_reason: [complication, unrelated, unknown]   # complication: the complication list
+
+operation:
+  asa_class: [I, II, III, IV, V, VI, IE, IIE, IIIE, IVE, VE, unknown]
+  indication_urgency: [elective, urgent, emergency, unknown]
+  reoperation: [primary, revision_same_level, revision_adjacent, return_to_theatre]
+  trainee_role: [none, observed, assisted, performed_supervised]
+  anaesthesia: [general, sedation, regional, local, unknown]
+  position: [supine, prone, lateral, park_bench, sitting, other, unknown]
+  neuromonitoring: [none, MEP, SSEP, EMG, D-wave, cortical_mapping, subcortical_mapping]   # multi
+  antibiotic_prophylaxis: [standard, extended, none, unknown]
+  record_status: [draft, complete, locked]
+  source: [manual, apyweb]
+
+diagnosis:
+  symptom_duration: [lt_6w, 6w_3m, 3m_12m, gt_12m, unknown]
+  neuro_deficit: [none, sensory, motor_mild, motor_severe, sphincter, unknown]   # motor_mild MRC 4, motor_severe MRC <=3
+  molecular_markers: [IDH, 1p19q, MGMT, H3K27M, other]                         # multi
+
+score:
+  # Score codes of the `scores` table; ranges in the data dictionary.
+  code: [vas_back, vas_leg, vas_neck, vas_arm, odi, ndi, mjoa, kps, mrs, gcs, eq5d, seizures_month,
+         bni_pain, bni_numbness, engel]
+  source: [patient, surgeon, nurse]
+
+implant:
+  category: [pedicle_screw, lateral_mass_screw, cage_PLIF_TLIF, cage_ALIF_LLIF, cage_ACDF, cervical_disc, plate,
+             vertebral_augmentation_cement, shunt_valve, external_drain, neurostimulator_lead, IPG, intrathecal_pump,
+             cranioplasty_implant, other]
+  valve_type: [fixed, programmable, anti_siphon]
+  guidance: [none, fluoroscopy, navigation_CT_intraop, navigation_preop, robot, ultrasound, exoscope, microscope, endoscope]   # multi
+  screw_breach: [A, B, C, D, E]          # Gertzbein-Robbins
+  adjuncts: [5-ALA, fluorescein, ICG, intraop_MRI, intraop_US]                                                                 # multi
+
+complication:
+  timing: [intraoperative, lt_48h, 48h_30d, 31d_90d]
+  clavien_dindo: [I, II, IIIa, IIIb, IVa, IVb, V]
+  treatment: [none, medication, bedside_procedure, reoperation, ICU, other]
+  outcome_at_90d: [resolved, improving, permanent_deficit, died]
+  related_to_surgery: [definite, probable, unrelated]
+  detected_by: [ward, clinic, readmission, patient_report]
+
+followup:
+  window: [6w, 3m, 12m, 24m, unscheduled]
+  status: [seen, phone, lost, died, declined]
+  neuro_status: [improved, unchanged, worse, new_deficit]
+  patient_satisfaction: ['1', '2', '3', '4', '5', would_again_yes, would_again_no]
+  return_to_work: ['yes', partial, 'no', not_applicable]
+  fusion_status: [fused, partial, pseudarthrosis, not_assessed]
+  tumour_status: [stable, progression, recurrence, not_assessed]
+  seizure_outcome: [I, II, III, IV]       # Engel
+
+member:
+  kind: [surgeon, anaesthetist, resident, external]

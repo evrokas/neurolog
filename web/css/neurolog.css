@@ -179,3 +179,12 @@ a { color: var(--nl-accent); }
 .main-navigation label[for="menu-open"] .bx-menu::before { content: "\2630"; font-style: normal; }
 .main-navigation label[for="menu-open"] .bx-x::before { content: "\2715"; font-style: normal; }
 .main-navigation label[for="menu-open"] i { font-style: normal; font-size: 1.4rem; }
+
+/* Tables (§6.4) */
+table.list { border-collapse: collapse; font-size: .92rem; }
+table.list td { padding: .4rem .8rem; border-bottom: 1px solid var(--nl-border); vertical-align: top; }
+table.list tbody tr:hover { background: #F5F8FB; }
+table.list tr.retired td { color: var(--nl-text-muted); text-decoration: line-through; }
+table.list tr.retired td:last-child { text-decoration: none; }
+.content { max-width: 1100px; }
+.codelists code { font-size: .88rem; }

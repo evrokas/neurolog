@@ -1,0 +1,76 @@
+---
+table:
+  name: followups
+  class: followupsClass
+
+  fields:
+  - name: nl_id
+    type: varchar(10) UNIQUE
+    required: true
+
+  - name: op_ref
+    type: int
+    required: true
+
+  - name: fu_window
+    type: varchar(12)
+
+  - name: visit_date
+    type: date
+
+  - name: status
+    type: varchar(12)
+
+  - name: neuro_status
+    type: varchar(16)
+
+  - name: patient_satisfaction
+    type: varchar(8)
+
+  - name: return_to_work
+    type: varchar(16)
+
+  - name: fusion_status
+    type: varchar(16)
+
+  - name: tumour_status
+    type: varchar(16)
+
+  - name: seizure_outcome
+    type: varchar(4)
+
+  - name: date_of_death
+    type: date
+
+  - name: no_complications
+    type: boolean
+
+  - name: numbness_branches
+    type: text
+
+  - name: locked_at
+    type: datetime
+
+  - name: locked_by
+    type: varchar(32)
+
+  - name: deleted
+    type: '@delete'
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Follow-up visit of an operation at a fixed window from op_date.
+# - fu_window         6w | 3m | 12m | 24m | unscheduled (`window` is a reserved word)
+# - no_complications  "no complication" recorded explicitly, so silence never counts as a clean outcome

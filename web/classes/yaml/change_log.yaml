@@ -1,0 +1,40 @@
+---
+table:
+  name: change_log
+  class: change_logClass
+
+  fields:
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: entity
+    type: varchar(32)
+    required: true
+
+  - name: entity_ref
+    type: int
+    required: true
+
+  - name: nl_id
+    type: varchar(10)
+
+  - name: field
+    type: varchar(64)
+    required: true
+
+  - name: old_value
+    type: text
+
+  - name: new_value
+    type: text
+
+  - name: reason
+    type: varchar(255)
+
+...
+
+# Field-level history of clinical records (old and new value, who, when, why).
+# reason: required when the record is locked

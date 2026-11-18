@@ -1,0 +1,138 @@
+---
+table:
+  name: operations
+  class: operationsClass
+
+  fields:
+  - name: nl_id
+    type: varchar(10) UNIQUE
+    required: true
+
+  - name: patient_ref
+    type: int
+    required: true
+
+  - name: admission_ref
+    type: int
+
+  - name: op_date
+    type: date
+    required: true
+
+  - name: asa_class
+    type: varchar(4)
+
+  - name: indication_urgency
+    type: varchar(16)
+
+  - name: reoperation
+    type: varchar(24)
+
+  - name: reoperation_of_ref
+    type: int
+
+  - name: primary_surgeon_ref
+    type: int
+
+  - name: assistant_1_ref
+    type: int
+
+  - name: assistant_2_ref
+    type: int
+
+  - name: anaesthetist_ref
+    type: int
+
+  - name: hospital_ref
+    type: int
+
+  - name: op_category
+    type: varchar(64)
+
+  - name: admission_code
+    type: varchar(64)
+
+  - name: trainee_role
+    type: varchar(24)
+
+  - name: anaesthesia
+    type: varchar(16)
+
+  - name: position
+    type: varchar(16)
+
+  - name: skin_incision_time
+    type: time
+
+  - name: skin_closure_time
+    type: time
+
+  - name: blood_loss_ml
+    type: int
+
+  - name: transfusion_units
+    type: int
+
+  - name: neuromonitoring
+    type: text
+
+  - name: antibiotic_prophylaxis
+    type: varchar(16)
+
+  - name: drain
+    type: boolean
+
+  - name: durotomy_incidental
+    type: boolean
+
+  - name: op_note
+    type: text
+
+  - name: construct
+    type: varchar(24)
+
+  - name: review_flag
+    type: varchar(255)
+
+  - name: record_status
+    type: varchar(16)
+
+  - name: source
+    type: varchar(16)
+
+  - name: source_key
+    type: varchar(80) UNIQUE
+
+  - name: imported_at
+    type: datetime
+
+  - name: source_text_pathology
+    type: text
+
+  - name: source_text_operation
+    type: text
+
+  - name: deleted
+    type: '@delete'
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Operation: one trip to the operating room. Procedures, diagnoses, implants, complications, follow-ups and scores hang off it.
+# Data dictionary: "Operation" and "Import from APYweb and coding".
+# - hospital_ref       copy of the admission's hospital, so an imported operation without an admission still has one
+# - neuromonitoring    JSON list (multi)
+# - construct          derived from the procedure rows: cage_only | screws_only | cage_and_screws | none
+# - review_flag        why the case needs a person (e.g. «Είδος» and text disagree); never fixed automatically
+# - record_status      draft | complete | locked (locked changes need a reason, see change_log)

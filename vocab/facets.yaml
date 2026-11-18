@@ -47,7 +47,7 @@ procedure:
     targets: [V1, V2, V3, V, "C1-C8", "T1-T12", "L1-L5", "S1-S5"]   # roots; optional side -L / -R
     modes: {T: thermal, P: pulsed, S: stimulation}
     units: {C: temp_c, s: duration_s, V: voltage_v, mA: current_ma, Hz: frequency_hz, ms: pulse_width_ms, ohm: impedance_ohm}
-    responses: {ok: concordant, no: not_concordant, mot: motor}
+    responses: {ok: concordant, 'no': not_concordant, mot: motor}
     repeat: "x1-x10"
     derived: [rf_mode, rf_cycles, per_target_thermal_s, per_target_pulsed_s, per_target_max_temp_c, branch_pattern]
     rf_mode: [thermal, pulsed, pulsed+thermal, stimulation_only]
@@ -88,7 +88,7 @@ diagnosis:
     trigeminal_neuralgia:
       branches_affected: [V1, V2, V3]                 # multi
       tn_type: [classical, secondary, idiopathic]      # ICHD-3
-      concomitant_continuous_pain: [yes, no]
+      concomitant_continuous_pain: ['yes', 'no']
       prior_treatments: [medication_only, MVD, RF, balloon, glycerol, radiosurgery]
 
 # Follow-up scores for trigeminal procedures.

@@ -4,8 +4,8 @@ Guidance for Claude Code when working in this repository.
 
 ## Status
 
-NeuroLog has the **M0 shell** (ZeusFW app: sign-in, three roles, dashboard and placeholder pages, design-system
-styles, tests); milestones are in [`docs/implementation-plan.md`](docs/implementation-plan.md). Read
+NeuroLog has milestones **M0** (shell: sign-in, roles, design-system styles, tests) and **M1** (schema, code lists,
+NeuroLog IDs); milestones are in [`docs/implementation-plan.md`](docs/implementation-plan.md). Read
 [`docs/README.md`](docs/README.md) first, then [`docs/data-dictionary.md`](docs/data-dictionary.md) and
 [`docs/decisions.md`](docs/decisions.md) before proposing anything. Don't re-argue a decision in the log unless
 the user brings new information; record new decisions there (newest first, with the reason).
@@ -20,7 +20,8 @@ the user brings new information; record new decisions there (newest first, with 
 ## Conventions
 
 - Code lists live twice: tables in `docs/data-dictionary.md` and files in `vocab/` (`procedures.csv`,
-  `diagnoses.csv`, `facets.yaml`). Change both in the same commit.
+  `diagnoses.csv`, `complications.csv`, `facets.yaml`, `fields.yaml`). Change both in the same commit; quote
+  `yes`/`no` in YAML. `fw/bin/update.sh` reloads them into `nl_codes` (`bin/load_vocab.php`).
 - A code or facet value is **retired, never renamed or deleted**.
 - Codes describe what was done, never the approach («Διαδερμική δισκεκτομή» = `discectomy` + `tubular_MIS`).
 - Clinical wording and clinical facts come from the surgeon; don't invent indications, outcomes or figures.
@@ -34,6 +35,11 @@ the user brings new information; record new decisions there (newest first, with 
 - Tests: `bin/run_tests.sh` (`--static-only`): `php -l`, YAML, route handlers and roles, every `.zetem` compiles,
   unit tests incl. `tools/rf_protocol/test.php`, and `bin/check_web.php` (real HTTP, temporary account per role,
   access matrix, CSRF on sign-in). Run it after every change.
+- Schema: one YAML per table in `web/classes/yaml/`; apply with `fw/bin/update.sh` (it takes the database name from
+  `sql/admin.sql`, not `config/db.php`). ZeusFW traps: no string `default:` (maker escapes the quotes; the app sets the
+  value), and changing the type of a `UNIQUE` column adds a second index (drop it). Avoid reserved words as column
+  names (`procedure_code`, `fu_window`). Rows link by `*_ref` integer keys; `nl_id` is the visible ID (`web/nl_id.php`).
+- `bin/check_schema.php` (in the runner) checks tables, columns, unique IDs and that `vocab/` and `nl_codes` agree.
 - Development uses made-up cases only. No web fonts or scripts from other hosts (the check enforces it on the sign-in page).
 
 ## Brand

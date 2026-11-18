@@ -1,0 +1,31 @@
+code,group,label_en
+wound_infection_superficial,infection,Wound infection superficial
+wound_infection_deep,infection,Wound infection deep
+csf_leak,dural,CSF leak
+durotomy_incidental,dural,Incidental durotomy
+haematoma_epidural,haemorrhage,Haematoma epidural
+haematoma_subdural,haemorrhage,Haematoma subdural
+haematoma_intracerebral,haemorrhage,Haematoma intracerebral
+new_motor_deficit,neurological,New motor deficit
+new_sensory_deficit,neurological,New sensory deficit
+c5_palsy,neurological,C5 palsy
+dysphagia,approach,Dysphagia
+recurrent_laryngeal_palsy,approach,Recurrent laryngeal palsy
+hardware_malposition,implant,Hardware malposition
+hardware_failure,implant,Hardware failure
+pseudarthrosis,implant,Pseudarthrosis
+adjacent_segment_disease,late,Adjacent-segment disease
+recurrent_disc_herniation,late,Recurrent disc herniation
+shunt_malfunction,CSF,Shunt malfunction
+shunt_infection,CSF,Shunt infection
+seizure,neurological,Seizure
+hydrocephalus,CSF,Hydrocephalus
+corneal_hypoaesthesia_keratitis,trigeminal,Corneal hypoaesthesia / keratitis
+masticatory_weakness,trigeminal,Masticatory weakness
+anaesthesia_dolorosa,trigeminal,Anaesthesia dolorosa
+dysaesthesia,trigeminal,Dysaesthesia
+dvt_pe,medical,DVT / PE
+pneumonia,medical,Pneumonia
+uti,medical,UTI
+delirium,medical,Delirium
+death,death,Death

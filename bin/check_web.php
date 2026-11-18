@@ -77,6 +77,7 @@ $matrix = [
     '/statistics'  => ['surgeon' => 'ok', 'admin' => 'ok', 'viewer' => 'ok'],
     '/profile'     => ['surgeon' => 'ok', 'admin' => 'ok', 'viewer' => 'ok'],
     '/codelists'   => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
+    '/codelists?list=procedure' => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
     '/status'      => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
     '/admin/users' => ['surgeon' => 'denied', 'admin' => 'ok', 'viewer' => 'denied'],
 ];

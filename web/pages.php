@@ -1,7 +1,7 @@
 <?php
 /**
- * Route handlers for the M0 shell (docs/implementation-plan.md): dashboard, profile, system
- * status, and placeholders for the pages later milestones build.
+ * Route handlers (docs/implementation-plan.md): dashboard, code lists, profile, system status, and
+ * placeholders for the pages later milestones build.
  */
 
 /** The signed-in user's role names. */
@@ -37,12 +37,16 @@ function nl_page_home($params) {
     $mine = nl_user_roles();
     $visible = array_values(array_filter($cards, fn($c) => !$c['roles'] || array_intersect($c['roles'], $mine)));
 
-    // Counters: real numbers arrive with the schema (M1); until then they read 0.
+    $db = dbConnection::getConnection();
+    $one = fn(string $sql) => (int)$db->query($sql)->fetchColumn();
     $stats = [
-        ['label' => 'Operations recorded', 'value' => 0],
-        ['label' => 'This year',           'value' => 0],
-        ['label' => 'Codes to confirm',    'value' => 0],
-        ['label' => 'Follow-ups due',      'value' => 0],
+        ['label' => 'Operations recorded', 'value' => $one('SELECT COUNT(*) FROM operations WHERE deleted IS NULL')],
+        ['label' => 'This year', 'value' => $one('SELECT COUNT(*) FROM operations WHERE deleted IS NULL AND YEAR(op_date) = YEAR(CURDATE())')],
+        // rows still to code or confirm; only confirmed codes enter statistics
+        ['label' => 'Codes to confirm', 'value' => $one("SELECT (SELECT COUNT(*) FROM procedures p JOIN operations o ON o.id = p.op_ref
+                                                                   WHERE o.deleted IS NULL AND p.coding_status <> 'confirmed')
+                                                               + (SELECT COUNT(*) FROM diagnoses d JOIN operations o ON o.id = d.op_ref
+                                                                   WHERE o.deleted IS NULL AND d.coding_status <> 'confirmed')")],
     ];
 
     return Renderer::render("homepage.zetem", [
@@ -65,8 +69,20 @@ function nl_page_statistics($params) {
     return nl_placeholder('Statistics', 'Counts by procedure and facet, from confirmed codes only, and pseudonymised research export.', 'M6');
 }
 
+/** Admin: the controlled vocabularies as loaded from vocab/ (read-only; values change in vocab/, see bin/load_vocab.php). */
 function nl_page_codelists($params) {
-    return nl_placeholder('Code lists', 'Procedures, diagnoses and facet values loaded from vocab/. Values are retired, never renamed or deleted.', 'M1');
+    $db = dbConnection::getConnection();
+    $list = (string)($_GET['list'] ?? '');
+    $lists = $db->query("SELECT list, SUM(retired_at IS NULL) AS active, SUM(retired_at IS NOT NULL) AS retired
+                           FROM nl_codes GROUP BY list ORDER BY list")->fetchAll(PDO::FETCH_ASSOC);
+    $values = [];
+    if ($list !== '') {
+        $st = $db->prepare('SELECT code, parent, label_el, label_en, notes, origin, retired_at FROM nl_codes WHERE list = ? ORDER BY retired_at IS NOT NULL, sort, code');
+        $st->execute([$list]);
+        $values = $st->fetchAll(PDO::FETCH_ASSOC);
+        if (!$values) $list = '';
+    }
+    return Renderer::render("codelists.zetem", ['lists' => $lists, 'list' => $list, 'values' => $values]);
 }
 
 function nl_page_profile($params) {

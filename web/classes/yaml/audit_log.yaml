@@ -1,0 +1,35 @@
+---
+table:
+  name: audit_log
+  class: audit_logClass
+
+  fields:
+  - name: cdate
+    type: '@cdate'
+
+  - name: uname
+    type: varchar(32)
+
+  - name: action
+    type: varchar(16)
+    required: true
+
+  - name: entity
+    type: varchar(32)
+
+  - name: entity_ref
+    type: int
+
+  - name: nl_id
+    type: varchar(10)
+
+  - name: detail
+    type: varchar(255)
+
+  - name: ip
+    type: varchar(45)
+
+...
+
+# Who viewed or exported what, and sign-ins. Never patient names or values in `detail`.
+# action: view | create | update | delete | export | confirm_code | import | login …

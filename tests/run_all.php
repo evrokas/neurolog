@@ -4,7 +4,7 @@
  *   php tests/run_all.php [--static-only]
  * static: php -l, bash -n, YAML parse of config and entities, every route handler exists,
  *         every .zetem template compiles, unit tests (tests/static/*_test.php, tools/rf_protocol/test.php).
- * web:    bin/check_web.php (real HTTP through php -S; needs the database).
+ * db:     bin/check_schema.php (tables, code lists, IDs) and bin/check_web.php (real HTTP through php -S).
  */
 $root = dirname(__DIR__);
 $o = getopt('', ['static-only']);
@@ -70,8 +70,10 @@ foreach (array_merge(glob("$root/tests/static/*_test.php"), ["$root/tools/rf_pro
 }
 
 if (!isset($o['static-only'])) {
-    passthru('php ' . escapeshellarg("$root/bin/check_web.php"), $c);
-    ok('bin/check_web.php', $c === 0);
+    foreach (['check_schema', 'check_web'] as $chk) {
+        passthru('php ' . escapeshellarg("$root/bin/$chk.php"), $c);
+        ok("bin/$chk.php", $c === 0);
+    }
 }
 
 echo "\n" . ($n - $fail) . "/$n passed" . ($fail ? ", $fail FAILED" : '') . "\n";

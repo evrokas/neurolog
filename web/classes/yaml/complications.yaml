@@ -1,0 +1,63 @@
+---
+table:
+  name: complications
+  class: complicationsClass
+
+  fields:
+  - name: nl_id
+    type: varchar(10) UNIQUE
+    required: true
+
+  - name: op_ref
+    type: int
+    required: true
+
+  - name: complication_type
+    type: varchar(48)
+
+  - name: timing
+    type: varchar(16)
+
+  - name: onset_date
+    type: date
+
+  - name: clavien_dindo
+    type: varchar(4)
+
+  - name: treatment
+    type: varchar(24)
+
+  - name: reoperation_op_ref
+    type: int
+
+  - name: outcome_at_90d
+    type: varchar(24)
+
+  - name: related_to_surgery
+    type: varchar(12)
+
+  - name: detected_by
+    type: varchar(16)
+
+  - name: note
+    type: text
+
+  - name: deleted
+    type: '@delete'
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Complication after an operation (up to 90 days), Clavien-Dindo graded.
+# complication_type: list complication (vocab/complications.csv)

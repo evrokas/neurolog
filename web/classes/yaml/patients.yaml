@@ -1,0 +1,84 @@
+---
+table:
+  name: patients
+  class: patientsClass
+
+  fields:
+  - name: nl_id
+    type: varchar(10) UNIQUE
+    required: true
+
+  - name: surname
+    type: varchar(128)
+    required: true
+
+  - name: given_name
+    type: varchar(128)
+
+  - name: name_match
+    type: varchar(255)
+
+  - name: birth_date
+    type: date
+
+  - name: sex
+    type: varchar(16)
+
+  - name: amka
+    type: varchar(11)
+
+  - name: match_status
+    type: varchar(24)
+
+  - name: bmi
+    type: decimal(4,1)
+
+  - name: smoking
+    type: varchar(16)
+
+  - name: diabetes
+    type: varchar(16)
+
+  - name: anticoagulant
+    type: varchar(16)
+
+  - name: charlson_index
+    type: int
+
+  - name: research_consent
+    type: varchar(16)
+
+  - name: research_consent_date
+    type: date
+
+  - name: source
+    type: varchar(16)
+
+  - name: source_key
+    type: varchar(80) UNIQUE
+
+  - name: imported_at
+    type: datetime
+
+  - name: deleted
+    type: '@delete'
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Patient: the only table that links a NeuroLog patient ID to a person. Nothing here leaves NeuroLog in a research export.
+# Data dictionary: "Patient". Enum values: vocab/fields.yaml (field.patient.*).
+# - nl_id       P-XXXX-XXXX-C stored without hyphens (web/nl_id.php)
+# - name_match  surname + given name, uppercased without accents, for duplicate control
+# - source_key  "<source>:<id>" of an imported record (e.g. apyweb:123); NULL for manual entries

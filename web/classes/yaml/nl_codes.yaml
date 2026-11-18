@@ -1,0 +1,56 @@
+---
+table:
+  name: nl_codes
+  class: nl_codesClass
+
+  fields:
+  - name: list
+    type: varchar(96)
+    required: true
+
+  - name: code
+    type: varchar(64)
+    required: true
+
+  - name: list_code
+    type: varchar(170) UNIQUE
+    required: true
+
+  - name: parent
+    type: varchar(64)
+
+  - name: label_el
+    type: varchar(255)
+
+  - name: label_en
+    type: varchar(255)
+
+  - name: notes
+    type: text
+
+  - name: extra
+    type: text
+
+  - name: sort
+    type: int
+
+  - name: origin
+    type: varchar(16)
+
+  - name: retired_at
+    type: datetime
+
+  - name: cdate
+    type: '@cdate'
+
+...
+
+# Controlled vocabularies (one row per list value), loaded from vocab/ by bin/load_vocab.php. A value is retired (retired_at), never renamed or deleted.
+# - list        dotted list name, e.g. procedure, diagnosis, complication, procedure.approach_type,
+#               procedure.approach_route.spinal, diagnosis.qualifiers.disc_herniation.zone, field.patient.sex
+# - code        stable code stored in the clinical tables
+# - list_code   "<list>|<code>", the unique key
+# - parent      grouping value from the source file (procedure domain, diagnosis class, complication group)
+# - extra       JSON: other columns of the source row (erweb_page, qualifiers…)
+# - origin      vocab (from vocab/, reloaded) or admin (added in the app, kept by the loader)
+# - retired_at  set when a value disappears from vocab/; old records keep their meaning

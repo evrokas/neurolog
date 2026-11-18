@@ -1,0 +1,99 @@
+---
+table:
+  name: diagnoses
+  class: diagnosesClass
+
+  fields:
+  - name: op_ref
+    type: int
+    required: true
+
+  - name: sort
+    type: int
+
+  - name: diagnosis_code
+    type: varchar(64)
+
+  - name: is_main
+    type: boolean
+    default: 0
+
+  - name: pathology_class
+    type: varchar(32)
+
+  - name: clinical_syndrome
+    type: text
+
+  - name: acuity
+    type: varchar(24)
+
+  - name: recurrence
+    type: varchar(12)
+
+  - name: qualifiers
+    type: text
+
+  - name: level_from
+    type: varchar(4)
+
+  - name: level_to
+    type: varchar(4)
+
+  - name: levels_list
+    type: text
+
+  - name: lesion_side
+    type: varchar(12)
+
+  - name: location
+    type: text
+
+  - name: index_op_ref
+    type: int
+
+  - name: histology
+    type: varchar(128)
+
+  - name: molecular_markers
+    type: text
+
+  - name: symptom_duration
+    type: varchar(16)
+
+  - name: neuro_deficit
+    type: varchar(24)
+
+  - name: prior_surgery_same_region
+    type: boolean
+
+  - name: note
+    type: text
+
+  - name: coding_status
+    type: varchar(12)
+
+  - name: coded_by
+    type: varchar(32)
+
+  - name: coded_at
+    type: datetime
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Diagnosis of an operation (main and others), with facets, qualifiers and the clinical baseline.
+# Data dictionary: "Diagnosis and baseline status", "Diagnosis facets".
+# - qualifiers     JSON object keyed by qualifier name (lists diagnosis.qualifiers.<code>.<name>)
+# - index_op_ref   for iatrogenic diagnoses: the earlier operation this one complicates
+# Baseline scores are rows in `scores` with followup_ref NULL.
