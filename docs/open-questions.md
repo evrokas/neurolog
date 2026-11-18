@@ -17,6 +17,8 @@ When one is answered, move it to [decisions.md](decisions.md).
 6. Import all APYweb operations, or only from a start date?
 7a. **Trigeminal branches of past cases.** Existing texts never name the branch treated. Fill them from the operative
     notes before import, or import as `unknown` and fill later?
+7b. **RF plausibility limits.** Confirm the limits that refuse typos in the RF protocol (e.g. thermal 40–95 °C, pulsed
+    limit 37–45 °C, pulsed 1–100 V, 1–20 Hz, 1–50 ms); table in [rf-protocol.md](rf-protocol.md).
 
 ## Ledger
 

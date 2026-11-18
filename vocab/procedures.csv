@@ -22,8 +22,8 @@ dural_repair,spinal,Μηνιγγοπλαστική,primary or for CSF leak,—
 posterior_fossa_decompression,spinal,Αποσυμπίεση οπίσθιας κρανιακής βόθρου,Chiari,posterior-fossa-decompression
 syrinx_shunt,spinal,Shunt συριγγομυελίας,,syringo-subarachnoid-shunt
 spinal_injection,pain,Έγχυση / block,"target: transforaminal, epidural, facet, medial branch, SI joint",spinal-injections
-rf_neurotomy,pain,RF θερμοπηξία νεύρου,"target: medial branch, SI joint, glossopharyngeal nerve, peripheral nerve","facet-joint-radiofrequency-neurotomy, radiofrequency-ablation"
-trigeminal_percutaneous,pain,Θερμοπηξία γασσερίου,"technique + branches treated (V1/V2/V3, multi) + per-branch lesion; see Trigeminal procedures below",percutaneous-trigeminal-procedures
+rf_neurotomy,pain,RF θερμοπηξία νεύρου,"target: spinal root / DRG, medial branch, SI joint, glossopharyngeal nerve, peripheral nerve; cycles in rf_protocol","facet-joint-radiofrequency-neurotomy, radiofrequency-ablation"
+trigeminal_percutaneous,pain,Θερμοπηξία γασσερίου,"technique + branches treated (V1/V2/V3, multi) + rf_protocol; see Trigeminal procedures and RF protocol below",percutaneous-trigeminal-procedures
 spinal_cord_stimulation,pain,Νευροδιέγερση νωτιαίου μυελού,trial or implant,spinal-cord-stimulation
 deep_brain_stimulation,pain,DBS,target,deep-brain-stimulation
 intrathecal_pump,pain,Αντλία,"baclofen, morphine",programmable-pump-implantation

@@ -39,10 +39,18 @@ procedure:
     intradiscal_hydrogel: [DiscoGel, GelStix]
   # trigeminal_percutaneous only (see "Trigeminal procedures" in the data dictionary)
   trigeminal:
-    technique: [rf_thermocoagulation, pulsed_rf, balloon_compression, glycerol_rhizotomy]
+    technique: [radiofrequency, balloon_compression, glycerol_rhizotomy]   # pulsed/thermal comes from rf_protocol
     branches_treated: [V1, V2, V3, non_selective]   # multi; non_selective for balloon and glycerol
     branch_pattern: derived from branches_treated in order, e.g. "V2+V3"
-    lesion_fields: [branch, temperature_c, duration_s, cycles, stimulation_threshold_v, paraesthesia_in_target]
+  # RF cycles of trigeminal_percutaneous (radiofrequency) and rf_neurotomy: one string, docs/rf-protocol.md
+  rf_protocol:
+    targets: [V1, V2, V3, V, "C1-C8", "T1-T12", "L1-L5", "S1-S5"]   # roots; optional side -L / -R
+    modes: {T: thermal, P: pulsed, S: stimulation}
+    units: {C: temp_c, s: duration_s, V: voltage_v, mA: current_ma, Hz: frequency_hz, ms: pulse_width_ms, ohm: impedance_ohm}
+    responses: {ok: concordant, no: not_concordant, mot: motor}
+    repeat: "x1-x10"
+    derived: [rf_mode, rf_cycles, per_target_thermal_s, per_target_pulsed_s, per_target_max_temp_c, branch_pattern]
+    rf_mode: [thermal, pulsed, pulsed+thermal, stimulation_only]
   coding_status: [uncoded, suggested, confirmed]
 
 # Derived per operation from its procedure rows (see "Cage and screws" in the data dictionary).

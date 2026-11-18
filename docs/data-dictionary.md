@@ -1,6 +1,6 @@
 # NeuroLog — Data Dictionary (draft v0.2)
 
-Draft v0.2 · public copy of the private working document (rev 58); counts from the group's own operations are kept there, not here
+Draft v0.2 · public copy of the private working document (rev 61); counts from the group's own operations are kept there, not here
 
 ## Purpose and scope
 
@@ -325,8 +325,8 @@ The procedure and diagnosis lists below are built from the group's real caseload
 | spinal | posterior\_fossa\_decompression | Αποσυμπίεση οπίσθιας κρανιακής βόθρου | Chiari | posterior-fossa-decompression |
 | spinal | syrinx\_shunt | Shunt συριγγομυελίας |  | syringo-subarachnoid-shunt |
 | pain | spinal\_injection | Έγχυση / block | target: transforaminal, epidural, facet, medial branch, SI joint | spinal-injections |
-| pain | rf\_neurotomy | RF θερμοπηξία νεύρου | target: medial branch, SI joint, glossopharyngeal nerve, peripheral nerve | facet-joint-radiofrequency-neurotomy, radiofrequency-ablation |
-| pain | trigeminal\_percutaneous | Θερμοπηξία γασσερίου | technique + branches treated (V1/V2/V3, multi) + per-branch lesion; see Trigeminal procedures below | percutaneous-trigeminal-procedures |
+| pain | rf\_neurotomy | RF θερμοπηξία νεύρου | target: spinal root / DRG, medial branch, SI joint, glossopharyngeal nerve, peripheral nerve; cycles in rf\_protocol | facet-joint-radiofrequency-neurotomy, radiofrequency-ablation |
+| pain | trigeminal\_percutaneous | Θερμοπηξία γασσερίου | technique + branches treated (V1/V2/V3, multi) + rf\_protocol; see Trigeminal procedures and RF protocol below | percutaneous-trigeminal-procedures |
 | pain | spinal\_cord\_stimulation | Νευροδιέγερση νωτιαίου μυελού | trial or implant | spinal-cord-stimulation |
 | pain | deep\_brain\_stimulation | DBS | target | deep-brain-stimulation |
 | pain | intrathecal\_pump | Αντλία | baclofen, morphine | programmable-pump-implantation |
@@ -368,13 +368,12 @@ The procedure and diagnosis lists below are built from the group's real caseload
 
 | Where | Field | Type | Req | Values | Answers |
 | --- | --- | --- | --- | --- | --- |
-| Procedure row | technique | enum | C | rf\_thermocoagulation, pulsed\_rf, balloon\_compression, glycerol\_rhizotomy | Technique comparison |
+| Procedure row | technique | enum | C | radiofrequency, balloon\_compression, glycerol\_rhizotomy (pulsed or thermal is read from the RF protocol) | Technique comparison |
 | Procedure row | branches\_treated | multi | C | V1, V2, V3; `non_selective` for balloon compression and glycerol | Branch-specific results and complications |
 | Procedure row | branch\_pattern | text | A | Derived, written in order: V2, V2+V3, V1+V2+V3, non\_selective | Grouping without multi-select logic |
 | Procedure row | lesion\_side | enum | C | left, right (bilateral only if both sides were treated in one session) | Side |
 | Procedure row | technology | multi | C | fluoroscopy, CT/navigation, neuromonitoring (sensory/motor stimulation) | Guidance |
-| Lesion (child of the row, one per branch) | branch, temperature\_c, duration\_s, cycles | enum, int, int, int | E | e.g. V2, 75 °C, 90 s, 2 | Dose-response, recurrence studies |
-| Lesion | stimulation\_threshold\_v, paraesthesia\_in\_target | dec, bool | E | Sensory threshold in volts; paraesthesia reached the painful area yes/no | Targeting quality |
+| Procedure row | rf\_protocol | text | C if radiofrequency | Every stimulation test and lesion cycle in order, one string (see RF protocol below), e.g. `V2 S 50Hz 0.2V ok; V2 T 75C 90s x2` | Dose-response, recurrence studies |
 | Diagnosis (trigeminal\_neuralgia) | branches\_affected | multi | C | V1, V2, V3 | Where the pain is |
 | Diagnosis | tn\_type | enum | C | classical (neurovascular compression), secondary (MS, tumour), idiopathic | ICHD-3 grouping |
 | Diagnosis | concomitant\_continuous\_pain | bool | C |  | Predicts a worse outcome |
@@ -387,6 +386,34 @@ The procedure and diagnosis lists below are built from the group's real caseload
 Branch-specific complications are added to the Complication list: corneal hypoaesthesia / keratitis (V1), masticatory weakness (V3 motor root), anaesthesia dolorosa, dysaesthesia.
 
 Existing APYweb texts do not name the branch, and only some name the side. Imported trigeminal cases get `branches_treated` = unknown and `review = branches`; the branches come from the operative note.
+
+**RF protocol: every cycle in one text field.** All radiofrequency procedures (`trigeminal_percutaneous` with technique radiofrequency, and `rf_neurotomy` at a spinal root / DRG, medial branch, SI joint or glossopharyngeal nerve) record their cycles in one string, `rf_protocol`. It is validated when saved, stored in a normalised form, and expanded into derived fields so that searches never have to read the string. Full specification and reference parser: `docs/rf-protocol.md` and `tools/rf_protocol/` in the public repository.
+
+Cycles are written in the order performed, separated by `;`. Each cycle is: **target**, **mode**, then values with their units, then an optional response and repeat count.
+
+| Part | Values | Notes |
+| --- | --- | --- |
+| Target | `V1`, `V2`, `V3`, `V` (ganglion, branch not determined); spinal root `C1`–`C8`, `T1`–`T12`, `L1`–`L5`, `S1`–`S5` | Optional `-L` / `-R` when the side differs from the procedure's side; Greek Α/Θ/Ο/Ι accepted for roots |
+| Mode | `T` thermal (conventional), `P` pulsed, `S` stimulation test | A combination is written as separate cycles: `P …; T …` |
+| Values | `C` temperature, `s` duration, `V` voltage (amplitude), `mA` current, `Hz` frequency, `ms` pulse width, `ohm` impedance | Number followed by the unit; decimal point or comma |
+| Required | T: temperature + duration. P: voltage + frequency + pulse width + duration (temperature limit optional). S: frequency + voltage or current | Missing values are refused |
+| Response (S only) | `ok` concordant paraesthesia, `no` not concordant, `mot` motor response |  |
+| Repeat | `x2` … `x10` | Identical consecutive cycles |
+
+Examples:
+
+| Written | Meaning |
+| --- | --- |
+| `V2 T 75C 90s x2` | Two thermal lesions on V2, 75 °C for 90 s each |
+| `V2 T 75C 90s; V3 T 80C 60s` | V2 then V3, thermal |
+| `V2 S 50Hz 0.2V ok; V2 S 2Hz 0.8V mot; V2 T 75C 90s x2` | Sensory and motor tests, then two thermal lesions |
+| `V2 P 45V 2Hz 20ms 120s 42C; V2 T 75C 90s` | Pulsed then thermal on the same branch |
+| `L5 P 45V 2Hz 20ms 240s 42C` | Pulsed RF to the L5 root / DRG |
+| `L5-L P 45V 2Hz 20ms 240s; S1-R P 45V 2Hz 20ms 240s` | Two roots, different sides |
+
+Derived on save (never typed): `rf_mode` (thermal, pulsed, pulsed+thermal, stimulation\_only), one row per cycle (sequence, target, side, mode, values), and per target the total thermal and pulsed time, maximum temperature and number of lesions. `branch_pattern` for trigeminal cases comes from the same parse.
+
+Values outside plausibility limits (e.g. 750C, a pulsed cycle above 45 °C) are refused to catch typos. The limits are validation settings, not clinical guidance, and must be confirmed by the surgeon.
 
 ### Diagnosis list
 
