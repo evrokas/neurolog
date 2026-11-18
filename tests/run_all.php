@@ -69,6 +69,20 @@ foreach (array_merge(glob("$root/tests/static/*_test.php"), ["$root/tools/rf_pro
     ok('unit ' . substr($t, strlen($root) + 1), $c === 0, implode("\n", array_slice($out, -5)));
 }
 
+// JavaScript: syntax of every web/js file and the shared-case tests in tests/js (needs node)
+exec('command -v node', $nodeOut, $nodeMissing);
+foreach (glob("$root/web/js/*.js") as $js) {
+    if ($nodeMissing) break;
+    $out = []; exec('node --check ' . escapeshellarg($js) . ' 2>&1', $out, $c);
+    ok('node --check ' . substr($js, strlen($root) + 1), $c === 0, implode(' ', $out));
+}
+foreach (glob("$root/tests/js/*_test.js") as $t) {
+    if ($nodeMissing) { ok('node available for ' . basename($t), false); continue; }
+    $out = []; exec('node ' . escapeshellarg($t) . ' 2>&1', $out, $c);
+    ok('js ' . substr($t, strlen($root) + 1), $c === 0, implode("
+", array_slice($out, -5)));
+}
+
 if (!isset($o['static-only'])) {
     foreach (['check_schema', 'check_web'] as $chk) {
         passthru('php ' . escapeshellarg("$root/bin/$chk.php"), $c);
