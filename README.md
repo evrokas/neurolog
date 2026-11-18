@@ -76,6 +76,7 @@ NeuroLog is in the **design phase**. The design documents are in [`docs/`](docs/
 | Document | What it holds |
 |---|---|
 | [Data dictionary](docs/data-dictionary.md) | Every field NeuroLog stores, the classification model, code lists and facets |
+| [Implementation plan](docs/implementation-plan.md) | Foundations and milestones |
 | [Decision log](docs/decisions.md) | What was decided and why |
 | [Open questions](docs/open-questions.md) | What still needs an answer |
 | [Naming](docs/naming.md) | Why "NeuroLog" |

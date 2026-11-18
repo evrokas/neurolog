@@ -5,6 +5,7 @@ NeuroLog is in the **design phase**: no application code yet. These documents de
 | Document | What it holds |
 | --- | --- |
 | [data-dictionary.md](data-dictionary.md) | Every field NeuroLog stores: tables, identifiers, import from APYweb, the classification model, code lists, facets, anatomy, governance. The main reference. |
+| [implementation-plan.md](implementation-plan.md) | Foundations and milestones M0–M6 for building the application. |
 | [decisions.md](decisions.md) | Decision log, newest first: what was decided and why. |
 | [open-questions.md](open-questions.md) | Questions still to be answered before building or importing. |
 | [naming.md](naming.md) | Why the name NeuroLog, and the names rejected. |
