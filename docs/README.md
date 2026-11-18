@@ -1,6 +1,6 @@
 # NeuroLog design documents
 
-NeuroLog is in the **design phase**: no application code yet. These documents define what it records and how.
+These documents define what NeuroLog records and how. The application is built milestone by milestone ([implementation-plan.md](implementation-plan.md)); M0 is done.
 
 | Document | What it holds |
 | --- | --- |

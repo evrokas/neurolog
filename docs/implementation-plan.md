@@ -31,6 +31,12 @@ starts only when the previous one is accepted.
 M5 needs a decision first: how NeuroLog reads APYweb without changing it (a read-only database account, or a file
 export run on the APYweb server). See [open-questions.md](open-questions.md).
 
+## Progress
+
+| Milestone | State |
+| --- | --- |
+| M0 | Built 2026-11-18. Password sign-in and roles tested over real HTTP; ErnsAuth sign-in is wired (module, sign-in tab, `config/ernsauth.php.in`) but untested until a NeuroLog client is registered in ErnsAuth. Dashboard counters read 0 until M1. |
+
 ## Repository layout (from M0)
 
 Follows ZPMS / MedScribe: `config/` (`*.in` templates committed, real files gitignored), `web/` (DocumentRoot:

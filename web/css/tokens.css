@@ -1,0 +1,55 @@
+/* NeuroLog design tokens (docs/design-system.md §3–§5).
+   The --nl-* names are the design system's; the short names below them are the ones the
+   shared ZeusFW-app stylesheets (navigation.css, styles.css, ui.css) already read. */
+:root {
+  --nl-primary: #17365D;
+  --nl-secondary: #20A6B2;
+  --nl-accent: #3985D6;
+  --nl-background: #EAF0F5;
+  --nl-surface: #FFFFFF;
+  --nl-text: #263445;
+  --nl-text-muted: #718096;
+  --nl-border: #D9E2EC;
+  --nl-success: #27966F;
+  --nl-warning: #E5A33D;
+  --nl-danger: #D9534F;
+  --nl-info: #3985D6;
+
+  --nl-space-1: 4px;  --nl-space-2: 8px;  --nl-space-3: 12px; --nl-space-4: 16px;
+  --nl-space-5: 20px; --nl-space-6: 24px; --nl-space-8: 32px; --nl-space-10: 40px; --nl-space-12: 48px;
+  --nl-radius: 8px;
+  --nl-radius-lg: 12px;
+  --nl-shadow: 0 1px 2px rgba(23, 54, 93, .06), 0 2px 8px rgba(23, 54, 93, .06);
+  --nl-font: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+
+  /* names used by the shared stylesheets */
+  --primary: var(--nl-primary);
+  --primary-light: #24497A;
+  --primary-dark: #102847;
+  --primary-rgb: 23, 54, 93;
+  --secondary: var(--nl-secondary);
+  --secondary-light: #4FBFC8;
+  --secondary-dark: #17848E;
+  --light-gray: var(--nl-background);
+  --medium-gray: #DCE5EE;
+  --dark-gray: var(--nl-text-muted);
+  --text: var(--nl-text);
+  --border-color: var(--nl-border);
+  --surface-muted: #F5F8FB;
+  --operation-text: #8A5A12;
+  --font-body: var(--nl-font);
+  --font-heading: var(--nl-font);
+  --success: var(--nl-success);
+  --warning: var(--nl-warning);
+  --error: var(--nl-danger);
+  --info: var(--nl-info);
+  --spacing: var(--nl-space-4);
+  --border-radius: 6px;
+  --border-radius-sm: 4px;
+  --spacing-lg: var(--nl-space-6);
+  --border-radius-md: var(--nl-radius);
+  --border-radius-lg: var(--nl-radius-lg);
+  --shadow-sm: var(--nl-shadow);
+  --shadow-lg: 0 8px 24px rgba(23, 54, 93, .14);
+  --transition-fast: .15s ease;
+}

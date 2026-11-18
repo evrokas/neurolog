@@ -1,0 +1,4 @@
+<div class="header">
+    <img src="{{rel_url('assets/logo.png')}}" alt="">
+    <h1>{{ $title }}</h1>
+</div>

@@ -1,0 +1,4 @@
+{# Footer line. The year comes from the server clock. #}
+<div class="module-copyright">
+    <span class="copyright-owner">NeuroLog &middot; Surgical Activity Logbook &middot; {{date('Y')}}</span>
+</div>

@@ -1,0 +1,22 @@
+<div class="dashboard">
+    <h2>{{{t('Welcome')}}}{% if($display_name): %}, {{{$display_name}}}{% endif %}</h2>
+    <p class="muted">{{{t('Signed in as')}}}: {{{$roles}}}</p>
+
+    <div class="stat-grid">
+        {% foreach($stats as $s): %}
+        <div class="stat-card">
+            <span class="stat-value">{{{$s['value']}}}</span>
+            <span class="stat-label">{{{t($s['label'])}}}</span>
+        </div>
+        {% endforeach %}
+    </div>
+
+    <div class="dashboard-grid">
+        {% foreach($cards as $card): %}
+        <a class="dashboard-card" href="{{rel_url($card['url'])}}">
+            <span class="dashboard-card-title">{{{t($card['title'])}}}</span>
+            <span class="dashboard-card-desc">{{{t($card['desc'])}}}</span>
+        </a>
+        {% endforeach %}
+    </div>
+</div>

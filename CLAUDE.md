@@ -4,7 +4,8 @@ Guidance for Claude Code when working in this repository.
 
 ## Status
 
-NeuroLog is in the **design phase**: documents and code lists only, no application code yet. Read
+NeuroLog has the **M0 shell** (ZeusFW app: sign-in, three roles, dashboard and placeholder pages, design-system
+styles, tests); milestones are in [`docs/implementation-plan.md`](docs/implementation-plan.md). Read
 [`docs/README.md`](docs/README.md) first, then [`docs/data-dictionary.md`](docs/data-dictionary.md) and
 [`docs/decisions.md`](docs/decisions.md) before proposing anything. Don't re-argue a decision in the log unless
 the user brings new information; record new decisions there (newest first, with the reason).
@@ -23,6 +24,17 @@ the user brings new information; record new decisions there (newest first, with 
 - A code or facet value is **retired, never renamed or deleted**.
 - Codes describe what was done, never the approach («Διαδερμική δισκεκτομή» = `discectomy` + `tubular_MIS`).
 - Clinical wording and clinical facts come from the surgeon; don't invent indications, outcomes or figures.
+
+## Application (ZeusFW, from M0)
+
+- Layout like MedScribe/ZPMS; read `zeusfw/CLAUDE.md` before using framework features. `fw` → the zeusfw checkout and
+  `web/core` → `../fw/core` are symlinks, gitignored. Real config files are copied from the committed `*.in` templates.
+- Set up a checkout: README → Installation. Dev server: `php -S 127.0.0.1:8097 -t web router.php`.
+- Roles `admin` (superuser), `surgeon`, `viewer` from `bin/seed_users.php`; route `access:` uses these names.
+- Tests: `bin/run_tests.sh` (`--static-only`): `php -l`, YAML, route handlers and roles, every `.zetem` compiles,
+  unit tests incl. `tools/rf_protocol/test.php`, and `bin/check_web.php` (real HTTP, temporary account per role,
+  access matrix, CSRF on sign-in). Run it after every change.
+- Development uses made-up cases only. No web fonts or scripts from other hosts (the check enforces it on the sign-in page).
 
 ## Brand
 

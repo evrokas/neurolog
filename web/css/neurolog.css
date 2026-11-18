@@ -1,0 +1,181 @@
+/* NeuroLog components on top of styles.css (docs/design-system.md §6–§8). */
+
+/* Sign-in tabs and the ErnsAuth number-matching panel (from ZPMS, design-system colours). */
+/* Password vs. ErnsAuth are two separate tab panels, not stacked on the
+   same page -- only one renders at a time (data-login-panel[hidden]),
+   so the card's height never grows past whichever tab is open and the
+   login screen doesn't scroll. See web/js/ernsauth-sso.js for the click
+   handler; only rendered at all when ErnsAuth is enabled (login.zetem),
+   so plain password login is completely unchanged when it isn't. */
+.login-tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--medium-gray);
+}
+
+.login-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.6rem 0.4rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--dark-gray);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-bottom: -1px;
+}
+
+.login-tab:hover {
+    color: var(--primary-dark);
+}
+
+.login-tab.active {
+    color: var(--primary-dark);
+    border-bottom-color: var(--primary);
+}
+
+.ernsauth-sso .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: var(--spacing);
+}
+
+.ernsauth-sso .field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+.ernsauth-sso input[type="text"] {
+    font-size: 1rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--border-radius-sm);
+    width: 100%;
+}
+
+.ernsauth-btn {
+    width: 100%;
+    font-size: 1.05rem;
+    font-weight: 600;
+    padding: 0.8rem;
+    border: 1px solid var(--primary);
+    border-radius: var(--border-radius);
+    background: white;
+    color: var(--primary-dark);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.ernsauth-btn:hover {
+    background: rgba(var(--primary-rgb), 0.08);
+}
+
+.ernsauth-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.ernsauth-instructions {
+    text-align: center;
+    color: var(--text);
+    font-size: 0.92rem;
+    margin-bottom: var(--spacing);
+}
+
+.ernsauth-number {
+    text-align: center;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--primary-dark);
+    margin-bottom: var(--spacing);
+}
+
+.ernsauth-status {
+    text-align: center;
+    color: var(--dark-gray);
+    font-size: 0.85rem;
+    margin-bottom: var(--spacing);
+}
+
+.ernsauth-error {
+    text-align: center;
+    color: var(--error);
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing);
+}
+
+.ernsauth-linkbtn {
+    display: block;
+    margin: 0 auto;
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.85rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+@media screen and (max-width: 500px) {
+    .login-card {
+        padding: var(--spacing-lg) var(--spacing);
+    }
+}
+
+
+/* Header: logo mark + wordmark */
+.header { background: var(--nl-primary); }
+.header img { height: 2.2rem; width: 2.2rem; border-radius: 6px; background: #fff; padding: 2px; }
+.header h1 { font-weight: 600; letter-spacing: .01em; }
+.header-grid-2x1 { background: var(--primary-dark); }
+
+/* Dashboard */
+.dashboard h2 { color: var(--nl-primary); margin-top: 0; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--nl-space-4); margin: var(--nl-space-4) 0; }
+.stat-card { padding: var(--nl-space-4); background: var(--nl-surface); border: 1px solid var(--nl-border); border-left: 4px solid var(--nl-secondary); border-radius: var(--nl-radius); box-shadow: var(--nl-shadow); }
+.stat-card .stat-value { display: block; font-size: 1.8rem; font-weight: 700; color: var(--nl-primary); }
+.stat-card .stat-label { font-size: .85rem; color: var(--nl-text-muted); }
+.dashboard-card { background: var(--nl-surface); border-radius: var(--nl-radius); }
+.dashboard-card:hover { border-color: var(--nl-accent); }
+.dashboard-card-title { color: var(--nl-primary); }
+
+/* Status badges (§6.5) */
+.badge-success { background: #DDF2EA; color: #1B6E51; }
+.badge-warning { background: #FBEBD2; color: #8A5A12; }
+.badge-danger  { background: #F8DEDD; color: #A33A37; }
+.badge-info    { background: #DCEAF9; color: #275F9C; }
+
+/* Buttons (§6.1) */
+.btn.primary, .buttons button { background: var(--nl-primary); }
+.btn.secondary { border-color: var(--nl-secondary); color: var(--nl-secondary-dark, #17848E); }
+a { color: var(--nl-accent); }
+:focus-visible { outline: 2px solid var(--nl-accent); outline-offset: 2px; }
+
+/* Sign-in card */
+.login-brand img { height: 3rem; width: 3rem; }
+.login-brand h1 { color: var(--nl-primary); }
+.login-brand h1 span { color: var(--nl-secondary); }
+.login-tagline { margin: .2rem 0 0; font-size: .85rem; color: var(--nl-text-muted); }
+
+/* Breadcrumbs (zeusfw breadcrumbs.zetem): one muted line, no "::" first item, "›" separators */
+.breadcrumbs { max-width: 1000px; margin: .9rem auto 0; padding: 0 1.5rem; font-size: .85rem; color: var(--nl-text-muted); }
+.breadcrumbs ul { display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .4rem; margin: 0; padding: 0; list-style: none; }
+.breadcrumbs li.breadcrumb-first { display: none; }
+.breadcrumbs li.breadcrumb-separator { font-size: 0; }
+.breadcrumbs li.breadcrumb-separator::before { content: "\203A"; font-size: 1rem; }
+.breadcrumbs a { color: var(--nl-text-muted); text-decoration: none; }
+.breadcrumbs a:hover { color: var(--nl-accent); text-decoration: underline; }
+.breadcrumbs a[href="#"], .breadcrumbs a[href$="/#"] { pointer-events: none; color: inherit; }
+.breadcrumbs li.breadcrumb-item:last-child, .breadcrumbs li.breadcrumb-item:last-child a { color: var(--nl-text); font-weight: 500; }
+
+/* Mobile menu button: the core template draws it with an icon font NeuroLog does not load,
+   so draw the ☰ / ✕ with text instead (no external icon library). */
+.main-navigation label[for="menu-open"] .bx-menu::before { content: "\2630"; font-style: normal; }
+.main-navigation label[for="menu-open"] .bx-x::before { content: "\2715"; font-style: normal; }
+.main-navigation label[for="menu-open"] i { font-style: normal; font-size: 1.4rem; }

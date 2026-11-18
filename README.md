@@ -71,7 +71,7 @@ The NeuroLog brand uses a geometric **N monogram**, inspired by neural pathways 
 
 ## Documentation
 
-NeuroLog is in the **design phase**. The design documents are in [`docs/`](docs/README.md):
+Development follows [the implementation plan](docs/implementation-plan.md); milestone **M0 (shell)** is built. The design documents are in [`docs/`](docs/README.md):
 
 | Document | What it holds |
 |---|---|
@@ -88,19 +88,40 @@ NeuroLog is in the **design phase**. The design documents are in [`docs/`](docs/
 
 ## Project Status
 
-**Development status:** Design phase. No application code yet.
+**Development status:** M0 shell built: sign-in, roles, dashboard, design-system styles, tests. Operations are entered from M2.
 
 NeuroLog is an evolving project. Its functionality, interface and architecture may change as development progresses.
 
 ## Technology
 
-The application is developed using its existing project technology stack.
-
-Specific framework, database, server and deployment requirements will be documented as the implementation evolves.
+- PHP 8.1+ on the ZeusFW framework (`evrokas/zeusfw`), no Composer
+- MySQL or MariaDB (utf8mb4)
+- Apache with `mod_rewrite` (`deploy/apache-vhost.conf.sample`); `DocumentRoot` is `web/`
+- Plain HTML, CSS and JavaScript; no front-end framework, nothing loaded from other hosts
+- Sign-in through ErnsAuth (optional per installation; password sign-in otherwise)
 
 ## Installation
 
-Installation instructions will be added once the deployment and configuration requirements are finalized.
+From the repository root, with a ZeusFW checkout next to it:
+
+```sh
+ln -s /path/to/zeusfw fw && ln -s ../fw/core web/core
+cp config/site.info.yaml.in config/site.info.yaml
+sed -e 's/<<host>>/localhost/;s/<<user>>/neurolog/;s/<<pass>>/PASSWORD/;s/<<db>>/neurolog/' sql/admin.sql.in > sql/admin.sql
+sed -e 's/<<host>>/localhost/;s/<<user>>/neurolog/;s/<<pass>>/PASSWORD/;s/<<db>>/neurolog/' config/db.php.in > config/db.php
+sudo mysql < sql/admin.sql
+mkdir -p var/sessions
+fw/bin/update.sh --core-tables=all --web-tables=all --core-diff=yes --web-diff=yes \
+                 --content=no --forms=no --generate-feeders=no --non-interactive
+php bin/seed_users.php --user=NAME --role=admin      # asks for the password; roles: admin, surgeon, viewer
+bin/run_tests.sh
+```
+
+For ErnsAuth sign-in: copy `config/ernsauth.php.in` to `config/ernsauth.php`, fill in the address and API key, and
+clone the client library to `lib/ernsauth` (see the comment in that file). Without both, the sign-in page offers
+the password form only.
+
+Development server: `php -S 127.0.0.1:8097 -t web router.php`.
 
 ## Configuration
 

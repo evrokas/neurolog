@@ -1,0 +1,5 @@
+<div class="page-placeholder">
+    <h2>{{{t($heading)}}}</h2>
+    <p>{{{t($note)}}}</p>
+    <p class="muted">{{{t('Not built yet')}}} &middot; {{{t('Planned milestone')}}}: {{{$milestone}}}</p>
+</div>

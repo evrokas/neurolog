@@ -1,0 +1,232 @@
+title: NeuroLog
+
+tz: "Europe/Athens"
+
+meta:
+  - charset="UTF-8"
+  - http-equiv="X-UA-Compatible" content="IE=edge"
+  - name="viewport" content="width=device-width, initial-scale=1.0"
+  - name="theme-color" content="#003399"
+
+# Session lifetime (zeusfw core/lib/SessionPolicy.php)
+session_idle_minutes: 60
+session_max_hours: 12
+remember_me_days: 15
+session_warn_seconds: 120
+session_name: neurolog_sess
+session_save_path: '@app/var/sessions'
+
+templates:
+  - '@core/templates/'
+  - '@app/web/templates/'
+
+# Order matters: tokens.css defines the design-system variables (docs/design-system.md) the others read.
+css:
+  - normalize:
+    src: 'css/normalize.css'
+  - tokens:
+    src: 'css/tokens.css'
+  - navigation:
+    src: 'css/navigation.css'
+  - styles:
+    src: 'css/styles.css'
+  - neurolog:
+    src: 'css/neurolog.css'
+
+multilingual: false
+
+languages:
+  - en
+
+libraries:
+  # Attached from login.zetem only, and only when ernsauthClass::isEnabled().
+  ernsauth-sso-library:
+    foot_script:
+      - ernsauth_sso:
+        type: 'text/javascript'
+        src: 'js/ernsauth-sso.js'
+        defer:
+
+# Roles (docs/decisions.md 2026-11-18). admin is the superuser role (bin/seed_users.php).
+roles:
+  anonymous: []
+  authenticated: []
+  admin: []
+  surgeon: []
+  viewer: []
+
+routes:
+  homepage:
+    title:
+      gr: "Αρχική"
+      en: "Dashboard"
+    name: homepage
+    url: "/"
+    handler: nl_page_home
+  login:
+    title:
+      en: "Sign in"
+      gr: "Είσοδος"
+    url: "/login"
+    handler: login
+    method: get
+  login_post:
+    title:
+      en: "Sign in"
+      gr: "Είσοδος"
+    url: "/login"
+    handler: login_post
+    method: post
+  logout:
+    title: "Sign out"
+    url: "/logout"
+    handler: logout
+  operations:
+    title:
+      gr: "Επεμβάσεις"
+      en: "Operations"
+    name: operations
+    url: "/operations"
+    handler: nl_page_operations
+    access: surgeon viewer admin
+  patients:
+    title:
+      gr: "Ασθενείς"
+      en: "Patients"
+    name: patients
+    url: "/patients"
+    handler: nl_page_patients
+    access: surgeon viewer admin
+  statistics:
+    title:
+      gr: "Στατιστικά"
+      en: "Statistics"
+    name: statistics
+    url: "/statistics"
+    handler: nl_page_statistics
+    access: surgeon viewer admin
+  codelists:
+    title:
+      gr: "Λίστες κωδικών"
+      en: "Code lists"
+    name: codelists
+    url: "/codelists"
+    handler: nl_page_codelists
+    access: admin
+  status:
+    title:
+      gr: "Κατάσταση συστήματος"
+      en: "System status"
+    name: status
+    url: "/status"
+    handler: nl_page_status
+    access: admin
+  profile:
+    title:
+      gr: "Το προφίλ μου"
+      en: "My profile"
+    name: profile
+    url: "/profile"
+    handler: nl_page_profile
+    access: authenticated
+
+regions:
+  - header:
+      access: authenticated
+  - main_navigation:
+      access: authenticated
+  - notification
+  - main_content
+  - footer:
+      access: authenticated
+
+structure:
+  header:
+    - header
+    - header-grid-2x1:
+      - left-column:
+        - userblock
+  main_navigation:
+    - mainnavigation
+  notification:
+    - notifications
+  main_content:
+    - breadcrumbs
+    - content
+  footer:
+    - footer
+    - copyright
+
+menu:
+  main:
+    - homepage:
+      text:
+        gr: 'Αρχική'
+        en: 'Dashboard'
+      url: '/'
+    - operations:
+      text:
+        gr: 'Επεμβάσεις'
+        en: 'Operations'
+      url: '/operations'
+      access: surgeon viewer admin
+    - patients:
+      text:
+        gr: 'Ασθενείς'
+        en: 'Patients'
+      url: '/patients'
+      access: surgeon viewer admin
+    - statistics:
+      text:
+        gr: 'Στατιστικά'
+        en: 'Statistics'
+      url: '/statistics'
+      access: surgeon viewer admin
+    - admin:
+      text:
+        gr: 'Διαχείριση'
+        en: 'Admin'
+      access: admin
+      submenu:
+        - admin_users:
+          text:
+            gr: 'Χρήστες'
+            en: 'Users'
+          url: '/admin/users'
+        - admin_roles:
+          text:
+            gr: 'Ρόλοι'
+            en: 'Roles'
+          url: '/admin/roles'
+        - codelists:
+          text:
+            gr: 'Λίστες κωδικών'
+            en: 'Code lists'
+          url: '/codelists'
+        - status:
+          text:
+            gr: 'Κατάσταση συστήματος'
+            en: 'System status'
+          url: '/status'
+
+modconf:
+  breadcrumbs:
+    access: authenticated
+
+modules:
+  path:
+    - "@core/modules/"
+    - "@app/web/modules/"
+  modules:
+    - admin
+    - mainnavigation
+    - notifications
+    - header
+    - breadcrumbs
+    - userblock
+    - htmltext
+    - copyright
+    - session_timer
+    - content
+    - admin_crud
+    - ernsauth_sso
