@@ -24,7 +24,9 @@
       var f = index(REGIONS[k][1], tr), t = index(REGIONS[k][2] === 'L5' && tr ? 'L6' : REGIONS[k][2], tr);
       if (lo >= f && hi <= t) return REGIONS[k][0];
     }
-    return null;
+    // a span that no region holds but that crosses exactly one junction gets that junction (L4-S1 -> lumbosacral)
+    var crossed = REGIONS.slice(4).filter(function (r) { return lo < index(r[2], tr) && hi > index(r[1], tr); });
+    return crossed.length === 1 ? crossed[0][0] : null;
   }
 
   function parse(text, tr) {

@@ -1,0 +1,11 @@
+/* Loaded by the framework's breadcrumbs module (zeusfw core/modules/breadcrumbs). */
+/* Breadcrumbs (zeusfw breadcrumbs.zetem): one muted line, no "::" first item, "›" separators */
+.breadcrumbs { max-width: 1000px; margin: .9rem auto 0; padding: 0 1.5rem; font-size: .85rem; color: var(--nl-text-muted); }
+.breadcrumbs ul { display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .4rem; margin: 0; padding: 0; list-style: none; }
+.breadcrumbs li.breadcrumb-first { display: none; }
+.breadcrumbs li.breadcrumb-separator { font-size: 0; }
+.breadcrumbs li.breadcrumb-separator::before { content: "\203A"; font-size: 1rem; }
+.breadcrumbs a { color: var(--nl-text-muted); text-decoration: none; }
+.breadcrumbs a:hover { color: var(--nl-accent); text-decoration: underline; }
+.breadcrumbs a[href="#"], .breadcrumbs a[href$="/#"] { pointer-events: none; color: inherit; }
+.breadcrumbs li.breadcrumb-item:last-child, .breadcrumbs li.breadcrumb-item:last-child a { color: var(--nl-text); font-weight: 500; }

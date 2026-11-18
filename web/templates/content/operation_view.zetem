@@ -1,0 +1,73 @@
+<div class="content op-view">
+    <div class="page-head">
+        <h2>{{{t('Operation')}}} <code>{{{$nl}}}</code></h2>
+        <div>
+            {% if($can_confirm): %}
+            <form method="post" action="{{rel_url('/operations/' . $nl . '/confirm')}}" class="inline">{{ csrf_field() }}
+                <button class="btn primary" type="submit">✓ {{{t('Confirm codes')}}} ({{{$suggested}}})</button></form>
+            {% endif %}
+            {% if($can_edit): %}<a class="btn" href="{{rel_url('/operations/' . $nl . '/edit')}}">{{{t('Edit')}}}</a>{% endif %}
+        </div>
+    </div>
+    {% if($suggested): %}<div class="notice notice-warning">{{{$suggested}}} {{{t('coded rows are suggested: they count in statistics only after the primary surgeon confirms them.')}}}</div>{% endif %}
+
+    <dl class="kv">
+        <dt>{{{t('Patient')}}}</dt><dd>{{{$patient['surname'] ?? ''}}} {{{$patient['given_name'] ?? ''}}} · <code>{{{$patient['nl_id_display'] ?? ''}}}</code>{% if(!empty($patient['birth_date'])): %} · {{{t('born')}}} {{{$patient['birth_date']}}}{% endif %}</dd>
+        <dt>{{{t('Date')}}}</dt><dd>{{{$op['op_date']}}}</dd>
+        <dt>{{{t('Hospital')}}}</dt><dd>{{{$hosp[$op['hospital_ref']] ?? '—'}}}</dd>
+        <dt>{{{t('Primary surgeon')}}}</dt><dd>{{{$names[$op['primary_surgeon_ref']] ?? '—'}}}</dd>
+        <dt>{{{t('Assistants')}}}</dt><dd>{{{implode(', ', array_filter([$names[$op['assistant_1_ref']] ?? null, $names[$op['assistant_2_ref']] ?? null])) ?: '—'}}}</dd>
+        <dt>{{{t('Anaesthetist')}}}</dt><dd>{{{$names[$op['anaesthetist_ref']] ?? '—'}}}</dd>
+        <dt>{{{t('Urgency')}}} · {{{t('episode')}}}</dt><dd>{{{nl_show($lists, 'field.operation.indication_urgency', $op['indication_urgency'])}}} · {{{nl_show($lists, 'field.operation.reoperation', $op['reoperation'])}}}</dd>
+        <dt>ASA · {{{t('anaesthesia')}}} · {{{t('position')}}}</dt><dd>{{{nl_show($lists, 'field.operation.asa_class', $op['asa_class'])}}} · {{{nl_show($lists, 'field.operation.anaesthesia', $op['anaesthesia'])}}} · {{{nl_show($lists, 'field.operation.position', $op['position'])}}}</dd>
+        <dt>{{{t('Skin to skin')}}}</dt><dd>{{{$op['skin_incision_time'] ? substr($op['skin_incision_time'], 0, 5) : '—'}}} – {{{$op['skin_closure_time'] ? substr($op['skin_closure_time'], 0, 5) : '—'}}}</dd>
+        <dt>{{{t('Blood loss')}}} · {{{t('transfusion')}}}</dt><dd>{{{$op['blood_loss_ml'] ?? '—'}}} mL · {{{$op['transfusion_units'] ?? '—'}}} u</dd>
+        <dt>{{{t('Neuromonitoring')}}}</dt><dd>{{{nl_show($lists, 'field.operation.neuromonitoring', $op['neuromonitoring'])}}}</dd>
+        <dt>{{{t('Construct')}}}</dt><dd>{{{str_replace('_', ' ', $op['construct'] ?? 'none')}}}</dd>
+    </dl>
+
+    <h3>{{{t('Diagnoses')}}}</h3>
+    {% foreach($dx as $d): %}
+    <div class="coded-row{% if($d['coding_status'] !== 'confirmed'): %} is-suggested{% endif %}">
+        <span class="chip" data-family="diagnosis">{{{nl_label($lists, 'diagnosis', $d['diagnosis_code'])}}}</span>
+        {% if($d['is_main']): %}<span class="badge badge-info">{{{t('main')}}}</span>{% endif %}
+        {% if($d['levels_list']): %}<span class="chip chip-level">{{{implode(', ', json_decode($d['levels_list'], true))}}}</span>{% endif %}
+        {% if($d['lesion_side']): %}<span class="muted">{{{nl_show($lists, 'procedure.side', $d['lesion_side'])}}}</span>{% endif %}
+        {% if($d['qualifiers']): %}{% foreach(json_decode($d['qualifiers'], true) as $qn => $qv): %}<span class="muted small">{{{str_replace('_', ' ', $qn)}}}: {{{is_array($qv) ? implode('+', $qv) : $qv}}}</span> {% endforeach %}{% endif %}
+        {% if($d['clinical_syndrome']): %}<span class="muted small">{{{nl_show($lists, 'diagnosis.clinical_syndrome', $d['clinical_syndrome'])}}}</span>{% endif %}
+        <span class="status-tag">{{{$d['coding_status']}}}</span>
+    </div>
+    {% endforeach %}
+    {% if(!$dx): %}<p class="muted">{{{t('none recorded')}}}</p>{% endif %}
+
+    <h3>{{{t('Procedures')}}}</h3>
+    {% foreach($pr as $p): %}
+    <div class="coded-row{% if($p['coding_status'] !== 'confirmed'): %} is-suggested{% endif %}">
+        <span class="chip" data-family="procedure">{{{nl_label($lists, 'procedure', $p['procedure_code'])}}}</span>
+        {% if($p['is_main']): %}<span class="badge badge-info">{{{t('main')}}}</span>{% endif %}
+        {% if($p['levels_list']): %}<span class="chip chip-level">{{{implode(', ', json_decode($p['levels_list'], true))}}}</span>{% endif %}
+        {% if($p['location']): %}<span class="chip chip-level">{{{implode(', ', json_decode($p['location'], true))}}}</span>{% endif %}
+        <span class="muted">{{{nl_show($lists, 'procedure.side', $p['lesion_side'])}}} · {{{nl_show($lists, 'procedure.approach_type', $p['approach_type'])}}}{% if($p['approach_route']): %} · {{{str_replace('_', ' ', $p['approach_route'])}}}{% endif %}</span>
+        <span class="muted small">{{{nl_show($lists, 'procedure.technology', $p['technology'])}}}</span>
+        {% if($p['region']): %}<span class="muted small">{{{str_replace('_', ' ', $p['region'])}}}</span>{% endif %}
+        {% if($p['branch_pattern']): %}<span class="chip">{{{$p['branch_pattern']}}}</span>{% endif %}
+        {% if($p['product']): %}<span class="muted small">{{{$p['product']}}}</span>{% endif %}
+        <span class="status-tag">{{{$p['coding_status']}}}</span>
+        {% if($p['rf_protocol']): %}
+        <div class="rf"><code>{{{$p['rf_protocol']}}}</code> <span class="muted small">{{{str_replace('_', ' ', $p['rf_mode'])}}} · {{{count($cycles[$p['id']] ?? [])}}} {{{t('cycles')}}}</span></div>
+        {% endif %}
+    </div>
+    {% endforeach %}
+
+    {% if($op['op_note']): %}<h3>{{{t('Operative note')}}}</h3><p class="note">{{{$op['op_note']}}}</p>{% endif %}
+
+    {% if($missing): %}
+    <div class="notice"><strong>{{{t('Still missing for a complete record')}}}:</strong> {{{implode(', ', $missing)}}}</div>
+    {% endif %}
+
+    {% if($history): %}
+    <details class="history"><summary>{{{t('Change history')}}} ({{{count($history)}}})</summary>
+        <table class="list"><tbody>{% foreach($history as $h): %}<tr><td>{{{$h['cdate']}}}</td><td>{{{$h['cuser']}}}</td><td>{{{$h['field']}}}</td></tr>{% endforeach %}</tbody></table>
+    </details>
+    {% endif %}
+</div>

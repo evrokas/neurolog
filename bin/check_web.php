@@ -99,6 +99,93 @@ foreach ($users as $role => $u) {
     unlink($jar);
 }
 
+// ---- M2: saving operations over HTTP (made-up data; removed afterwards) ----
+$hid = 0; $mS = 0; $mA = 0;
+$db->query("INSERT INTO hospitals (name, active, cuser) VALUES ('wt hospital', 1, 'wt')"); $hid = $db->insert_id;
+$db->query("INSERT INTO members (name, kind, uname, active, cuser) VALUES ('wt surgeon', 'surgeon', 'wt_surgeon', 1, 'wt')"); $mS = $db->insert_id;
+$db->query("INSERT INTO members (name, kind, active, cuser) VALUES ('wt other surgeon', 'surgeon', 1, 'wt')"); $mO = $db->insert_id;
+$created = [];
+// leftovers of an earlier crashed run (made-up patient WT-Test) go first
+foreach ($db->query("SELECT o.id FROM operations o JOIN patients p ON p.id = o.patient_ref WHERE p.surname = 'WT-Test'")->fetch_all() as $row) $created[] = (int)$row[0];
+register_shutdown_function(function () use ($db, &$created, &$hid, &$mS, &$mO) {
+    foreach ($created as $oid) {
+        $r = $db->query("SELECT patient_ref FROM operations WHERE id = $oid")->fetch_row();
+        $db->query("DELETE c FROM rf_cycles c JOIN procedures p ON p.id = c.procedure_ref WHERE p.op_ref = $oid");
+        foreach (['procedures', 'diagnoses'] as $t) $db->query("DELETE FROM $t WHERE op_ref = $oid");
+        $db->query("DELETE FROM change_log WHERE entity = 'operations' AND entity_ref = $oid");
+        $db->query("DELETE FROM operations WHERE id = $oid");
+        if ($r) $db->query("DELETE FROM patients WHERE id = " . (int)$r[0] . " AND NOT EXISTS (SELECT 1 FROM operations WHERE patient_ref = " . (int)$r[0] . ")");
+    }
+    $db->query("DELETE FROM members WHERE id IN (" . (int)$mS . "," . (int)$mO . ")");
+    $db->query("DELETE FROM hospitals WHERE id = " . (int)$hid);
+});
+function login_as(string $base, string $u, string $pass): string {
+    $jar = tempnam(sys_get_temp_dir(), 'nlj');
+    $t = token(req("$base/login", $jar)['body']);
+    req("$base/login", $jar, ['csrf_token' => $t, 'username' => $u, 'password' => $pass]);
+    return $jar;
+}
+$opPost = function (string $jar, string $url, int $surgeon, array $extra = []) use ($base, $hid) {
+    $t = token(req($base . $url, $jar)['body']);
+    $post = ['csrf_token' => $t, 'new_patient' => ['surname' => 'WT-Test', 'given_name' => 'Patient', 'birth_date' => '1960-01-01'],
+             'op' => ['op_date' => date('Y-m-d'), 'primary_surgeon_ref' => (string)$surgeon, 'hospital_ref' => (string)$hid],
+             'dx' => ['0' => ['diagnosis_code' => 'disc_herniation', 'levels' => 'Ο4/5', 'lesion_side' => 'left']],
+             'pr' => ['0' => ['procedure_code' => 'discectomy', 'levels' => 'Ο4/5', 'lesion_side' => 'left', 'approach_type' => 'tubular_MIS', 'technology' => '["microscope"]', 'treats' => '0']],
+             'main_dx' => '0', 'main_pr' => '0'];
+    return req($base . $url, $jar, array_replace_recursive($post, $extra));
+};
+$js = login_as($base, $users['surgeon'], $pass);
+$r = $opPost($js, '/operations/new', $mS);
+$okSave = $r['code'] === 302 && preg_match('#/operations/(O-[0-9A-Z*~$=]{4}-[0-9A-Z*~$=]{4}-[0-9A-Z*~$=])$#', urldecode($r['loc']), $m);
+check('surgeon saves an operation (redirect to its page)', (bool)$okSave, "{$r['code']} {$r['loc']}");
+if ($okSave) {
+    $nl = str_replace('-', '', $m[1]);
+    $op = $db->query("SELECT id FROM operations WHERE nl_id = '" . $db->real_escape_string($nl) . "'")->fetch_assoc();
+    $created[] = (int)$op['id'];
+    $st = $db->query("SELECT coding_status, coded_by, levels_list, region FROM procedures WHERE op_ref = {$op['id']}")->fetch_assoc();
+    check('own case: codes confirmed, levels and region stored', $st['coding_status'] === 'confirmed' && $st['coded_by'] === $users['surgeon'] && $st['levels_list'] === '["L4-L5"]' && $st['region'] === 'lumbar', json_encode($st));
+    $v = req("$base/operations/{$m[1]}", $js);
+    check('operation page shows the record', $v['code'] === 200 && str_contains($v['body'], $m[1]) && clean($v['body']));
+    $a = $db->query("SELECT COUNT(*) FROM audit_log WHERE action = 'view' AND entity = 'operations' AND entity_ref = {$op['id']}")->fetch_row()[0];
+    check('viewing the operation is audited', $a >= 1);
+    $b = $db->query("SELECT COUNT(*) FROM audit_log WHERE detail LIKE '%WT-Test%'")->fetch_row()[0];
+    check('no patient name in the audit log', (int)$b === 0);
+    // edit: change only the operation note; rows unchanged keep their status
+    $e = req("$base/operations/{$m[1]}/edit", $js);
+    check('edit form opens with the stored levels', $e['code'] === 200 && str_contains($e['body'], 'value="L4-L5"'));
+    $jv = login_as($base, $users['viewer'], $pass);
+    check('viewer can read the operation', req("$base/operations/{$m[1]}", $jv)['code'] === 200);
+    check('viewer cannot open the edit form', req("$base/operations/{$m[1]}/edit", $jv)['code'] === 302);
+    $t = token(req("$base/operations/new", $js)['body']);
+    $r2 = req("$base/operations/{$m[1]}/confirm", $jv, ['csrf_token' => $t]);
+    check('viewer cannot confirm codes', $r2['code'] !== 200 || !str_contains($r2['body'], 'codes confirmed'));
+}
+// someone else's case: suggested until that surgeon confirms
+$r = $opPost($js, '/operations/new', $mO);
+if ($r['code'] === 302 && preg_match('#/operations/(O-[^/]+)$#', urldecode($r['loc']), $m2)) {
+    $op2 = $db->query("SELECT id FROM operations WHERE nl_id = '" . $db->real_escape_string(str_replace('-', '', $m2[1])) . "'")->fetch_assoc();
+    $created[] = (int)$op2['id'];
+    $st = $db->query("SELECT coding_status FROM procedures WHERE op_ref = {$op2['id']}")->fetch_assoc();
+    check("another surgeon's case: codes suggested", $st['coding_status'] === 'suggested');
+    $t = token(req("$base/operations/new", $js)['body']);
+    req("$base/operations/{$m2[1]}/confirm", $js, ['csrf_token' => $t]);
+    $st = $db->query("SELECT coding_status FROM procedures WHERE op_ref = {$op2['id']}")->fetch_assoc();
+    check("only the primary surgeon confirms", $st['coding_status'] === 'suggested');
+    $db->query("UPDATE members SET uname = '{$users['surgeon']}' WHERE id = $mO");
+    req("$base/operations/{$m2[1]}/confirm", $js, ['csrf_token' => $t]);
+    $st = $db->query("SELECT coding_status FROM procedures WHERE op_ref = {$op2['id']}")->fetch_assoc();
+    check('the primary surgeon confirms suggested codes', $st['coding_status'] === 'confirmed');
+} else check("save another surgeon's case", false, "{$r['code']}");
+// refused input is not saved and comes back with the messages
+$before = $db->query('SELECT COUNT(*) FROM operations')->fetch_row()[0];
+$r = $opPost($js, '/operations/new', $mS, ['pr' => ['0' => ['levels' => 'Ο7', 'approach_type' => '']]]);
+check('impossible level refused, nothing saved', $r['code'] === 422 && str_contains($r['body'], 'L7 does not exist') && $db->query('SELECT COUNT(*) FROM operations')->fetch_row()[0] == $before, (string)$r['code']);
+$r = $opPost($js, '/operations/new', $mS, ['csrf_token' => 'bad']);
+check('operation save without a valid CSRF token is refused (403, nothing saved)', $r['code'] === 403 && $db->query('SELECT COUNT(*) FROM operations')->fetch_row()[0] == $before, (string)$r['code']);
+if ($r['code'] === 302 && preg_match('#/operations/(O-[^/]+)$#', urldecode($r['loc']), $m3)) $created[] = (int)$db->query("SELECT id FROM operations WHERE nl_id = '" . $db->real_escape_string(str_replace('-', '', $m3[1])) . "'")->fetch_row()[0];
+$r = req("$base/settings/hospitals", login_as($base, $users['admin'], $pass), ['csrf_token' => 'bad', 'name' => 'wt csrf']);
+check('settings save without a valid CSRF token is refused', $r['code'] === 403);
+
 $srv = (string)@file_get_contents($log);
 check('server log has no PHP warning', !preg_match('/PHP (Warning|Notice|Fatal|Deprecated)/', $srv), substr($srv, 0, 300));
 exit($fail ? 1 : 0);

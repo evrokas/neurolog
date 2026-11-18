@@ -1,0 +1,23 @@
+<fieldset class="op-row dx-row" data-row="{{{$i}}}">
+    <legend>{{{t('Diagnosis')}}} <span class="row-no"></span>
+        {% if(($r['_status'] ?? '') === 'suggested'): %}<span class="badge badge-warning">{{{t('suggested')}}}</span>{% endif %}</legend>
+    <div class="row-grid">
+        <label class="wide">{{{t('Diagnosis')}}} {{ nl_chip("dx[$i][diagnosis_code]", 'diagnosis', $r['diagnosis_code'] ?? '', false, false, true) }} {{ nl_ferr($errors, "dx.$i.diagnosis_code") }}</label>
+        <label class="check"><input type="radio" name="main_dx" value="{{{$i}}}"{% if((string)($in['main_dx'] ?? '0') === (string)$i): %} checked{% endif %}> {{{t('Main diagnosis')}}}</label>
+        <label>{{{t('Levels')}}} <input type="text" class="levels-input" name="dx[{{{$i}}}][levels]" value="{{{$r['levels'] ?? ''}}}" placeholder="Ο4/5" autocomplete="off">
+            <span class="levels-out"></span> {{ nl_ferr($errors, "dx.$i.levels") }}</label>
+        <label>{{{t('Location')}}} {{ nl_chip("dx[$i][location]", 'location', $r['location'] ?? '', true) }} {{ nl_ferr($errors, "dx.$i.location") }}</label>
+        <label>{{{t('Side')}}} {{ nl_chip("dx[$i][lesion_side]", 'procedure.side', $r['lesion_side'] ?? '', false, true) }}</label>
+        <label>{{{t('Clinical syndrome')}}} {{ nl_chip("dx[$i][clinical_syndrome]", 'diagnosis.clinical_syndrome', $r['clinical_syndrome'] ?? '', true) }}</label>
+        <label>{{{t('Acuity')}}} {{ nl_chip("dx[$i][acuity]", 'diagnosis.acuity', $r['acuity'] ?? '', false, true) }}</label>
+        <label>{{{t('Recurrence')}}} {{ nl_chip("dx[$i][recurrence]", 'diagnosis.recurrence', $r['recurrence'] ?? '') }}</label>
+        <label>{{{t('Symptom duration')}}} {{ nl_chip("dx[$i][symptom_duration]", 'field.diagnosis.symptom_duration', $r['symptom_duration'] ?? '') }}</label>
+        <label>{{{t('Neurological deficit')}}} {{ nl_chip("dx[$i][neuro_deficit]", 'field.diagnosis.neuro_deficit', $r['neuro_deficit'] ?? '') }}</label>
+        <div class="qualifiers wide" data-name="dx[{{{$i}}}][q]" data-values="{{{json_encode((object)($r['q'] ?? []), JSON_UNESCAPED_UNICODE)}}}" data-errors="{{{json_encode(array_filter($errors, fn($k) => str_starts_with($k, "dx.$i.q."), ARRAY_FILTER_USE_KEY))}}}"></div>
+        <label>{{{t('Histology')}}} <input type="text" name="dx[{{{$i}}}][histology]" value="{{{$r['histology'] ?? ''}}}" maxlength="128"></label>
+        <label>{{{t('Prior surgery, same region')}}} {{ nl_yesno("dx[$i][prior_surgery_same_region]", $r['prior_surgery_same_region'] ?? '') }}</label>
+        <label>{{{t('Complicates operation (ID)')}}} <input type="text" name="dx[{{{$i}}}][index_op]" value="{{{$r['index_op'] ?? ''}}}" placeholder="O-XXXX-XXXX-X"> {{ nl_ferr($errors, "dx.$i.index_op") }}</label>
+        <label class="wide">{{{t('Note')}}} <input type="text" name="dx[{{{$i}}}][note]" value="{{{$r['note'] ?? ''}}}"></label>
+    </div>
+    <button type="button" class="btn small-btn row-remove">{{{t('Remove')}}}</button>
+</fieldset>

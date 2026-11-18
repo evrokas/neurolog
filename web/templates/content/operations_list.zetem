@@ -1,0 +1,25 @@
+<div class="content">
+    <div class="page-head">
+        <h2>{{{t('Operations')}}}</h2>
+        {% if($can_edit): %}<a class="btn primary" href="{{rel_url('/operations/new')}}">+ {{{t('New operation')}}}</a>{% endif %}
+    </div>
+    <p class="muted small">{{{t('The latest 200. Filters on every facet come with milestone M3.')}}}</p>
+    <table class="list">
+        <thead><tr><th>ID</th><th>{{{t('Date')}}}</th><th>{{{t('Patient')}}}</th><th>{{{t('Main procedure')}}}</th><th>{{{t('Levels / location')}}}</th><th>{{{t('Side')}}}</th><th>{{{t('Surgeon')}}}</th><th></th></tr></thead>
+        <tbody>
+        {% foreach($rows as $r): %}
+            <tr>
+                <td><a href="{{rel_url('/operations/' . $r['nl'])}}"><code>{{{$r['nl']}}}</code></a></td>
+                <td>{{{$r['op_date']}}}</td>
+                <td>{{{$r['surname']}}} {{{$r['given_name'] ?? ''}}}</td>
+                <td>{{{nl_label($lists, 'procedure', $r['procedure_code'])}}}</td>
+                <td>{{{$r['where']}}}</td>
+                <td>{{{$r['lesion_side'] ?? ''}}}</td>
+                <td>{{{$r['surgeon'] ?? ''}}}</td>
+                <td>{% if($r['suggested'] > 0): %}<span class="badge badge-warning">{{{$r['suggested']}}} {{{t('to confirm')}}}</span>{% endif %}</td>
+            </tr>
+        {% endforeach %}
+        {% if(!$rows): %}<tr><td colspan="8" class="muted">{{{t('No operations yet.')}}}</td></tr>{% endif %}
+        </tbody>
+    </table>
+</div>

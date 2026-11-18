@@ -57,10 +57,6 @@ function nl_page_home($params) {
     ]);
 }
 
-function nl_page_operations($params) {
-    return nl_placeholder('Operations', 'Entering an operation with its procedure rows, facets, levels and RF protocol; then the list with a filter on every facet.', 'M2 / M3');
-}
-
 function nl_page_patients($params) {
     return nl_placeholder('Patients', 'Patients with their NeuroLog ID and all their operations.', 'M3');
 }

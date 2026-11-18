@@ -40,6 +40,18 @@ languages:
 
 libraries:
   # Attached from login.zetem only, and only when ernsauthClass::isEnabled().
+  # Operation form (M2): level parser, chip pickers, form behaviour. Attached from operation_form.zetem.
+  operation-form:
+    foot_script:
+      - levels:
+        type: 'text/javascript'
+        src: 'js/levels.js'
+      - chips:
+        type: 'text/javascript'
+        src: 'js/chips.js'
+      - operation_form:
+        type: 'text/javascript'
+        src: 'js/operation_form.js'
   ernsauth-sso-library:
     foot_script:
       - ernsauth_sso:
@@ -89,6 +101,82 @@ routes:
     url: "/operations"
     handler: nl_page_operations
     access: surgeon viewer admin
+  operation_new:
+    title:
+      gr: "Νέα επέμβαση"
+      en: "New operation"
+    url: "/operations/new"
+    handler: nl_page_operation_new
+    method: get
+    access: surgeon admin
+  operation_new_post:
+    title: "New operation"
+    url: "/operations/new"
+    handler: nl_page_operation_new_post
+    method: post
+    access: surgeon admin
+  operation:
+    title:
+      gr: "Επέμβαση"
+      en: "Operation"
+    url: "/operations/{id}"
+    handler: nl_page_operation
+    method: get
+    access: surgeon viewer admin
+  operation_edit:
+    title:
+      gr: "Επεξεργασία επέμβασης"
+      en: "Edit operation"
+    url: "/operations/{id}/edit"
+    handler: nl_page_operation_edit
+    method: get
+    access: surgeon admin
+  operation_edit_post:
+    title: "Edit operation"
+    url: "/operations/{id}/edit"
+    handler: nl_page_operation_edit_post
+    method: post
+    access: surgeon admin
+  operation_confirm_post:
+    title: "Confirm codes"
+    url: "/operations/{id}/confirm"
+    handler: nl_page_operation_confirm_post
+    method: post
+    access: surgeon
+  patient_search:
+    title: "Patient search"
+    url: "/patients/search"
+    handler: nl_page_patient_search
+    method: get
+    access: surgeon admin
+  hospitals:
+    title:
+      gr: "Νοσοκομεία"
+      en: "Hospitals"
+    url: "/settings/hospitals"
+    handler: nl_page_hospitals
+    method: get
+    access: admin
+  hospitals_post:
+    title: "Hospitals"
+    url: "/settings/hospitals"
+    handler: nl_page_hospitals_post
+    method: post
+    access: admin
+  members:
+    title:
+      gr: "Μέλη ομάδας"
+      en: "Group members"
+    url: "/settings/members"
+    handler: nl_page_members
+    method: get
+    access: admin
+  members_post:
+    title: "Group members"
+    url: "/settings/members"
+    handler: nl_page_members_post
+    method: post
+    access: admin
   patients:
     title:
       gr: "Ασθενείς"
@@ -198,6 +286,16 @@ menu:
             gr: 'Ρόλοι'
             en: 'Roles'
           url: '/admin/roles'
+        - hospitals:
+          text:
+            gr: 'Νοσοκομεία'
+            en: 'Hospitals'
+          url: '/settings/hospitals'
+        - members:
+          text:
+            gr: 'Μέλη ομάδας'
+            en: 'Group members'
+          url: '/settings/members'
         - codelists:
           text:
             gr: 'Λίστες κωδικών'

@@ -1,0 +1,31 @@
+<fieldset class="op-row pr-row" data-row="{{{$i}}}">
+    <legend>{{{t('Procedure')}}} <span class="row-no"></span>
+        {% if(($r['_status'] ?? '') === 'suggested'): %}<span class="badge badge-warning">{{{t('suggested')}}}</span>{% endif %}</legend>
+    <div class="row-grid">
+        <label class="wide">{{{t('Procedure')}}} {{ nl_chip("pr[$i][procedure_code]", 'procedure', $r['procedure_code'] ?? '', false, false, true) }} {{ nl_ferr($errors, "pr.$i.procedure_code") }}</label>
+        <label class="check"><input type="radio" name="main_pr" value="{{{$i}}}"{% if((string)($in['main_pr'] ?? '0') === (string)$i): %} checked{% endif %}> {{{t('Main procedure')}}}</label>
+        <label>{{{t('Treats')}}} <select name="pr[{{{$i}}}][treats]" class="treats" data-value="{{{$r['treats'] ?? ''}}}"><option value="">—</option></select></label>
+        <label class="when-levels">{{{t('Levels')}}} <input type="text" class="levels-input" name="pr[{{{$i}}}][levels]" value="{{{$r['levels'] ?? ''}}}" placeholder="Ο4/5" autocomplete="off">
+            <span class="levels-tools"><button type="button" class="btn small-btn levels-grid-btn">{{{t('Grid')}}}</button>
+            <label class="check small"><input type="checkbox" name="pr[{{{$i}}}][transitional]" value="1" class="transitional"{% if(!empty($r['transitional'])): %} checked{% endif %}> {{{t('transitional vertebra (L6)')}}}</label></span>
+            <span class="levels-out"></span> {{ nl_ferr($errors, "pr.$i.levels") }}</label>
+        <label class="when-location">{{{t('Location')}}} {{ nl_chip("pr[$i][location]", 'location', $r['location'] ?? '', true) }} {{ nl_ferr($errors, "pr.$i.location") }}</label>
+        <label>{{{t('Side')}}} {{ nl_chip("pr[$i][lesion_side]", 'procedure.side', $r['lesion_side'] ?? '', false, true, true) }} {{ nl_ferr($errors, "pr.$i.lesion_side") }}</label>
+        <label>{{{t('Approach')}}} {{ nl_chip("pr[$i][approach_type]", 'procedure.approach_type', $r['approach_type'] ?? '', false, false, true) }} {{ nl_ferr($errors, "pr.$i.approach_type") }}</label>
+        <label>{{{t('Route')}}} {{ nl_chip("pr[$i][approach_route]", 'procedure.approach_route.spinal', $r['approach_route'] ?? '', false, true) }} {{ nl_ferr($errors, "pr.$i.approach_route") }}</label>
+        <label>{{{t('Approach side')}}} {{ nl_chip("pr[$i][approach_side]", 'procedure.side', $r['approach_side'] ?? '', false, true) }}</label>
+        <label class="wide">{{{t('Technology')}}} {{ nl_chip("pr[$i][technology]", 'procedure.technology', $r['technology'] ?? '', true, false, true) }} {{ nl_ferr($errors, "pr.$i.technology") }}</label>
+        <label>{{{t('Compartment')}}} {{ nl_chip("pr[$i][compartment]", 'procedure.compartment.spinal', $r['compartment'] ?? '', false, true) }} {{ nl_ferr($errors, "pr.$i.compartment") }}</label>
+        <label>{{{t('Spinal column')}}} {{ nl_chip("pr[$i][spinal_column]", 'procedure.spinal_column', $r['spinal_column'] ?? '', false, true) }}</label>
+        <label>{{{t('Extent')}}} {{ nl_chip("pr[$i][extent]", 'procedure.extent', $r['extent'] ?? '', false, true) }}</label>
+        <label>{{{t('Episode')}}} {{ nl_chip("pr[$i][episode]", 'procedure.episode', $r['episode'] ?? '') }}</label>
+        <label>{{{t('Intent')}}} {{ nl_chip("pr[$i][intent]", 'procedure.intent', $r['intent'] ?? '') }}</label>
+        <label class="when-product">{{{t('Product')}}} {{ nl_chip("pr[$i][product]", 'procedure.product.intradiscal_hydrogel', $r['product'] ?? '') }} {{ nl_ferr($errors, "pr.$i.product") }}</label>
+        <label class="when-trigeminal">{{{t('Technique')}}} {{ nl_chip("pr[$i][trigeminal_technique]", 'procedure.trigeminal.technique', $r['trigeminal_technique'] ?? '') }} {{ nl_ferr($errors, "pr.$i.trigeminal_technique") }}</label>
+        <label class="when-trigeminal">{{{t('Branches treated')}}} {{ nl_chip("pr[$i][branches_treated]", 'procedure.trigeminal.branches_treated', $r['branches_treated'] ?? '', true) }} {{ nl_ferr($errors, "pr.$i.branches_treated") }}</label>
+        <label class="when-rf wide">{{{t('RF protocol')}}} <input type="text" name="pr[{{{$i}}}][rf_protocol]" value="{{{$r['rf_protocol'] ?? ''}}}" placeholder="V2 S 50Hz 0.2V ok; V2 T 75C 90s x2" class="mono">
+            <span class="muted small">{{{t('One line, cycles separated by ; (docs/rf-protocol.md)')}}}</span> {{ nl_ferr($errors, "pr.$i.rf_protocol") }}</label>
+        <label>{{{t('Action')}}} {{ nl_chip("pr[$i][action]", 'procedure.action', $r['action'] ?? '', false, false, false, 'default of the procedure') }} {{ nl_ferr($errors, "pr.$i.action") }}</label>
+    </div>
+    <button type="button" class="btn small-btn row-remove">{{{t('Remove')}}}</button>
+</fieldset>

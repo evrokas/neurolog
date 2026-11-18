@@ -87,5 +87,11 @@ function nl_spine_region(array $items, bool $transitional = false): ?string {
         $f = nl_vertebra_index($from, $transitional); $t = nl_vertebra_index($to === 'L5' && $transitional ? 'L6' : $to, $transitional);
         if ($lo >= $f && $hi <= $t) return $name;
     }
-    return null;
+    // a span that no region holds but that crosses exactly one junction gets that junction (L4-S1 -> lumbosacral)
+    $crossed = [];
+    foreach (['craniocervical', 'cervicothoracic', 'thoracolumbar', 'lumbosacral'] as $name) {
+        [$from, $to] = NL_SPINE_REGIONS[$name];
+        if ($lo < nl_vertebra_index($to, $transitional) && $hi > nl_vertebra_index($from, $transitional)) $crossed[] = $name;
+    }
+    return count($crossed) === 1 ? $crossed[0] : null;
 }

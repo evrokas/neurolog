@@ -1,0 +1,102 @@
+{% attach_library('operation-form') %}
+<div class="content op-form-page">
+    <div class="page-head">
+        <h2>{% if($op): %}{{{t('Edit operation')}}} <code>{{{nl_id_format($op['nl_id'])}}}</code>{% else: %}{{{t('New operation')}}}{% endif %}</h2>
+        {% if($op): %}<a class="btn" href="{{rel_url('/operations/' . nl_id_format($op['nl_id']))}}">{{{t('Cancel')}}}</a>{% endif %}
+    </div>
+
+    {% if($errors): %}
+    <div class="notice notice-danger"><strong>{{{t('Not saved')}}}:</strong> {{{count($errors)}}} {{{t('fields need attention (marked below).')}}}
+        {% if(isset($errors['pr'])): %}<br>{{{t('Procedures')}}}: {{{$errors['pr']}}}{% endif %}
+        {% if(isset($errors['patient'])): %}<br>{{{t('Patient')}}}: {{{$errors['patient']}}}{% endif %}</div>
+    {% endif %}
+
+    <script type="application/json" id="nl-lists">{{ $lists_json }}</script>
+    <script type="application/json" id="nl-freq">{{ $freq_json }}</script>
+
+    <form method="post" action="{{$action}}" id="op-form" novalidate>
+        {{ csrf_field() }}
+
+        <section class="op-section">
+            <h3>{{{t('Patient')}}}</h3>
+            {% if($op): %}
+                <p><strong>{{{$patient['surname'] ?? ''}}} {{{$patient['given_name'] ?? ''}}}</strong> · <code>{{{$patient['nl_id_display'] ?? ''}}}</code>
+                   {% if(!empty($patient['birth_date'])): %} · {{{t('born')}}} {{{$patient['birth_date']}}}{% endif %}</p>
+            {% else: %}
+            <div class="patient-pick" data-url="{{rel_url('/patients/search')}}">
+                <input type="hidden" name="patient_ref" value="{{{$in['patient_ref'] ?? ''}}}">
+                <div class="patient-chosen">{% if($patient): %}<span class="chip chip-patient">{{{$patient['surname']}}} {{{$patient['given_name'] ?? ''}}} · {{{$patient['nl_id_display']}}} <button type="button" class="chip-x" aria-label="remove">×</button></span>{% endif %}</div>
+                <label class="patient-search-label">{{{t('Find a patient (name or P- ID)')}}} <input type="text" class="patient-search" autocomplete="off"></label>
+                <ul class="patient-results"></ul>
+                <fieldset class="new-patient">
+                    <legend>{{{t('or a new patient')}}}</legend>
+                    <div class="row-grid">
+                        <label>{{{t('Surname')}}} <input type="text" name="new_patient[surname]" value="{{{$in['new_patient']['surname'] ?? ''}}}" maxlength="128"></label>
+                        <label>{{{t('Given name')}}} <input type="text" name="new_patient[given_name]" value="{{{$in['new_patient']['given_name'] ?? ''}}}" maxlength="128"></label>
+                        <label>{{{t('Birth date')}}} <input type="date" name="new_patient[birth_date]" value="{{{$in['new_patient']['birth_date'] ?? ''}}}"> {{ nl_ferr($errors, 'patient.birth_date') }}</label>
+                        <label>{{{t('Sex')}}} {{ nl_chip('new_patient[sex]', 'field.patient.sex', $in['new_patient']['sex'] ?? '') }}</label>
+                    </div>
+                </fieldset>
+                {{ nl_ferr($errors, 'patient') }}
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="op-section">
+            <h3>{{{t('Operation')}}}</h3>
+            {% $o = $in['op']; %}
+            <div class="row-grid">
+                <label>{{{t('Date')}}} <input type="date" name="op[op_date]" value="{{{$o['op_date'] ?? ''}}}" required> {{ nl_ferr($errors, 'op.op_date') }}</label>
+                <label>{{{t('Hospital')}}} {{ nl_select('op[hospital_ref]', $hospitals, $o['hospital_ref'] ?? '') }} {{ nl_ferr($errors, 'op.hospital_ref') }}</label>
+                <label>{{{t('Primary surgeon')}}} {{ nl_select('op[primary_surgeon_ref]', $members, $o['primary_surgeon_ref'] ?? '', 'surgeon') }} {{ nl_ferr($errors, 'op.primary_surgeon_ref') }}</label>
+                <label>{{{t('Assistant 1')}}} {{ nl_select('op[assistant_1_ref]', $members, $o['assistant_1_ref'] ?? '') }}</label>
+                <label>{{{t('Assistant 2')}}} {{ nl_select('op[assistant_2_ref]', $members, $o['assistant_2_ref'] ?? '') }}</label>
+                <label>{{{t('Anaesthetist')}}} {{ nl_select('op[anaesthetist_ref]', $members, $o['anaesthetist_ref'] ?? '', 'anaesthetist') }}</label>
+                <label>{{{t('Urgency')}}} {{ nl_chip('op[indication_urgency]', 'field.operation.indication_urgency', $o['indication_urgency'] ?? '') }}</label>
+                <label>{{{t('Episode')}}} {{ nl_chip('op[reoperation]', 'field.operation.reoperation', $o['reoperation'] ?? 'primary') }}</label>
+                <label>{{{t('Reoperation of (ID)')}}} <input type="text" name="op[reoperation_of]" value="{{{$o['reoperation_of'] ?? ''}}}" placeholder="O-XXXX-XXXX-X"> {{ nl_ferr($errors, 'op.reoperation_of') }}</label>
+                <label>ASA {{ nl_chip('op[asa_class]', 'field.operation.asa_class', $o['asa_class'] ?? '') }}</label>
+                <label>{{{t('Anaesthesia')}}} {{ nl_chip('op[anaesthesia]', 'field.operation.anaesthesia', $o['anaesthesia'] ?? '') }}</label>
+                <label>{{{t('Position')}}} {{ nl_chip('op[position]', 'field.operation.position', $o['position'] ?? '') }}</label>
+                <label>{{{t('Skin incision')}}} <input type="time" name="op[skin_incision_time]" value="{{{$o['skin_incision_time'] ?? ''}}}"> {{ nl_ferr($errors, 'op.skin_incision_time') }}</label>
+                <label>{{{t('Skin closure')}}} <input type="time" name="op[skin_closure_time]" value="{{{$o['skin_closure_time'] ?? ''}}}"> {{ nl_ferr($errors, 'op.skin_closure_time') }}</label>
+                <label>{{{t('Blood loss (mL)')}}} <input type="number" min="0" name="op[blood_loss_ml]" value="{{{$o['blood_loss_ml'] ?? ''}}}"> {{ nl_ferr($errors, 'op.blood_loss_ml') }}</label>
+                <label>{{{t('Transfusion (units)')}}} <input type="number" min="0" name="op[transfusion_units]" value="{{{$o['transfusion_units'] ?? ''}}}"> {{ nl_ferr($errors, 'op.transfusion_units') }}</label>
+                <label class="wide">{{{t('Neuromonitoring')}}} {{ nl_chip('op[neuromonitoring]', 'field.operation.neuromonitoring', $o['neuromonitoring'] ?? '', true) }}</label>
+                <label>{{{t('Antibiotic prophylaxis')}}} {{ nl_chip('op[antibiotic_prophylaxis]', 'field.operation.antibiotic_prophylaxis', $o['antibiotic_prophylaxis'] ?? '') }}</label>
+                <label>{{{t('Drain')}}} {{ nl_yesno('op[drain]', $o['drain'] ?? '') }}</label>
+                <label>{{{t('Incidental durotomy')}}} {{ nl_yesno('op[durotomy_incidental]', $o['durotomy_incidental'] ?? '') }}</label>
+                <label>{{{t('Admission code')}}} <input type="text" name="op[admission_code]" value="{{{$o['admission_code'] ?? ''}}}" maxlength="64"></label>
+            </div>
+        </section>
+
+        <section class="op-section">
+            <h3>{{{t('Diagnoses')}}}</h3>
+            <div class="rows" id="dx-rows">
+                {% foreach($in['dx'] as $i => $r): %}{% include op_dx_row.zetem %}{% endforeach %}
+            </div>
+            <button type="button" class="btn row-add" data-tpl="dx-tpl" data-into="dx-rows">+ {{{t('Diagnosis')}}}</button>
+        </section>
+
+        <section class="op-section">
+            <h3>{{{t('Procedures')}}} <span class="construct muted small"></span></h3>
+            <div class="rows" id="pr-rows">
+                {% foreach($in['pr'] as $i => $r): %}{% include op_pr_row.zetem %}{% endforeach %}
+            </div>
+            <button type="button" class="btn row-add" data-tpl="pr-tpl" data-into="pr-rows">+ {{{t('Procedure')}}}</button>
+        </section>
+
+        <section class="op-section">
+            <h3>{{{t('Operative note')}}}</h3>
+            <textarea name="op[op_note]" rows="5" class="wide-text">{{{$in['op']['op_note'] ?? ''}}}</textarea>
+        </section>
+
+        <div class="form-actions"><button type="submit" class="btn primary">{{{t('Save')}}}</button>
+            <span class="muted small">{{{t('Codes are confirmed when the primary surgeon saves them; otherwise they are suggested until confirmed.')}}}</span></div>
+    </form>
+
+    {% $i = '__I__'; $r = []; %}
+    <template id="dx-tpl">{% include op_dx_row.zetem %}</template>
+    <template id="pr-tpl">{% include op_pr_row.zetem %}</template>
+    <div class="levels-grid-pop" hidden></div>
+</div>

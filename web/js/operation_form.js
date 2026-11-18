@@ -1,0 +1,232 @@
+/* Operation form (M2): rows, levels, conditional fields, qualifiers, construct, patient search.
+   Uses NLChips (chips.js) and NLLevels (levels.js). The server validates everything again; this only helps typing. */
+(function () {
+  'use strict';
+  var form, C, L;
+
+  function procMeta(code) {
+    var e = C.find('procedure', code);
+    return e ? { domain: e[3], extra: e[4] || {} } : null;
+  }
+
+  // ---------- rows ----------
+  function nextIndex(container) {
+    var max = -1;
+    container.querySelectorAll('.op-row').forEach(function (r) { var n = parseInt(r.dataset.row, 10); if (n > max) max = n; });
+    return max + 1;
+  }
+  function addRow(btn) {
+    var tpl = document.getElementById(btn.dataset.tpl), into = document.getElementById(btn.dataset.into);
+    var i = nextIndex(into);
+    var html = tpl.innerHTML.replace(/__I__/g, String(i));
+    var tmp = document.createElement('div'); tmp.innerHTML = html;
+    var row = tmp.firstElementChild;
+    into.appendChild(row);
+    setupRow(row);
+    refresh();
+    var first = row.querySelector('.chip-text'); if (first) first.focus();
+  }
+  function removeRow(row) {
+    var container = row.parentNode;
+    if (container.querySelectorAll('.op-row').length <= 1) { row.querySelectorAll('input[type=text], input[type=hidden]').forEach(function (i) { i.value = ''; });
+      row.querySelectorAll('.chipf').forEach(function (c) { C.set(c, []); }); return; }
+    row.remove();
+    refresh();
+  }
+
+  function setupRow(row) {
+    C.initAll(row);
+    row.querySelector('.row-remove').addEventListener('click', function () { removeRow(row); });
+    row.querySelectorAll('.levels-input').forEach(setupLevels);
+    if (row.classList.contains('pr-row')) {
+      var proc = row.querySelector('.chipf[data-list="procedure"] input');
+      proc.addEventListener('change', function () { procChanged(row); refresh(); });
+      row.querySelectorAll('.chipf[data-list="procedure.trigeminal.technique"] input').forEach(function (i) { i.addEventListener('change', function () { procChanged(row); }); });
+      row.querySelector('.levels-grid-btn').addEventListener('click', function (ev) { openGrid(row.querySelector('.levels-input'), ev.target); });
+      procChanged(row);
+    } else {
+      row.querySelector('.chipf[data-list="diagnosis"] input').addEventListener('change', function () { qualifiers(row); refresh(); });
+      qualifiers(row);
+    }
+  }
+
+  function show(row, cls, on) { row.querySelectorAll('.' + cls).forEach(function (el) { el.hidden = !on; }); }
+
+  function procChanged(row) {
+    var code = C.value(row.querySelector('.chipf[data-list="procedure"]'))[0] || '';
+    var m = procMeta(code), kind = m ? (m.extra.level_kind || '') : '';
+    var dom = m ? m.domain : '';
+    show(row, 'when-levels', !m || kind !== '');
+    show(row, 'when-location', !m || kind === '');
+    show(row, 'when-product', code === 'intradiscal_hydrogel');
+    show(row, 'when-trigeminal', code === 'trigeminal_percutaneous');
+    var tech = C.value(row.querySelector('.chipf[data-list="procedure.trigeminal.technique"]'))[0] || '';
+    show(row, 'when-rf', code === 'rf_neurotomy' || (code === 'trigeminal_percutaneous' && tech === 'radiofrequency') || row.querySelector('input[name$="[rf_protocol]"]').value !== '');
+    var route = row.querySelector('.chipf[data-list^="procedure.approach_route"]'), comp = row.querySelector('.chipf[data-list^="procedure.compartment"]');
+    C.setList(route, dom === 'cranial' ? 'procedure.approach_route.cranial' : 'procedure.approach_route.spinal');
+    C.setList(comp, dom === 'cranial' ? 'procedure.compartment.cranial' : 'procedure.compartment.spinal');
+    var act = row.querySelector('.chipf[data-list="procedure.action"]');
+    if (act) act.dataset.ph = m && m.extra.action ? 'default: ' + C.label('procedure.action', m.extra.action) : 'default of the procedure';
+  }
+
+  // ---------- diagnosis qualifiers ----------
+  function qualifiers(row) {
+    var box = row.querySelector('.qualifiers'), code = C.value(row.querySelector('.chipf[data-list="diagnosis"]'))[0] || '';
+    var prev = {};
+    try { prev = JSON.parse(box.dataset.values || '{}'); } catch (e) {}
+    box.querySelectorAll('.chipf').forEach(function (c) { var n = c.dataset.q; prev[n] = c._chip ? C.value(c) : prev[n]; });
+    var errs = {}; try { errs = JSON.parse(box.dataset.errors || '{}'); } catch (e) {}
+    box.innerHTML = '';
+    if (!code) return;
+    var prefix = 'diagnosis.qualifiers.' + code + '.', multi = ['branches_affected', 'prior_treatments'];
+    Object.keys(window.NL_LIST_NAMES).forEach(function (list) {
+      if (list.indexOf(prefix) !== 0) return;
+      var name = list.slice(prefix.length), isMulti = multi.indexOf(name) >= 0;
+      var lab = document.createElement('label'); lab.textContent = name.replace(/_/g, ' ') + ' ';
+      var sp = document.createElement('span'); sp.className = 'chipf'; sp.dataset.list = list; sp.dataset.q = name;
+      if (isMulti) sp.dataset.multi = '1';
+      var inp = document.createElement('input'); inp.type = 'hidden'; inp.name = box.dataset.name + '[' + name + ']';
+      var v = prev[name];
+      inp.value = Array.isArray(v) ? (isMulti ? (v.length ? JSON.stringify(v) : '') : (v[0] || '')) : (v || '');
+      sp.appendChild(inp); lab.appendChild(sp);
+      var key = Object.keys(errs).filter(function (k) { return k.slice(-name.length - 2) === '.q.' + name || k.split('.q.')[1] === name; })[0];
+      if (key) { var er = document.createElement('span'); er.className = 'field-error'; er.textContent = errs[key]; lab.appendChild(er); }
+      box.appendChild(lab);
+      C.init(sp);
+    });
+  }
+
+  // ---------- levels ----------
+  function setupLevels(inp) {
+    var out = inp.parentNode.querySelector('.levels-out'), tr = inp.parentNode.querySelector('.transitional');
+    function upd() {
+      out.innerHTML = '';
+      if (!inp.value.trim()) return;
+      var r = L.parse(inp.value, tr && tr.checked);
+      if (!r.ok) { out.className = 'levels-out bad'; out.textContent = r.errors.join('; '); return; }
+      out.className = 'levels-out';
+      r.items.forEach(function (it) { var c = document.createElement('span'); c.className = 'chip chip-level'; c.textContent = it[0] === it[1] ? it[0] : it[0] + '-' + it[1]; out.appendChild(c); });
+      if (r.region) { var g = document.createElement('span'); g.className = 'muted small'; g.textContent = ' ' + r.region.replace(/_/g, ' '); out.appendChild(g); }
+    }
+    inp.addEventListener('input', upd);
+    if (tr) tr.addEventListener('change', upd);
+    upd();
+  }
+
+  // the level grid (ZPMS): segments by region, several at once; writes standard text into the levels box
+  var grid = null;
+  function openGrid(inp, anchor) {
+    var pop = document.querySelector('.levels-grid-pop');
+    var tr = inp.parentNode.querySelector('.transitional'), trans = tr && tr.checked;
+    var cur = L.parse(inp.value, trans), chosen = {};
+    if (cur.ok) cur.items.forEach(function (it) { if (it[2] === 'segment') chosen[it[0] + '-' + it[1]] = 1; });
+    var V = L.VERTEBRAE.filter(function (v) { return v !== 'C0' && (trans || v !== 'L6'); });
+    pop.innerHTML = '';
+    ['C', 'T', 'L', 'S'].forEach(function (reg) {
+      var line = document.createElement('div'); line.className = 'grid-line';
+      var h = document.createElement('span'); h.className = 'grid-reg'; h.textContent = { C: 'Α', T: 'Θ', L: 'Ο', S: 'Ι' }[reg]; line.appendChild(h);
+      for (var k = 0; k < V.length - 1; k++) {
+        if (V[k][0] !== reg || ['S2', 'S3', 'S4', 'S5'].indexOf(V[k + 1]) >= 0) continue;
+        var seg = V[k] + '-' + V[k + 1], b = document.createElement('button');
+        b.type = 'button'; b.className = 'grid-seg' + (chosen[seg] ? ' on' : ''); b.textContent = seg; b.dataset.seg = seg;
+        b.addEventListener('click', function () { this.classList.toggle('on'); });
+        line.appendChild(b);
+      }
+      pop.appendChild(line);
+    });
+    var act = document.createElement('div'); act.className = 'grid-actions';
+    var ok = document.createElement('button'); ok.type = 'button'; ok.className = 'btn primary small-btn'; ok.textContent = 'OK';
+    var no = document.createElement('button'); no.type = 'button'; no.className = 'btn small-btn'; no.textContent = 'Cancel';
+    ok.addEventListener('click', function () {
+      var segs = [].map.call(pop.querySelectorAll('.grid-seg.on'), function (b) { return b.dataset.seg; });
+      var keep = cur.ok ? cur.items.filter(function (it) { return it[2] !== 'segment'; }).map(function (it) { return it[0] === it[1] ? it[0] : it[0] + '-' + it[1]; }) : [];
+      inp.value = keep.concat(segs).join(', ');
+      inp.dispatchEvent(new Event('input')); pop.hidden = true; inp.focus();
+    });
+    no.addEventListener('click', function () { pop.hidden = true; inp.focus(); });
+    act.appendChild(ok); act.appendChild(no); pop.appendChild(act);
+    var r = anchor.getBoundingClientRect();
+    pop.style.top = (window.scrollY + r.bottom + 4) + 'px';
+    pop.style.left = Math.max(8, Math.min(window.scrollX + r.left, window.scrollX + document.documentElement.clientWidth - 420)) + 'px';
+    pop.hidden = false;
+    var first = pop.querySelector('.grid-seg'); if (first) first.focus();
+    pop.onkeydown = function (ev) { if (ev.key === 'Escape') { pop.hidden = true; inp.focus(); } if (ev.key === 'Enter' && ev.target.classList.contains('grid-seg')) { ev.preventDefault(); ok.click(); } };
+  }
+
+  // ---------- numbering, "treats" choices, construct ----------
+  function refresh() {
+    var dxRows = form.querySelectorAll('.dx-row'), names = [];
+    dxRows.forEach(function (r, k) {
+      r.querySelector('.row-no').textContent = String(k + 1);
+      var code = C.value(r.querySelector('.chipf[data-list="diagnosis"]'))[0];
+      names.push([r.dataset.row, (k + 1) + '. ' + (code ? C.label('diagnosis', code) : '…')]);
+    });
+    var codes = [];
+    form.querySelectorAll('.pr-row').forEach(function (r, k) {
+      r.querySelector('.row-no').textContent = String(k + 1);
+      var c = C.value(r.querySelector('.chipf[data-list="procedure"]'))[0]; if (c) codes.push(c);
+      var sel = r.querySelector('select.treats'), cur = sel.value || sel.dataset.value || '';
+      sel.innerHTML = '<option value="">—</option>';
+      names.forEach(function (n) { var o = document.createElement('option'); o.value = n[0]; o.textContent = n[1]; if (n[0] === cur) o.selected = true; sel.appendChild(o); });
+      if (!sel.value && names.length === 1) sel.value = names[0][0];
+      sel.dataset.value = sel.value;
+    });
+    var cage = codes.indexOf('interbody_fusion') >= 0, screws = codes.indexOf('pedicle_screw_fixation') >= 0;
+    var cons = form.querySelector('.construct');
+    if (cons) cons.textContent = 'construct: ' + (cage && screws ? 'cage + screws' : cage ? 'cage only' : screws ? 'screws only' : 'none');
+  }
+
+  // ---------- patient search ----------
+  function setupPatient() {
+    var box = form.querySelector('.patient-pick'); if (!box) return;
+    var q = box.querySelector('.patient-search'), list = box.querySelector('.patient-results'), ref = box.querySelector('input[name=patient_ref]');
+    var chosen = box.querySelector('.patient-chosen'), np = box.querySelector('.new-patient'), timer = null;
+    function choose(p) {
+      ref.value = p ? p.id : '';
+      chosen.innerHTML = '';
+      if (p) {
+        var c = document.createElement('span'); c.className = 'chip chip-patient';
+        c.textContent = p.name + ' · ' + p.nl_id + (p.birth_date ? ' · ' + p.birth_date : '');
+        var x = document.createElement('button'); x.type = 'button'; x.className = 'chip-x'; x.textContent = '×'; x.setAttribute('aria-label', 'remove');
+        x.addEventListener('click', function () { choose(null); q.focus(); });
+        c.appendChild(x); chosen.appendChild(c);
+      }
+      np.hidden = !!p; q.parentNode.hidden = !!p; list.innerHTML = '';
+    }
+    var x0 = chosen.querySelector('.chip-x');
+    if (x0) x0.addEventListener('click', function () { choose(null); });
+    np.hidden = !!ref.value; q.parentNode.hidden = !!ref.value;
+    q.addEventListener('input', function () {
+      clearTimeout(timer);
+      var term = q.value.trim();
+      if (term.length < 2) { list.innerHTML = ''; return; }
+      timer = setTimeout(function () {
+        fetch(box.dataset.url + '?q=' + encodeURIComponent(term), { credentials: 'same-origin' })
+          .then(function (r) { return r.ok ? r.json() : { matches: [] }; })
+          .then(function (d) {
+            list.innerHTML = '';
+            (d.matches || []).forEach(function (p) {
+              var li = document.createElement('li'), b = document.createElement('button');
+              b.type = 'button'; b.textContent = p.name + ' · ' + p.nl_id + (p.birth_date ? ' · ' + p.birth_date : '');
+              b.addEventListener('click', function () { choose(p); });
+              li.appendChild(b); list.appendChild(li);
+            });
+            if (!(d.matches || []).length) { var li = document.createElement('li'); li.className = 'muted small'; li.textContent = 'no patient found — fill in a new one below'; list.appendChild(li); }
+          }).catch(function () {});
+      }, 250);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    form = document.getElementById('op-form'); if (!form) return;
+    C = window.NLChips; L = window.NLLevels;
+    window.NL_LIST_NAMES = {};
+    try { Object.keys(JSON.parse(document.getElementById('nl-lists').textContent)).forEach(function (k) { window.NL_LIST_NAMES[k] = 1; }); } catch (e) {}
+    form.querySelectorAll('.op-row').forEach(setupRow);
+    document.querySelectorAll('.row-add').forEach(function (b) { b.addEventListener('click', function () { addRow(b); }); });
+    form.addEventListener('change', refresh);
+    setupPatient();
+    refresh();
+    var firstErr = form.querySelector('.field-error'); if (firstErr) firstErr.scrollIntoView({ block: 'center' });
+  });
+})();
