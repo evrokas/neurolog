@@ -55,7 +55,8 @@ function nl_form_data(PDO $db): array {
     $members = $db->query('SELECT id, name, kind, active FROM members ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
     $hospitals = $db->query('SELECT id, name, active FROM hospitals ORDER BY name')->fetchAll(PDO::FETCH_ASSOC);
     $flags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
-    return ['lists_json' => json_encode($js, $flags), 'freq_json' => json_encode((object)$freq, $flags),
+    $presets = array_map(fn($p) => ['id' => (int)$p['id'], 'name' => $p['name'], 'rows' => json_decode($p['rows_json'], true)], nl_presets($db));
+    return ['lists_json' => json_encode($js, $flags), 'freq_json' => json_encode((object)$freq, $flags), 'presets_json' => json_encode($presets, $flags), 'presets' => $presets,
             'members' => $members, 'hospitals' => $hospitals, 'lists' => $lists, 'my_members' => $mine];
 }
 
@@ -131,7 +132,6 @@ function nl_render_form(PDO $db, array $in, array $errors, array $missing, ?arra
     return Renderer::render('operation_form.zetem', $data + [
         'in' => $in, 'errors' => $errors, 'missing' => $missing, 'op' => $op, 'patient' => $patient,
         'action' => $op ? rel_url('/operations/' . nl_id_format($op['nl_id']) . '/edit') : rel_url('/operations/new'),
-        'presets' => [],
     ]);
 }
 
@@ -166,8 +166,12 @@ function nl_operation_save_post(?array $op) {
     }
     $isSurgeon = in_array((int)$v['op']['primary_surgeon_ref'], nl_my_member_ids($db), true);
     $id = nl_op_save($db, $v, $kernel->getUserName(), $isSurgeon, $op ? (int)$op['id'] : null);
+    // presets used on this form (ids only; unknown ones are ignored)
+    foreach (array_unique(array_filter(array_map('intval', explode(',', (string)($_POST['preset_ids'] ?? ''))))) as $pid) {
+        $db->prepare('UPDATE presets SET use_count = use_count + 1 WHERE id = ?')->execute([$pid]);
+    }
     $st = $db->prepare('SELECT nl_id FROM operations WHERE id = ?'); $st->execute([$id]);
-    $kernel->addStatus('status', $isSurgeon ? 'Saved; codes confirmed' : 'Saved; codes suggested until the primary surgeon confirms them');
+    $kernel->addStatus('notice', $isSurgeon ? 'Saved; codes confirmed' : 'Saved; codes suggested until the primary surgeon confirms them');
     header('location: ' . rel_url('/operations/' . nl_id_format((string)$st->fetchColumn())));
     exit();
 }
@@ -216,7 +220,7 @@ function nl_page_operation_confirm_post($params) {
     if (!$op) return error_404();
     if (!in_array((int)$op['primary_surgeon_ref'], nl_my_member_ids($db), true)) return error_403('Only the primary surgeon confirms the codes of an operation.');
     $n = nl_op_confirm($db, (int)$op['id'], $op['nl_id'], $kernel->getUserName());
-    $kernel->addStatus('status', "$n codes confirmed");
+    $kernel->addStatus('notice', "$n codes confirmed");
     header('location: ' . rel_url('/operations/' . nl_id_format($op['nl_id']))); exit();
 }
 
@@ -325,4 +329,60 @@ function nl_page_operation_parse_post($params) {
     $text = mb_substr((string)($_POST['text'] ?? ''), 0, 20000);
     echo json_encode(nl_quickline_parse($text, nl_aliases(__APPDIR__), nl_diadermiki()), JSON_UNESCAPED_UNICODE);
     exit();
+}
+
+// ---------- presets (docs/plans/tags-and-chips.md A7; shared by the group) ----------
+
+// what a preset keeps of a procedure row: never levels, side or location (those differ per patient)
+const NL_PRESET_KEYS = ['procedure_code', 'approach_type', 'approach_route', 'approach_side', 'compartment', 'spinal_column',
+                        'technology', 'episode', 'intent', 'product', 'trigeminal_technique'];
+
+function nl_presets(PDO $db, bool $activeOnly = true): array {
+    return $db->query('SELECT * FROM presets' . ($activeOnly ? ' WHERE active = 1' : '') . ' ORDER BY active DESC, use_count DESC, name')->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/** POST /operations/{id}/preset: save this operation's procedure rows as a preset. */
+function nl_page_operation_preset_post($params) {
+    global $kernel;
+    if ($refused = csrfClass::requireValid()) return $refused;
+    $db = dbConnection::getConnection();
+    $op = nl_op_load($db, (string)($params['id'] ?? ''));
+    if (!$op) return error_404();
+    $name = trim((string)($_POST['name'] ?? ''));
+    $nl = nl_id_format($op['nl_id']);
+    if ($name === '' || mb_strlen($name) > 80) { $kernel->addStatus('error', 'A preset needs a name (at most 80 characters).'); header('location: ' . rel_url("/operations/$nl")); exit(); }
+    $st = $db->prepare('SELECT * FROM procedures WHERE op_ref = ? ORDER BY sort'); $st->execute([$op['id']]);
+    $rows = [];
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $p) {
+        $r = [];
+        foreach (NL_PRESET_KEYS as $k) if ($p[$k] !== null && $p[$k] !== '') $r[$k] = str_starts_with((string)$p[$k], '[') ? json_decode($p[$k], true) : $p[$k];
+        $rows[] = $r;
+    }
+    if (!$rows) { $kernel->addStatus('error', 'This operation has no procedure rows.'); header('location: ' . rel_url("/operations/$nl")); exit(); }
+    $db->prepare('INSERT INTO presets (name, rows_json, active, use_count, from_op_ref, cuser) VALUES (?,?,1,0,?,?)')
+       ->execute([$name, json_encode($rows, JSON_UNESCAPED_UNICODE), $op['id'], $kernel->getUserName()]);
+    nl_audit($db, $kernel->getUserName(), 'create', 'presets', (int)$db->lastInsertId(), null, 'from ' . $op['nl_id']);
+    $kernel->addStatus('notice', 'Preset «' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . '» saved');
+    header('location: ' . rel_url("/operations/$nl")); exit();
+}
+
+/** The group's presets: rename, switch off/on. */
+function nl_page_presets($params) {
+    $db = dbConnection::getConnection();
+    return Renderer::render('presets.zetem', ['presets' => nl_presets($db, false), 'lists' => nl_lists($db)]);
+}
+
+function nl_page_presets_post($params) {
+    global $kernel;
+    if ($refused = csrfClass::requireValid()) return $refused;
+    $db = dbConnection::getConnection();
+    $id = (int)($_POST['id'] ?? 0);
+    $name = trim((string)($_POST['name'] ?? ''));
+    if ($id && $name !== '' && mb_strlen($name) <= 80) {
+        $db->prepare('UPDATE presets SET name = ?, active = ?, udate = NOW(), uuser = ? WHERE id = ?')
+           ->execute([$name, !empty($_POST['active']) ? 1 : 0, $kernel->getUserName(), $id]);
+        nl_audit($db, $kernel->getUserName(), 'update', 'presets', $id);
+        $kernel->addStatus('notice', 'Saved');
+    }
+    header('location: ' . rel_url('/presets')); exit();
 }

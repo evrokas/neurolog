@@ -13,6 +13,7 @@
 
     <script type="application/json" id="nl-lists">{{ $lists_json }}</script>
     <script type="application/json" id="nl-freq">{{ $freq_json }}</script>
+    <script type="application/json" id="nl-presets">{{ $presets_json }}</script>
 
     <form method="post" action="{{$action}}" id="op-form" novalidate>
         {{ csrf_field() }}
@@ -91,6 +92,12 @@
 
         <section class="op-section">
             <h3>{{{t('Procedures')}}} <span class="construct muted small"></span></h3>
+            <input type="hidden" name="preset_ids" value="">
+            {% if($presets): %}
+            <div class="preset-chips"><span class="muted small">{{{t('Presets')}}}:</span>
+                {% foreach($presets as $ps): %}<button type="button" class="chip preset-chip" data-preset="{{{$ps['id']}}}">{{{$ps['name']}}}</button>{% endforeach %}
+            </div>
+            {% endif %}
             <div class="rows" id="pr-rows">
                 {% foreach($in['pr'] as $i => $r): %}{% include op_pr_row.zetem %}{% endforeach %}
             </div>

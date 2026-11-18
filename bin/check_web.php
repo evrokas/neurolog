@@ -77,6 +77,8 @@ $matrix = [
     '/statistics'  => ['surgeon' => 'ok', 'admin' => 'ok', 'viewer' => 'ok'],
     '/profile'     => ['surgeon' => 'ok', 'admin' => 'ok', 'viewer' => 'ok'],
     '/codelists'   => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
+    '/presets'     => ['surgeon' => 'ok', 'admin' => 'ok', 'viewer' => 'login'],
+    '/settings/members' => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
     '/codelists?list=procedure' => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
     '/status'      => ['surgeon' => 'login', 'admin' => 'ok', 'viewer' => 'login'],
     '/admin/users' => ['surgeon' => 'denied', 'admin' => 'ok', 'viewer' => 'denied'],
@@ -200,6 +202,23 @@ if ($r['code'] === 302 && preg_match('#/operations/(O-[^/]+)$#', urldecode($r['l
     check('a proposed row the surgeon did not accept is saved as suggested', $st['coding_status'] === 'suggested');
     check('the quick line is kept verbatim', $o4['quick_line'] === 'Διαδερμική δισκεκτομή Ο4/5 αρ');
 } else check('save with a proposed row', false, (string)$r['code']);
+
+// presets: saved from an operation without levels or side, offered on the form, refused to a viewer
+if (!empty($m[1])) {
+    $t = token(req("$base/operations/{$m[1]}", $js)['body']);
+    $r = req("$base/operations/{$m[1]}/preset", $js, ['csrf_token' => $t, 'name' => 'wt preset']);
+    $pr = $db->query("SELECT id, rows_json FROM presets WHERE name = 'wt preset'")->fetch_assoc();
+    check('preset saved from an operation', $r['code'] === 302 && $pr !== null);
+    if ($pr) {
+        $rows = json_decode($pr['rows_json'], true);
+        check('preset keeps the procedure, not levels or side', ($rows[0]['procedure_code'] ?? '') === 'discectomy' && !isset($rows[0]['levels_list']) && !isset($rows[0]['lesion_side']) && !isset($rows[0]['level_from']));
+        check('preset offered on the form', str_contains(req("$base/operations/new", $js)['body'], 'wt preset'));
+        $db->query("DELETE FROM presets WHERE id = {$pr['id']}");
+    }
+    $jv2 = login_as($base, $users['viewer'], $pass);
+    $r = req("$base/operations/{$m[1]}/preset", $jv2, ['csrf_token' => token(req("$base/operations/{$m[1]}", $jv2)['body']), 'name' => 'wt viewer preset']);
+    check('viewer cannot save a preset', $db->query("SELECT COUNT(*) FROM presets WHERE name = 'wt viewer preset'")->fetch_row()[0] == 0);
+}
 
 // refused input is not saved and comes back with the messages
 $before = $db->query('SELECT COUNT(*) FROM operations')->fetch_row()[0];

@@ -61,7 +61,7 @@ function nl_people_post(string $kind) {
            ->execute(array_values($vals));
         nl_audit($db, $uname, 'create', $cfg['table'], (int)$db->lastInsertId());
     }
-    $kernel->addStatus('status', 'Saved');
+    $kernel->addStatus('notice', 'Saved');
     header('location: ' . rel_url($cfg['url'])); exit();
 }
 

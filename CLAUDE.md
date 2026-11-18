@@ -4,8 +4,8 @@ Guidance for Claude Code when working in this repository.
 
 ## Status
 
-NeuroLog has milestones **M0** (shell: sign-in, roles, design-system styles, tests) and **M1** (schema, code lists,
-NeuroLog IDs); milestones are in [`docs/implementation-plan.md`](docs/implementation-plan.md). Read
+NeuroLog has milestones **M0** (shell), **M1** (schema, code lists, NeuroLog IDs) and **M2** (entering operations:
+chips, quick line, presets); milestones are in [`docs/implementation-plan.md`](docs/implementation-plan.md). Read
 [`docs/README.md`](docs/README.md) first, then [`docs/data-dictionary.md`](docs/data-dictionary.md) and
 [`docs/decisions.md`](docs/decisions.md) before proposing anything. Don't re-argue a decision in the log unless
 the user brings new information; record new decisions there (newest first, with the reason).
@@ -39,6 +39,8 @@ the user brings new information; record new decisions there (newest first, with 
   `sql/admin.sql`, not `config/db.php`). ZeusFW traps: no string `default:` (maker escapes the quotes; the app sets the
   value), and changing the type of a `UNIQUE` column adds a second index (drop it). Avoid reserved words as column
   names (`procedure_code`, `fu_window`). Rows link by `*_ref` integer keys; `nl_id` is the visible ID (`web/nl_id.php`).
+- Status messages: `$kernel->addStatus('notice'|'error'|'warning', …)`; the notifications module prints them **raw**,
+  so escape anything a user typed.
 - **Every POST handler starts with `if ($refused = csrfClass::requireValid()) return $refused;`**: Kernel::boot's
   `csrf_webforms` covers only framework webforms, not app routes (`bin/check_web.php` tests it).
 - Operations: `web/operations.php` (validation is pure and unit-tested, saving, derived fields, audit/change log),

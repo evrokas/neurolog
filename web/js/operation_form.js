@@ -281,6 +281,29 @@
     if (ns) ns.addEventListener('click', function () { if (note.value.trim()) { runParse(note.value, box); box.scrollIntoView({ block: 'center' }); } });
   }
 
+  // ---------- presets (A7): add the preset's rows; levels and side stay to be filled ----------
+  function setupPresets() {
+    var src = document.getElementById('nl-presets'), presets = [];
+    try { presets = JSON.parse(src ? src.textContent : '[]'); } catch (e) {}
+    form.querySelectorAll('.preset-chip').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var ps = presets.filter(function (x) { return String(x.id) === b.dataset.preset; })[0]; if (!ps) return;
+        var first = null;
+        ps.rows.forEach(function (x) {
+          var row = emptyRow('pr-rows', 'pr-tpl', function (r) { return !C.value(r.querySelector('.chipf[data-list="procedure"]')).length; });
+          fill(row, 'procedure_code', x.procedure_code); procChanged(row);
+          Object.keys(x).forEach(function (k) { if (k !== 'procedure_code') fill(row, k, x[k]); });
+          procChanged(row);
+          if (!first) first = row;
+        });
+        var ids = form.querySelector('input[name=preset_ids]');
+        ids.value = ids.value ? ids.value + ',' + ps.id : String(ps.id);
+        refresh();
+        if (first) { var li = first.querySelector('.levels-input'); if (li && li.offsetParent) li.focus(); }
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     form = document.getElementById('op-form'); if (!form) return;
     C = window.NLChips; L = window.NLLevels;
@@ -291,6 +314,7 @@
     form.addEventListener('change', refresh);
     setupPatient();
     setupQuick();
+    setupPresets();
     refresh();
     var firstErr = form.querySelector('.field-error'); if (firstErr) firstErr.scrollIntoView({ block: 'center' });
   });

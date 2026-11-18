@@ -115,6 +115,27 @@ routes:
     handler: nl_page_operation_new_post
     method: post
     access: surgeon admin
+  operation_preset_post:
+    title: "Save as preset"
+    url: "/operations/{id}/preset"
+    handler: nl_page_operation_preset_post
+    method: post
+    access: surgeon admin
+  presets:
+    title:
+      gr: "Πρότυπα"
+      en: "Presets"
+    name: presets
+    url: "/presets"
+    handler: nl_page_presets
+    method: get
+    access: surgeon admin
+  presets_post:
+    title: "Presets"
+    url: "/presets"
+    handler: nl_page_presets_post
+    method: post
+    access: surgeon admin
   operation_parse_post:
     title: "Read the quick line"
     url: "/operations/parse"
@@ -264,6 +285,12 @@ menu:
         en: 'Operations'
       url: '/operations'
       access: surgeon viewer admin
+    - presets:
+      text:
+        gr: 'Πρότυπα'
+        en: 'Presets'
+      url: '/presets'
+      access: surgeon admin
     - patients:
       text:
         gr: 'Ασθενείς'

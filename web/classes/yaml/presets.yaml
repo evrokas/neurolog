@@ -1,0 +1,45 @@
+---
+table:
+  name: presets
+  class: presetsClass
+
+  fields:
+  - name: name
+    type: varchar(80)
+    required: true
+
+  - name: rows_json
+    type: text
+    required: true
+
+  - name: active
+    type: boolean
+    default: 1
+
+  - name: use_count
+    type: int
+    default: 0
+
+  - name: from_op_ref
+    type: int
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+  - name: udate
+    type: datetime
+
+  - name: uuser
+    type: char(32)
+
+...
+
+# Preset chips (docs/plans/tags-and-chips.md A7; shared by the group, decisions 2026-11-18): a frequent combination
+# of procedure rows. One click on the operation form adds the rows; levels, side and location are never stored
+# here and are always asked.
+# - rows_json    JSON list of procedure rows, only the keys in NL_PRESET_KEYS (web/operation_pages.php)
+# - use_count    how often it was used on a saved operation (order of the chips)
+# - from_op_ref  the operation it was made from

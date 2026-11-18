@@ -66,6 +66,15 @@
     <div class="notice"><strong>{{{t('Still missing for a complete record')}}}:</strong> {{{implode(', ', $missing)}}}</div>
     {% endif %}
 
+    {% if($can_edit && $pr): %}
+    <form method="post" action="{{rel_url('/operations/' . $nl . '/preset')}}" class="preset-save">
+        {{ csrf_field() }}
+        <label>{{{t('Save these procedure rows as a group preset')}}} <input type="text" name="name" maxlength="80" placeholder="{{{t('e.g. Tubular discectomy')}}}"></label>
+        <button class="btn small-btn" type="submit">{{{t('Save as preset')}}}</button>
+        <span class="muted small">{{{t('Levels, side and location are not kept.')}}}</span>
+    </form>
+    {% endif %}
+
     {% if($history): %}
     <details class="history"><summary>{{{t('Change history')}}} ({{{count($history)}}})</summary>
         <table class="list"><tbody>{% foreach($history as $h): %}<tr><td>{{{$h['cdate']}}}</td><td>{{{$h['cuser']}}}</td><td>{{{$h['field']}}}</td></tr>{% endforeach %}</tbody></table>
