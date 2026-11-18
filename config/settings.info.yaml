@@ -176,6 +176,28 @@ routes:
     handler: nl_page_patient_search
     method: get
     access: surgeon admin
+  patient:
+    title:
+      gr: "Ασθενής"
+      en: "Patient"
+    url: "/patients/{id}"
+    handler: nl_page_patient
+    method: get
+    access: surgeon viewer admin
+  patient_edit:
+    title:
+      gr: "Επεξεργασία ασθενή"
+      en: "Edit patient"
+    url: "/patients/{id}/edit"
+    handler: nl_page_patient_edit
+    method: get
+    access: surgeon admin
+  patient_edit_post:
+    title: "Edit patient"
+    url: "/patients/{id}/edit"
+    handler: nl_page_patient_edit_post
+    method: post
+    access: surgeon admin
   hospitals:
     title:
       gr: "Νοσοκομεία"

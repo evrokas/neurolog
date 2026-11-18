@@ -1,0 +1,32 @@
+<div class="content">
+    <div class="page-head">
+        <h2>{{{$p['surname']}}} {{{$p['given_name'] ?? ''}}} <code class="small">{{{$nl}}}</code></h2>
+        <div>
+            <a class="btn" href="{{rel_url('/operations')}}?patient={{{rawurlencode($nl)}}}">{{{t('Operations list')}}}</a>
+            {% if($can_edit): %}<a class="btn" href="{{rel_url('/patients/' . $nl . '/edit')}}">{{{t('Edit')}}}</a>{% endif %}
+        </div>
+    </div>
+    <dl class="kv">
+        <dt>{{{t('Born')}}}</dt><dd>{{{$p['birth_date'] ?? '—'}}}{% if($age !== null): %} ({{{$age}}} {{{t('years')}}}){% endif %}</dd>
+        <dt>{{{t('Sex')}}}</dt><dd>{{{nl_show($lists, 'field.patient.sex', $p['sex'])}}}</dd>
+        <dt>AMKA</dt><dd>{{{$p['amka'] ?? '—'}}}</dd>
+        <dt>BMI</dt><dd>{{{$p['bmi'] ?? '—'}}}</dd>
+        <dt>{{{t('Smoking')}}} · {{{t('diabetes')}}}</dt><dd>{{{nl_show($lists, 'field.patient.smoking', $p['smoking'])}}} · {{{nl_show($lists, 'field.patient.diabetes', $p['diabetes'])}}}</dd>
+        <dt>{{{t('Anticoagulant')}}}</dt><dd>{{{nl_show($lists, 'field.patient.anticoagulant', $p['anticoagulant'])}}}</dd>
+        <dt>Charlson</dt><dd>{{{$p['charlson_index'] ?? '—'}}}</dd>
+        <dt>{{{t('Research consent')}}}</dt><dd>{{{nl_show($lists, 'field.patient.research_consent', $p['research_consent'])}}}{% if($p['research_consent_date']): %} · {{{$p['research_consent_date']}}}{% endif %}</dd>
+    </dl>
+    <h3>{{{t('Operations')}}}</h3>
+    <table class="list">
+        <thead><tr><th>ID</th><th>{{{t('Date')}}}</th><th>{{{t('Main procedure')}}}</th><th>{{{t('Levels / location')}}}</th><th>{{{t('Side')}}}</th><th>{{{t('Surgeon')}}}</th><th>{{{t('Hospital')}}}</th><th></th></tr></thead>
+        <tbody>
+        {% foreach($ops as $o): %}
+            <tr><td><a href="{{rel_url('/operations/' . $o['nl'])}}"><code>{{{$o['nl']}}}</code></a></td><td>{{{$o['op_date']}}}</td>
+                <td>{{{nl_label($lists, 'procedure', $o['procedure_code'])}}}</td><td>{{{$o['where']}}}</td><td>{{{$o['lesion_side'] ?? ''}}}</td>
+                <td>{{{$o['surgeon'] ?? ''}}}</td><td>{{{$o['hospital'] ?? ''}}}</td>
+                <td>{% if($o['suggested'] > 0): %}<span class="badge badge-warning">{{{t('to confirm')}}}</span>{% endif %}</td></tr>
+        {% endforeach %}
+        {% if(!$ops): %}<tr><td colspan="8" class="muted">{{{t('No operations.')}}}</td></tr>{% endif %}
+        </tbody>
+    </table>
+</div>

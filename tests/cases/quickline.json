@@ -42,6 +42,8 @@
      "pr": [], "dx": [{"diagnosis_code": "disc_herniation", "levels": "Ο4/5", "lesion_side": "left"}]},
     {"in": "Δισκεκτομή Ο4/5, αριστερά, ενδοσκοπική",
      "pr": [{"procedure_code": "discectomy", "levels": "Ο4/5", "lesion_side": "left", "approach_type": "endoscopic_uniportal"}]},
+    {"in": "δισκεκτομές Ο4/5 και Ο5/Ι1", "pr": [{"procedure_code": "discectomy", "levels": "Ο4/5, Ο5/Ι1"}]},
+    {"in": "two discectomies L4-L5", "pr": [{"procedure_code": "discectomy", "levels": "L4-L5"}]},
     {"in": "κάτι άγνωστο", "pr": [], "unplaced": ["ΚΑΤΙ ΑΓΝΩΣΤΟ"]},
     {"in": "email a@ep.gr δισκεκτομή Ο4/5", "tags": 0, "pr": [{"procedure_code": "discectomy", "levels": "Ο4/5"}]}
   ]

@@ -305,6 +305,12 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    // the filter form and the patient form use the chips and the level preview only
+    var ff = document.getElementById('filter-form');
+    if (ff) {
+      ff.querySelectorAll('.levels-input').forEach(function (i) { C = window.NLChips; L = window.NLLevels; setupLevels(i); });
+      ff.addEventListener('submit', function () { ff.querySelectorAll('input, select').forEach(function (i) { if (!i.value) i.disabled = true; }); });
+    }
     form = document.getElementById('op-form'); if (!form) return;
     C = window.NLChips; L = window.NLLevels;
     window.NL_LIST_NAMES = {};

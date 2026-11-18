@@ -283,3 +283,17 @@ form.inline { display: inline; }
 .notification.notice { background: #E5F4EC; border-color: #A6D8BD; color: #1B6E51; }
 .notification.error { background: #FBEDEC; border-color: #EFC6C4; color: #A33A37; }
 .notification.warning { background: #FDF4E4; border-color: #F0D7A6; color: #8A5A12; }
+
+/* Operation list: search line, filter chips, filter panel */
+.search-line { display: flex; gap: .5rem; margin: .6rem 0; }
+.search-line input { flex: 1; font-size: 1rem; }
+.filter-chips { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: .4rem 0 .8rem; }
+.filter-chip { text-decoration: none; }
+.filter-chip:hover { border-color: var(--nl-danger); }
+.filter-panel { margin: .4rem 0 1rem; border: 1px solid var(--nl-border); border-radius: var(--nl-radius); padding: .5rem .8rem; background: #FBFCFE; }
+.filter-panel summary { cursor: pointer; color: var(--nl-primary); font-weight: 600; }
+.filter-panel form { margin-top: .7rem; }
+.pager a, .pager strong { margin-right: .4rem; }
+
+/* IDs and dates never wrap */
+table.list code, table.list td:nth-child(2) { white-space: nowrap; }

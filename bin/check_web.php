@@ -220,6 +220,57 @@ if (!empty($m[1])) {
     check('viewer cannot save a preset', $db->query("SELECT COUNT(*) FROM presets WHERE name = 'wt viewer preset'")->fetch_row()[0] == 0);
 }
 
+// ---- M3: finding operations; procedure filters match one row ----
+$mkOp = function (array $pr) use ($opPost, $js, $mS, $db, &$created) {
+    $r = $opPost($js, '/operations/new', $mS, ['pr' => $pr]);
+    if ($r['code'] === 302 && preg_match('#/operations/(O-[^/]+)$#', urldecode($r['loc']), $mm)) {
+        $created[] = (int)$db->query("SELECT id FROM operations WHERE nl_id = '" . $db->real_escape_string(str_replace('-', '', $mm[1])) . "'")->fetch_row()[0];
+        return $mm[1];
+    }
+    return null;
+};
+$A = $mkOp([]);   // the default row: discectomy L4-L5 left tubular_MIS
+$B = $mkOp(['0' => ['levels' => 'Ο5/Ι1'], '1' => ['procedure_code' => 'laminectomy_decompression', 'levels' => 'Ο4/5', 'lesion_side' => 'left', 'approach_type' => 'tubular_MIS', 'technology' => '["microscope"]']]);
+$Cop = $mkOp(['0' => ['procedure_code' => 'laminectomy_decompression', 'levels' => 'Ο3-5', 'lesion_side' => 'bilateral', 'approach_type' => 'open']]);
+check('three test operations saved', $A && $B && $Cop);
+$find = function (array $q) use ($base, $js) {
+    $r = req("$base/operations?" . http_build_query($q), $js);
+    if ($r['code'] === 302) $r = req($r['loc'], $js);    // the search line redirects to its filters
+    preg_match_all('#/operations/(O-[0-9A-Z*~$=-]{11,13})"#', urldecode($r['body']), $mm);
+    return ['code' => $r['code'], 'ids' => array_values(array_unique($mm[1])), 'body' => $r['body']];
+};
+$y = date('Y');
+$r = $find(['s' => "left L4-L5 tubular discectomies $y", 'surgeon' => (string)$mS]);
+check('acceptance query: one line finds the left L4-L5 tubular discectomy', in_array($A, $r['ids'], true), json_encode($r['ids']));
+check('…and not a discectomy at L5-S1 beside a left L4-L5 decompression (same-row rule)', !in_array($B, $r['ids'], true));
+check('…and not the bilateral open L3-L5 decompression', !in_array($Cop, $r['ids'], true));
+$r = $find(['s' => "αριστερές διαδερμικές δισκεκτομές Ο4/5 $y", 'surgeon' => (string)$mS]);
+check('the same query in Greek gives the same result', in_array($A, $r['ids'], true) && !in_array($B, $r['ids'], true), json_encode($r['ids']));
+$r = $find(['proc' => 'laminectomy_decompression', 'level' => 'L4-L5', 'surgeon' => (string)$mS]);
+check('a level finds ranges that cover it (L3-L5 for L4-L5)', in_array($Cop, $r['ids'], true) && in_array($B, $r['ids'], true) && !in_array($A, $r['ids'], true), json_encode($r['ids']));
+check('active filters shown as chips', str_contains($r['body'], 'filter-chip') && clean($r['body']));
+$r = $find(['level' => 'not a level', 'proc' => "x' OR 1=1 --", 'surgeon' => (string)$mS]);
+check('bad filter values are ignored, not an error', $r['code'] === 200 && clean($r['body']));
+$al = $db->query("SELECT detail FROM audit_log WHERE action = 'view' AND entity = 'operations' AND entity_ref IS NULL ORDER BY id DESC LIMIT 1")->fetch_row()[0] ?? '';
+check('list view audited with filter names only', str_contains($al, 'filters: ') && !str_contains($al, 'L4-L5') && !str_contains($al, 'discectomy'), $al);
+// patient page and patient form
+$pnl = $db->query("SELECT p.nl_id FROM operations o JOIN patients p ON p.id = o.patient_ref WHERE o.id = " . (int)end($created))->fetch_row()[0];
+$pd = substr($pnl, 0, 1) . '-' . substr($pnl, 1, 4) . '-' . substr($pnl, 5, 4) . '-' . substr($pnl, 9, 1);
+$r = req("$base/patients/$pd", $js);
+check('patient page shows the patient and their operations', $r['code'] === 200 && str_contains($r['body'], 'WT-Test') && str_contains($r['body'], $Cop ?? '-') && clean($r['body']));
+check('viewer can read the patient page, not edit it', req("$base/patients/$pd", login_as($base, $users['viewer'], $pass))['code'] === 200
+      && req("$base/patients/$pd/edit", login_as($base, $users['viewer'], $pass))['code'] === 302);
+$t = token(req("$base/patients/$pd/edit", $js)['body']);
+$r = req("$base/patients/$pd/edit", $js, ['csrf_token' => $t, 'p' => ['surname' => 'WT-Test', 'birth_date' => '1960-01-01', 'amka' => '01016012345']]);
+check('patient form refuses an invalid AMKA', $r['code'] === 422 && str_contains($r['body'], 'AMKA'));
+$r = req("$base/patients/$pd/edit", $js, ['csrf_token' => $t, 'p' => ['surname' => 'WT-Test', 'birth_date' => '1960-01-01', 'smoking' => 'former', 'research_consent' => 'yes']]);
+check('consent yes needs its date', $r['code'] === 422);
+$r = req("$base/patients/$pd/edit", $js, ['csrf_token' => $t, 'p' => ['surname' => 'WT-Test', 'birth_date' => '1960-01-01', 'smoking' => 'former']]);
+check('patient form saves and logs the change', $r['code'] === 302 && $db->query("SELECT smoking FROM patients WHERE nl_id = '$pnl'")->fetch_row()[0] === 'former'
+      && $db->query("SELECT COUNT(*) FROM change_log WHERE entity = 'patients' AND nl_id = '$pnl' AND field = 'smoking'")->fetch_row()[0] >= 1);
+$db->query("DELETE FROM change_log WHERE entity = 'patients' AND nl_id = '$pnl'");
+check('patient list search works by name', str_contains(req("$base/patients?q=wt-test", $js)['body'], $pd));
+
 // refused input is not saved and comes back with the messages
 $before = $db->query('SELECT COUNT(*) FROM operations')->fetch_row()[0];
 $r = $opPost($js, '/operations/new', $mS, ['pr' => ['0' => ['levels' => 'Ο7', 'approach_type' => '']]]);

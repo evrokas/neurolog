@@ -4,8 +4,8 @@ Guidance for Claude Code when working in this repository.
 
 ## Status
 
-NeuroLog has milestones **M0** (shell), **M1** (schema, code lists, NeuroLog IDs) and **M2** (entering operations:
-chips, quick line, presets); milestones are in [`docs/implementation-plan.md`](docs/implementation-plan.md). Read
+NeuroLog has milestones **M0** (shell), **M1** (schema, code lists, NeuroLog IDs), **M2** (entering operations:
+chips, quick line, presets) and **M3** (search and filters, patient pages); milestones are in [`docs/implementation-plan.md`](docs/implementation-plan.md). Read
 [`docs/README.md`](docs/README.md) first, then [`docs/data-dictionary.md`](docs/data-dictionary.md) and
 [`docs/decisions.md`](docs/decisions.md) before proposing anything. Don't re-argue a decision in the log unless
 the user brings new information; record new decisions there (newest first, with the reason).
@@ -46,7 +46,10 @@ the user brings new information; record new decisions there (newest first, with 
 - Operations: `web/operations.php` (validation is pure and unit-tested, saving, derived fields, audit/change log),
   `web/operation_pages.php` (pages), `web/levels.php` + `web/js/levels.js` (one case file `tests/cases/levels.json`),
   `web/js/chips.js` (chip pickers), `web/quickline.php` (quick line and `@` tags; cases `tests/cases/quickline.json`;
-  words per code in `vocab/aliases.yaml`, general vocabulary only). Dev data: `php bin/seed_demo.php --link-surgeon=UNAME` (made-up names only).
+  words per code in `vocab/aliases.yaml`, general vocabulary only; words of 6+ letters match on their stem).
+- Finding: `web/search.php` (pure: filters from GET, SQL with bound parameters, the search line; procedure filters
+  share one `EXISTS` so they match the same row) and `web/find_pages.php` (operation list, patients). Audit lists
+  with filter names only, never values. Dev data: `php bin/seed_demo.php --link-surgeon=UNAME` (made-up names only).
 - `bin/check_schema.php` (in the runner) checks tables, columns, unique IDs and that `vocab/` and `nl_codes` agree.
 - Development uses made-up cases only. No web fonts or scripts from other hosts (the check enforces it on the sign-in page).
 

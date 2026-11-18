@@ -1,0 +1,26 @@
+{% attach_library('operation-form') %}
+<div class="content">
+    <div class="page-head"><h2>{{{t('Edit patient')}}} <code class="small">{{{$nl}}}</code></h2>
+        <a class="btn" href="{{rel_url('/patients/' . $nl)}}">{{{t('Cancel')}}}</a></div>
+    {% if($errors): %}<div class="notice notice-danger"><strong>{{{t('Not saved')}}}:</strong> {{{count($errors)}}} {{{t('fields need attention.')}}}</div>{% endif %}
+    <script type="application/json" id="nl-lists">{{ $lists_json }}</script>
+    <script type="application/json" id="nl-freq">{{ $freq_json }}</script>
+    <form method="post" action="{{rel_url('/patients/' . $nl . '/edit')}}">
+        {{ csrf_field() }}
+        <div class="row-grid">
+            <label>{{{t('Surname')}}} <input type="text" name="p[surname]" value="{{{$v['surname'] ?? ''}}}" maxlength="128" required> {{ nl_ferr($errors, 'surname') }}</label>
+            <label>{{{t('Given name')}}} <input type="text" name="p[given_name]" value="{{{$v['given_name'] ?? ''}}}" maxlength="128"> {{ nl_ferr($errors, 'given_name') }}</label>
+            <label>{{{t('Birth date')}}} <input type="date" name="p[birth_date]" value="{{{$v['birth_date'] ?? ''}}}"> {{ nl_ferr($errors, 'birth_date') }}</label>
+            <label>{{{t('Sex')}}} {{ nl_chip('p[sex]', 'field.patient.sex', $v['sex'] ?? '') }} {{ nl_ferr($errors, 'sex') }}</label>
+            <label>AMKA <input type="text" name="p[amka]" value="{{{$v['amka'] ?? ''}}}" maxlength="11" inputmode="numeric"> {{ nl_ferr($errors, 'amka') }}</label>
+            <label>BMI <input type="text" name="p[bmi]" value="{{{$v['bmi'] ?? ''}}}" inputmode="decimal"> {{ nl_ferr($errors, 'bmi') }}</label>
+            <label>{{{t('Smoking')}}} {{ nl_chip('p[smoking]', 'field.patient.smoking', $v['smoking'] ?? '') }}</label>
+            <label>{{{t('Diabetes')}}} {{ nl_chip('p[diabetes]', 'field.patient.diabetes', $v['diabetes'] ?? '') }}</label>
+            <label>{{{t('Anticoagulant')}}} {{ nl_chip('p[anticoagulant]', 'field.patient.anticoagulant', $v['anticoagulant'] ?? '') }}</label>
+            <label>Charlson <input type="number" min="0" max="37" name="p[charlson_index]" value="{{{$v['charlson_index'] ?? ''}}}"> {{ nl_ferr($errors, 'charlson_index') }}</label>
+            <label>{{{t('Research consent')}}} {{ nl_chip('p[research_consent]', 'field.patient.research_consent', $v['research_consent'] ?? '') }}</label>
+            <label>{{{t('Consent date')}}} <input type="date" name="p[research_consent_date]" value="{{{$v['research_consent_date'] ?? ''}}}"> {{ nl_ferr($errors, 'research_consent_date') }}</label>
+        </div>
+        <div class="form-actions"><button class="btn primary" type="submit">{{{t('Save')}}}</button></div>
+    </form>
+</div>

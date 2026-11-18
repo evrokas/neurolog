@@ -57,10 +57,6 @@ function nl_page_home($params) {
     ]);
 }
 
-function nl_page_patients($params) {
-    return nl_placeholder('Patients', 'Patients with their NeuroLog ID and all their operations.', 'M3');
-}
-
 function nl_page_statistics($params) {
     return nl_placeholder('Statistics', 'Counts by procedure and facet, from confirmed codes only, and pseudonymised research export.', 'M6');
 }

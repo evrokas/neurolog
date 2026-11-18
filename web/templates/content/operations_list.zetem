@@ -1,25 +1,71 @@
-<div class="content">
+{% attach_library('operation-form') %}
+<div class="content ops-list">
     <div class="page-head">
-        <h2>{{{t('Operations')}}}</h2>
+        <h2>{{{t('Operations')}}} <span class="muted small">{{{$total}}}</span></h2>
         {% if($can_edit): %}<a class="btn primary" href="{{rel_url('/operations/new')}}">+ {{{t('New operation')}}}</a>{% endif %}
     </div>
-    <p class="muted small">{{{t('The latest 200. Filters on every facet come with milestone M3.')}}}</p>
+
+    <form method="get" action="{{rel_url('/operations')}}" class="search-line">
+        <input type="search" name="s" class="wide-text" placeholder="{{{t('e.g. left L4-L5 tubular discectomies 2026  ·  ΚΜΔ Ο5/Ι1  ·  TLIF 2024-2026')}}}" autocomplete="off">
+        <button class="btn" type="submit">{{{t('Search')}}}</button>
+    </form>
+
+    {% if($chips): %}
+    <div class="filter-chips">
+        {% foreach($chips as $c): %}<a class="chip filter-chip" href="{{{$c['href']}}}" title="{{{t('remove this filter')}}}"><span class="muted">{{{t($c['label'])}}}:</span> {{{$c['value']}}} <span class="chip-x" aria-hidden="true">×</span></a>{% endforeach %}
+        <a class="small" href="{{rel_url('/operations')}}">{{{t('clear all')}}}</a>
+    </div>
+    {% endif %}
+
+    <script type="application/json" id="nl-lists">{{ $lists_json }}</script>
+    <script type="application/json" id="nl-freq">{}</script>
+    <details class="filter-panel"{% if(!$f): %}{% endif %}>
+        <summary>{{{t('Filters')}}}</summary>
+        <form method="get" action="{{rel_url('/operations')}}" id="filter-form">
+            <div class="row-grid">
+                <label>{{{t('Procedure')}}} {{ nl_chip('proc', 'procedure', $f['proc'] ?? '') }}</label>
+                <label>{{{t('Level')}}} <input type="text" name="level" class="levels-input" value="{{{$f['level'] ?? ''}}}" placeholder="Ο4/5"><span class="levels-out"></span></label>
+                <label>{{{t('Side')}}} {{ nl_chip('side', 'procedure.side', $f['side'] ?? '') }}</label>
+                <label>{{{t('Approach')}}} {{ nl_chip('approach', 'procedure.approach_type', $f['approach'] ?? '') }}</label>
+                <label>{{{t('Route')}}} {{ nl_chip('route', 'procedure.approach_route.spinal', $f['route'] ?? '') }}</label>
+                <label>{{{t('Technology')}}} {{ nl_chip('technology', 'procedure.technology', $f['technology'] ?? '') }}</label>
+                <label>{{{t('Construct')}}} {{ nl_chip('construct', 'operation.construct', $f['construct'] ?? '') }}</label>
+                <label>{{{t('RF')}}} {{ nl_chip('rf_mode', 'procedure.rf_protocol.rf_mode', $f['rf_mode'] ?? '') }}</label>
+                <label>{{{t('Branches')}}} <input type="text" name="branch" value="{{{$f['branch'] ?? ''}}}" placeholder="V2+V3"></label>
+                <label>{{{t('Diagnosis')}}} {{ nl_chip('dx', 'diagnosis', $f['dx'] ?? '') }}</label>
+                <label>{{{t('Surgeon')}}} {{ nl_select('surgeon', $members, $f['surgeon'] ?? '', 'surgeon') }}</label>
+                <label>{{{t('Hospital')}}} {{ nl_select('hospital', $hospitals, $f['hospital'] ?? '') }}</label>
+                <label>{{{t('From')}}} <input type="date" name="from" value="{{{$f['from'] ?? ''}}}"></label>
+                <label>{{{t('To')}}} <input type="date" name="to" value="{{{$f['to'] ?? ''}}}"></label>
+                <label>{{{t('Codes')}}} <select name="coding"><option value="">{{{t('all')}}}</option>
+                    <option value="confirmed"{% if(($f['coding'] ?? '') === 'confirmed'): %} selected{% endif %}>{{{t('confirmed only')}}}</option>
+                    <option value="suggested"{% if(($f['coding'] ?? '') === 'suggested'): %} selected{% endif %}>{{{t('to confirm')}}}</option></select></label>
+            </div>
+            <p class="muted small">{{{t('The procedure filters (procedure, level, side, approach, route, technology, RF, branches) must all match the same procedure row. A level also finds ranges that cover it.')}}}</p>
+            <button class="btn primary" type="submit">{{{t('Apply')}}}</button>
+        </form>
+    </details>
+
     <table class="list">
-        <thead><tr><th>ID</th><th>{{{t('Date')}}}</th><th>{{{t('Patient')}}}</th><th>{{{t('Main procedure')}}}</th><th>{{{t('Levels / location')}}}</th><th>{{{t('Side')}}}</th><th>{{{t('Surgeon')}}}</th><th></th></tr></thead>
+        <thead><tr><th>ID</th><th>{{{t('Date')}}}</th><th>{{{t('Patient')}}}</th><th>{{{t('Main procedure')}}}</th><th>{{{t('Levels / location')}}}</th><th>{{{t('Side')}}}</th><th>{{{t('Surgeon')}}}</th><th>{{{t('Hospital')}}}</th><th></th></tr></thead>
         <tbody>
         {% foreach($rows as $r): %}
             <tr>
                 <td><a href="{{rel_url('/operations/' . $r['nl'])}}"><code>{{{$r['nl']}}}</code></a></td>
                 <td>{{{$r['op_date']}}}</td>
-                <td>{{{$r['surname']}}} {{{$r['given_name'] ?? ''}}}</td>
-                <td>{{{nl_label($lists, 'procedure', $r['procedure_code'])}}}</td>
+                <td><a href="{{rel_url('/patients/' . $r['pnl'])}}">{{{$r['surname']}}} {{{$r['given_name'] ?? ''}}}</a></td>
+                <td>{{{nl_label($lists, 'procedure', $r['procedure_code'])}}}{% if($r['nproc'] > 1): %} <span class="muted small">+{{{$r['nproc'] - 1}}}</span>{% endif %}</td>
                 <td>{{{$r['where']}}}</td>
                 <td>{{{$r['lesion_side'] ?? ''}}}</td>
                 <td>{{{$r['surgeon'] ?? ''}}}</td>
+                <td>{{{$r['hospital'] ?? ''}}}</td>
                 <td>{% if($r['suggested'] > 0): %}<span class="badge badge-warning">{{{$r['suggested']}}} {{{t('to confirm')}}}</span>{% endif %}</td>
             </tr>
         {% endforeach %}
-        {% if(!$rows): %}<tr><td colspan="8" class="muted">{{{t('No operations yet.')}}}</td></tr>{% endif %}
+        {% if(!$rows): %}<tr><td colspan="9" class="muted">{{{t('No operation matches.')}}}</td></tr>{% endif %}
         </tbody>
     </table>
+    {% if($pages > 1): %}
+    <p class="pager">{% for($k = 1; $k <= $pages; $k++): %}{% if($k === $page): %}<strong>{{{$k}}}</strong>{% else: %}<a href="{{rel_url('/operations')}}?{{{http_build_query($qs + ['page' => $k])}}}">{{{$k}}}</a>{% endif %} {% endfor %}</p>
+    {% endif %}
 </div>

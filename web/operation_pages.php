@@ -224,27 +224,6 @@ function nl_page_operation_confirm_post($params) {
     header('location: ' . rel_url('/operations/' . nl_id_format($op['nl_id']))); exit();
 }
 
-function nl_page_operations($params) {
-    global $kernel;
-    $db = dbConnection::getConnection();
-    $rows = $db->query("SELECT o.id, o.nl_id, o.op_date, o.record_status, o.construct, pa.surname, pa.given_name, m.name AS surgeon,
-                               p.procedure_code, p.levels_list, p.lesion_side, p.approach_type, p.location,
-                               (SELECT COUNT(*) FROM procedures x WHERE x.op_ref = o.id AND x.coding_status <> 'confirmed')
-                             + (SELECT COUNT(*) FROM diagnoses y WHERE y.op_ref = o.id AND y.coding_status <> 'confirmed') AS suggested
-                          FROM operations o
-                          JOIN patients pa ON pa.id = o.patient_ref
-                          LEFT JOIN members m ON m.id = o.primary_surgeon_ref
-                          LEFT JOIN procedures p ON p.op_ref = o.id AND p.is_main = 1
-                         WHERE o.deleted IS NULL ORDER BY o.op_date DESC, o.id DESC LIMIT 200")->fetchAll(PDO::FETCH_ASSOC);
-    nl_audit($db, $kernel->getUserName(), 'view', 'operations', null, null, 'list: ' . count($rows) . ' rows');
-    foreach ($rows as &$r) {
-        $r['nl'] = nl_id_format($r['nl_id']);
-        $r['where'] = $r['levels_list'] ? implode(', ', json_decode($r['levels_list'], true)) : ($r['location'] ? implode(', ', json_decode($r['location'], true)) : '');
-    }
-    unset($r);
-    return Renderer::render('operations_list.zetem', ['rows' => $rows, 'lists' => nl_lists($db), 'can_edit' => nl_can_edit()]);
-}
-
 /** JSON: patients matching a name or NeuroLog ID (at most 15). Session-gated; the term is never logged. */
 function nl_page_patient_search($params) {
     global $kernel;

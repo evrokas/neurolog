@@ -151,7 +151,10 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki): ar
         $found = [];
         $work = $part;
         foreach ($aliases as [$w, $list, $code]) {
-            if (!preg_match('/(?<![\p{L}\p{N}])' . preg_quote($w, '/') . '\p{L}*/u', $work, $m, PREG_OFFSET_CAPTURE)) continue;
+            // words of 6+ letters match on their stem (last letter dropped): plurals and Greek endings
+            // (δισκεκτομή / δισκεκτομές, discectomy / discectomies)
+            $stem = mb_strlen($w) >= 6 && preg_match('/\p{L}$/u', $w) ? mb_substr($w, 0, -1) : $w;
+            if (!preg_match('/(?<![\p{L}\p{N}])' . preg_quote($stem, '/') . '\p{L}*/u', $work, $m, PREG_OFFSET_CAPTURE)) continue;
             $found[] = [$list, $code, $w];
             $work = substr_replace($work, str_repeat(' ', strlen($m[0][0])), $m[0][1], strlen($m[0][0]));
         }
