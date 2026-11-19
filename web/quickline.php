@@ -11,7 +11,7 @@
  * interbody fusion, percutaneous for pedicle screws; procedures percutaneous by nature are always percutaneous
  * (vocab/facets.yaml `diadermiki`). PLIF/TLIF is a cage and never implies screws; «σπονδυλοδεσία» is screws.
  * A part without levels takes the levels of the part before it; a part of levels only adds to the part before.
- * Tags: @δγ diagnosis, @επ levels, @πλ side, @προσ approach, @υλ implant/product (ZPMS syntax: longest name wins,
+ * Tags: @δγ diagnosis, @επ levels, @πλ side, @προσ approach, @υλ implant/product, @προμ supplier (ZPMS syntax: longest name wins,
  * value ends at , · ; a full stop + space, a line break, the next tag; an e-mail address is not a tag).
  */
 
@@ -19,7 +19,7 @@ require_once __DIR__ . '/levels.php';
 
 const NL_TAGS = ['ΔΙΑΓΝΩΣΗ' => 'dx', 'ΔΓ' => 'dx', 'DX' => 'dx', 'ΕΠΙΠΕΔΑ' => 'lvl', 'ΕΠ' => 'lvl', 'LVL' => 'lvl',
                  'ΠΛΕΥΡΑ' => 'side', 'ΠΛ' => 'side', 'SIDE' => 'side', 'ΠΡΟΣΠΕΛΑΣΗ' => 'appr', 'ΠΡΟΣ' => 'appr', 'APPR' => 'appr',
-                 'ΥΛΙΚΟ' => 'impl', 'ΥΛ' => 'impl', 'IMPL' => 'impl'];
+                 'ΥΛΙΚΟ' => 'impl', 'ΥΛ' => 'impl', 'IMPL' => 'impl', 'ΠΡΟΜΗΘΕΥΤΗΣ' => 'supp', 'ΠΡΟΜ' => 'supp', 'SUPP' => 'supp'];
 
 /** Uppercase, Greek accents removed, spaces collapsed. Keeps string length per character (for spans). */
 function nl_ql_norm(string $s): string {
@@ -128,7 +128,7 @@ function nl_ql_implant(string $text, array $companies, string $context = ''): ?a
         ['/(ΡΑΒΔ|(?<![\p{L}])RODS?(?![\p{L}]))/u', 'rod'], ['/(CAGE|ΚΛΩΒ)/u', 'cage'],
         ['/(ΤΕΧΝΗΤ\p{L}* ΔΙΣΚ|DISC PROSTH|ΑΡΘΡΟΠΛΑΣΤ|ARTHROPLAST)/u', 'cervical_disc'], ['/(ΠΛΑΚ|PLATE)/u', 'plate'],
         ['/(ΜΕΣΑΚΑΝΘ|INTERSPINOUS)/u', 'interspinous_device'], ['/(ΤΣΙΜΕΝΤ|CEMENT|PMMA)/u', 'vertebral_augmentation_cement'],
-        ['/(ΒΑΛΒΙΔ|VALVE|SHUNT)/u', 'shunt_valve'], ['/((?<![\p{L}])EVD(?![\p{L}])|ΕΞΩΤΕΡΙΚ\p{L}* ΠΑΡΟΧΕΤ)/u', 'external_drain'],
+        ['/(ΒΑΛΒΙΔ|VALVE|SHUNT)/u', 'shunt_valve'],   // drains and catheters are one supply kind, `drain` (nl_ql_supply)
         ['/(ΗΛΕΚΤΡΟΔ|(?<![\p{L}])LEADS?(?![\p{L}]))/u', 'neurostimulator_lead'], ['/((?<![\p{L}])IPG(?![\p{L}])|ΓΕΝΝΗΤΡ|ΓΕΝΝΗΤΡΙ)/u', 'IPG'],
         ['/(ΑΝΤΛΙ|PUMP)/u', 'intrathecal_pump'], ['/(ΚΡΑΝΙΟΠΛΑΣΤ|CRANIOPLAST)/u', 'cranioplasty_implant'],
         ['/(ΜΟΣΧΕΥΜ|GRAFT|ΥΠΟΚΑΤΑΣΤΑΤ|SUBSTITUTE|DBM)/u', 'bone_graft_substitute'],
@@ -142,12 +142,7 @@ function nl_ql_implant(string $text, array $companies, string $context = ''): ?a
     }
     $row = ['implant_category' => $cat, 'company_ref' => null, 'implant_count' => null, 'levels' => nl_ql_levels($t), 'side' => nl_ql_side($t),
             'params' => [], 'source' => $text];
-    // company: the longest name found in the text
-    $best = 0;
-    foreach ($companies as $id => $name) {
-        $n = nl_ql_norm($name);
-        if (mb_strlen($n) > $best && preg_match('/(?<![\p{L}\p{N}])' . preg_quote($n, '/') . '(?![\p{L}\p{N}])/u', $t)) { $row['company_ref'] = (int)$id; $best = mb_strlen($n); }
-    }
+    $row['company_ref'] = nl_ql_company($t, $companies);
     $num = '(\d+(?:[.,]\d+)?)';
     $x = '\s*[XΧ×*]\s*';
     if (preg_match("/(?<![\\d.,])$num$x$num(?:[XΧ×*]$num)?(?:\s*MM)?/u", $t, $m)) {
@@ -164,17 +159,51 @@ function nl_ql_implant(string $text, array $companies, string $context = ''): ?a
     return $row;
 }
 
+/** The company named in a (normalised) text: the longest name of the list found as whole words, or null. */
+function nl_ql_company(string $t, array $companies): ?int {
+    $best = 0; $found = null;
+    foreach ($companies as $id => $name) {
+        $n = nl_ql_norm($name);
+        if (mb_strlen($n) > $best && preg_match('/(?<![\p{L}\p{N}])' . preg_quote($n, '/') . '(?![\p{L}\p{N}])/u', $t)) { $found = (int)$id; $best = mb_strlen($n); }
+    }
+    return $found;
+}
+
+/**
+ * A supplier read from an @προμ tag (or an @υλ tag that names no implant): the kind from the words
+ * (field.supply.kind; every drain or catheter is `drain`), the company from the group's list. Null if no kind is found.
+ */
+function nl_ql_supply(string $text, array $companies): ?array {
+    $t = nl_ql_norm($text);
+    $rules = [
+        ['/(ΝΕΥΡΟΠΑΡΑΚΟΛΟΥΘ|NEUROMONITOR|(?<![\p{L}])(IONM|MEP|SSEP)(?![\p{L}]))/u', 'neuromonitoring'],
+        ['/(ΠΛΟΗΓ|NAVIGAT|O-ARM)/u', 'navigation'], ['/(ΡΟΜΠΟΤ|ROBOT)/u', 'robot'],
+        ['/(ΕΝΔΟΣΚΟΠ|ENDOSCOP)/u', 'endoscope'], ['/(ΕΞΩΣΚΟΠ|EXOSCOP)/u', 'exoscope'], ['/(ΜΙΚΡΟΣΚΟΠ|MICROSCOP)/u', 'microscope'],
+        ['/(CUSA|ΥΠΕΡΗΧΗΤΙΚ\p{L}* ΑΝΑΡΡΟΦ|ULTRASONIC ASPIRAT)/u', 'ultrasonic_aspirator'],
+        ['/(?<![\p{L}])(CT|ΑΞΟΝΙΚ\p{L}*)(?![\p{L}])/u', 'intraop_CT'], ['/(?<![\p{L}])(MRI|ΜΑΓΝΗΤΙΚ\p{L}*)(?![\p{L}])/u', 'intraop_MRI'],
+        ['/(ΥΠΕΡΗΧ|ULTRASOUND|(?<![\p{L}])US(?![\p{L}]))/u', 'intraop_US'],
+        ['/((?<![\p{L}])RF(?![\p{L}])|ΡΑΔΙΟΣΥΧΝ|RADIOFREQ)/u', 'RF_generator'],
+        ['/(ΑΙΜΟΣΤ|HAEMOST|HEMOST)/u', 'haemostat'],
+        ['/(ΜΗΝΙΓΓΟΠΛΑΣΤ|DURA\s*PATCH|DURAL GRAFT|ΜΟΣΧΕΥΜ\p{L}* ΣΚΛΗΡ)/u', 'dural_graft'],
+        ['/(SEAL|ΣΦΡΑΓΙΣΤ|ΚΟΛΛΑ)/u', 'dural_sealant'],
+        ['/(ΠΑΡΟΧΕΤ|DRAIN|ΚΑΘΕΤΗΡ|CATHETER|(?<![\p{L}])EVD(?![\p{L}]))/u', 'drain'],
+        ['/(DISCOGEL|GELSTI|ANSOLUTE)/u', 'intradiscal_product'],
+    ];
+    foreach ($rules as [$re, $kind]) if (preg_match($re, $t)) return ['supply_kind' => $kind, 'company_ref' => nl_ql_company($t, $companies), 'source' => $text];
+    return null;
+}
+
 /**
  * Parse a quick line. $diadermiki: vocab/facets.yaml `diadermiki` (tubular_MIS, percutaneous, percutaneous_by_nature).
  * Returns ['procedures' => [...], 'diagnoses' => [...], 'unplaced' => [part texts nothing was read from], 'tags' => n].
  */
 function nl_quickline_parse(string $text, array $aliases, array $diadermiki, array $companies = []): array {
     $text = trim($text);
-    $out = ['procedures' => [], 'diagnoses' => [], 'implants' => [], 'unplaced' => [], 'tags' => 0];
+    $out = ['procedures' => [], 'diagnoses' => [], 'implants' => [], 'supplies' => [], 'unplaced' => [], 'tags' => 0];
     if ($text === '') return $out;
     // 1. explicit tags: read them, then blank them out of the text
     $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
-    $tagged = ['dx' => [], 'lvl' => [], 'side' => [], 'appr' => [], 'impl' => []];
+    $tagged = ['dx' => [], 'lvl' => [], 'side' => [], 'appr' => [], 'impl' => [], 'supp' => []];
     foreach (nl_tags_find($text) as [$s, $e, $tag, $vs, $ve]) {
         $tagged[$tag][] = implode('', array_slice($chars, $vs, $ve - $vs));
         for ($k = $s; $k < $ve; $k++) $chars[$k] = ' ';
@@ -191,6 +220,7 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
         $t = nl_ql_norm($t);
         if (str_contains($t, 'DISCOGEL')) $product = 'DiscoGel';
         elseif (preg_match('/GELSTI(X|KS|KS)/u', $t)) $product = 'GelStix';
+        elseif (str_contains($t, 'ANSOLUTE')) $product = 'AnsoluteGel';
     }
 
     // 2. parts
@@ -278,7 +308,13 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
     foreach ($tagged['impl'] as $t) {
         $im = nl_ql_implant($t, $companies, $rest);
         if ($im) { if ($im['levels'] === '') $im['levels'] = $lineLevels; $out['implants'][] = $im; }
-        elseif (!preg_match('/DISCOGEL|GELSTI/u', nl_ql_norm($t))) $out['unplaced'][] = '@υλ ' . $t;
+        elseif (!preg_match('/DISCOGEL|GELSTI|ANSOLUTE/u', nl_ql_norm($t)) && ($su = nl_ql_supply($t, $companies))) $out['supplies'][] = $su;   // a drain, a sealant…
+        elseif (!preg_match('/DISCOGEL|GELSTI|ANSOLUTE/u', nl_ql_norm($t))) $out['unplaced'][] = '@υλ ' . $t;
+    }
+    // 5. tagged suppliers: proposed supplier rows (a hydrogel product also goes on the procedure row above)
+    foreach ($tagged['supp'] as $t) {
+        $su = nl_ql_supply($t, $companies);
+        if ($su) $out['supplies'][] = $su; else $out['unplaced'][] = '@προμ ' . $t;
     }
     // procedures with no levels yet take the line's levels (e.g. «@επ Ο4/5» written last)
     foreach ($out['procedures'] as &$p) if ($p['levels'] === '' && $lineLevels !== '' && $p['procedure_code'] !== 'trigeminal_percutaneous') $p['levels'] = $lineLevels;

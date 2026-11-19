@@ -9,7 +9,7 @@ cervical_corpectomy,spinal,Πρόσθια αυχενική σωματεκτομ�
 cervical_disc_arthroplasty,spinal,Τεχνητός δίσκος,Cervical disc arthroplasty,arthroplasty,segment,,cervical-disc-arthroplasty
 posterior_cervical_fusion,spinal,Οπίσθια αυχενική σπονδυλοδεσία,Posterior cervical fusion,fusion,range,,posterior-cervical-fusion
 vertebral_augmentation,spinal,Κυφοπλαστική,Vertebral augmentation (kyphoplasty / vertebroplasty),vertebral_augmentation,vertebra,"qualifier: kyphoplasty, vertebroplasty; vertebrae",kyphoplasty
-intradiscal_hydrogel,spinal,Δισκοπλαστική,Intradiscal hydrogel (nucleoplasty),injection_block,segment,"product: DiscoGel, GelStix",—
+intradiscal_hydrogel,spinal,Δισκοπλαστική,Intradiscal hydrogel (nucleoplasty),injection_block,segment,"product: DiscoGel, GelStix, AnsoluteGel",—
 intradiscal_thermal,spinal,IDET,Intradiscal electrothermal therapy (IDET),ablation,segment,,—
 spinal_biopsy,spinal,Βιοψία σπονδύλου,Vertebral biopsy,biopsy,vertebra,,spinal-biopsy
 vertebral_tumour_resection,spinal,Αφαίρεση όγκου σπονδύλου,Vertebral tumour resection,excision_resection,vertebra,,—

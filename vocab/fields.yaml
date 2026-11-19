@@ -43,8 +43,9 @@ score:
 
 implant:
   # implant groups (docs/plans/m4.md A); the parameters of each category are in vocab/implants.yaml
+  # external_drain retired 2026-11-19: every drain or catheter is the supply kind `drain` (docs/plans/suppliers.md)
   category: [pedicle_screw, lateral_mass_screw, rod, cage_PLIF_TLIF, cage_ALIF_LLIF, cage_ACDF, cervical_disc, plate,
-             interspinous_device, bone_graft_substitute, vertebral_augmentation_cement, shunt_valve, external_drain,
+             interspinous_device, bone_graft_substitute, vertebral_augmentation_cement, shunt_valve,
              neurostimulator_lead, IPG, intrathecal_pump, cranioplasty_implant, other]
   breach: [A, B, C, D, E]                  # Gertzbein-Robbins, one grade per screw
   rod_material: [titanium, cobalt_chrome, PEEK, other]
@@ -57,6 +58,18 @@ implant:
   lead_type: [percutaneous, paddle, depth_DBS]
   pump_drug: [baclofen, morphine, ziconotide, other]
   cranioplasty_material: [autologous_bone, PEEK, titanium_mesh, PMMA, hydroxyapatite, other]
+
+supply:
+  # what a company supplied to an operation besides implants (docs/plans/suppliers.md): one supply row per kind,
+  # company and product. Kinds in SUPPLY_FROM_TECHNOLOGY (web/supplies.php) are offered when the technology is ticked.
+  kind: [neuromonitoring, navigation, robot, endoscope, microscope, exoscope, intraop_CT, intraop_US, intraop_MRI,
+         RF_generator, ultrasonic_aspirator, dural_graft, dural_sealant, haemostat, drain, intradiscal_product, other]
+
+company:
+  # what a company supplies (multi; none ticked = offered everywhere): implants plus the supply kinds
+  supplies: [implants, neuromonitoring, navigation, robot, endoscope, microscope, exoscope, intraop_CT, intraop_US,
+             intraop_MRI, RF_generator, ultrasonic_aspirator, dural_graft, dural_sealant, haemostat, drain,
+             intradiscal_product, other]
 
 complication:
   timing: [intraoperative, lt_48h, 48h_30d, 31d_90d]

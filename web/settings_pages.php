@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin lists the operation form needs: hospitals, implant companies and group members (surgeons, anaesthetists,
+ * Admin lists the operation form needs: hospitals, companies (every supplier, with what it supplies) and group members (surgeons, anaesthetists,
  * residents, external).
  * Rows are never deleted (operations refer to them); they are switched inactive instead.
  */
@@ -11,16 +11,17 @@ function nl_people_page(string $kind) {
     $rows = $db->query("SELECT * FROM {$cfg['table']} ORDER BY active DESC, name")->fetchAll(PDO::FETCH_ASSOC);
     $users = $kind === 'members' ? $db->query('SELECT uname FROM users ORDER BY uname')->fetchAll(PDO::FETCH_COLUMN) : [];
     $kinds = $kind === 'members' ? array_keys(nl_lists($db)['field.member.kind'] ?? []) : [];
+    $supplies = $kind === 'companies' ? array_filter(nl_lists($db)['field.company.supplies'] ?? [], fn($v) => !$v['retired']) : [];
     $edit = null;
     if (isset($_GET['edit'])) foreach ($rows as $r) if ((int)$r['id'] === (int)$_GET['edit']) $edit = $r;
     return Renderer::render('settings_people.zetem', ['kind' => $kind, 'cfg' => $cfg, 'rows' => $rows, 'users' => $users,
-        'kinds' => $kinds, 'edit' => $edit, 'errors' => $_SESSION['nl_form_errors'] ?? [], 'old' => nl_take_flash()]);
+        'kinds' => $kinds, 'supplies' => $supplies, 'edit' => $edit, 'errors' => $_SESSION['nl_form_errors'] ?? [], 'old' => nl_take_flash()]);
 }
 
 function nl_people_cfg(string $kind): array {
     return match ($kind) {
         'hospitals' => ['table' => 'hospitals', 'title' => 'Hospitals', 'url' => '/settings/hospitals'],
-        'companies' => ['table' => 'companies', 'title' => 'Implant companies', 'url' => '/settings/companies'],
+        'companies' => ['table' => 'companies', 'title' => 'Companies', 'url' => '/settings/companies'],
         default => ['table' => 'members', 'title' => 'Group members', 'url' => '/settings/members'],
     };
 }
@@ -42,6 +43,9 @@ function nl_people_post(string $kind) {
         $vals['name_match'] = nl_name_match($name);
         $st = $db->prepare('SELECT id FROM companies WHERE name_match = ? AND id <> ?'); $st->execute([$vals['name_match'], $id]);
         if ($st->fetchColumn()) $err['name'] = 'this company is already in the list';
+        $L = nl_lists($db)['field.company.supplies'] ?? [];
+        $sup = array_values(array_unique(array_filter(array_map('strval', (array)($_POST['supplies'] ?? [])), fn($c) => isset($L[$c]))));
+        $vals['supplies'] = $sup ? json_encode($sup) : null;
     } elseif ($kind === 'hospitals') {
         $vals['short_name'] = mb_substr(trim((string)($_POST['short_name'] ?? '')), 0, 32) ?: null;
     } else {

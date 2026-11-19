@@ -2,7 +2,7 @@
    Uses NLChips (chips.js) and NLLevels (levels.js). The server validates everything again; this only helps typing. */
 (function () {
   'use strict';
-  var form, C, L, IM = { spec: {}, companies: {}, products: {} };
+  var form, C, L, IM = { spec: {}, companies: {}, supplies: {}, products: {}, from_technology: {} }, dismissed = {}, offering = false;
 
   function procMeta(code) {
     var e = C.find('procedure', code);
@@ -29,7 +29,8 @@
   }
   function removeRow(row) {
     var container = row.parentNode;
-    if (row.classList.contains('im-row')) { row.remove(); refresh(); return; }
+    if (row.classList.contains('su-row')) { var k = suKind(row); if (k) dismissed[k] = 1; }
+    if (row.classList.contains('im-row') || row.classList.contains('su-row')) { row.remove(); refresh(); return; }
     if (container.querySelectorAll('.op-row').length <= 1) { row.querySelectorAll('input[type=text], input[type=hidden]').forEach(function (i) { i.value = ''; });
       row.querySelectorAll('.chipf').forEach(function (c) { C.set(c, []); }); return; }
     row.remove();
@@ -39,7 +40,7 @@
   function setupRow(row) {
     C.initAll(row);
     row.querySelector('.row-remove').addEventListener('click', function () { removeRow(row); });
-    row.querySelector('.row-accept').addEventListener('click', function () { setProposed(row, false); });
+    var acc = row.querySelector('.row-accept'); if (acc) acc.addEventListener('click', function () { setProposed(row, false); });
     row.querySelectorAll('.levels-input').forEach(setupLevels);
     if (row.classList.contains('pr-row')) {
       var proc = row.querySelector('.chipf[data-list="procedure"] input');
@@ -48,11 +49,18 @@
       row.querySelector('.levels-grid-btn').addEventListener('click', function (ev) { openGrid(row.querySelector('.levels-input'), ev.target); });
       procChanged(row);
     } else if (row.classList.contains('im-row')) {
-      row.querySelector('.chipf[data-list="field.implant.category"] input').addEventListener('change', function () { implantParams(row); });
+      row.querySelector('.chipf[data-list="field.implant.category"] input').addEventListener('change', function () { implantParams(row); productList(row); });
       var co = row.querySelector('.im-company');
       co.addEventListener('change', function () { productList(row); });
+      companyFilter(co, 'implants');
       productList(row);
       implantParams(row);
+    } else if (row.classList.contains('su-row')) {
+      var sco = row.querySelector('.su-company');
+      row.querySelector('.chipf[data-list="field.supply.kind"] input').addEventListener('change', function () { companyFilter(sco, suKind(row)); productList(row); });
+      sco.addEventListener('change', function () { productList(row); });
+      companyFilter(sco, suKind(row));
+      productList(row);
     } else {
       row.querySelector('.chipf[data-list="diagnosis"] input').addEventListener('change', function () { qualifiers(row); refresh(); });
       qualifiers(row);
@@ -145,10 +153,44 @@
       if (el.classList.contains('chipf')) C.init(el);
     });
   }
+  // products used before with this company: for the row's implant category or supply kind first, then the rest
+  // (one company may supply several product lines of one category, e.g. two PLIF cage systems)
   function productList(row) {
-    var co = row.querySelector('.im-company').value, dl = row.querySelector('datalist');
+    var su = row.classList.contains('su-row');
+    var co = row.querySelector(su ? '.su-company' : '.im-company').value, dl = row.querySelector('datalist');
+    var kind = su ? suKind(row) : (C.value(row.querySelector('.chipf[data-list="field.implant.category"]'))[0] || '');
+    var by = IM.products[co] || {}, seen = {}, list = (by[kind] || []).slice();
+    Object.keys(by).forEach(function (k) { if (k !== kind) list = list.concat(by[k]); });
     dl.innerHTML = '';
-    (IM.products[co] || []).forEach(function (p) { var o = document.createElement('option'); o.value = p; dl.appendChild(o); });
+    list.forEach(function (p) { if (seen[p]) return; seen[p] = 1; var o = document.createElement('option'); o.value = p; dl.appendChild(o); });
+  }
+  function suKind(row) { return C.value(row.querySelector('.chipf[data-list="field.supply.kind"]'))[0] || ''; }
+  // offer only the companies that supply this kind (a company with nothing ticked supplies everything); keep the chosen one
+  function companyFilter(sel, kind) {
+    Array.prototype.forEach.call(sel.options, function (o) {
+      if (!o.value) return;
+      var tags = IM.supplies[o.value] || [];
+      o.hidden = !!kind && tags.length > 0 && tags.indexOf(kind) < 0 && o.value !== sel.value;
+    });
+  }
+  // a supplier row for each technology ticked (procedure rows), neuromonitoring and adjuncts, unless one is there or was removed
+  function offerSuppliers() {
+    var into = document.getElementById('su-rows'); if (!into || offering) return;
+    var want = {}, ft = IM.from_technology || {};
+    form.querySelectorAll('.pr-row .chipf[data-list="procedure.technology"]').forEach(function (c) { C.value(c).forEach(function (t) { if (ft[t]) want[ft[t]] = 1; }); });
+    var nm = form.querySelector('.chipf[data-list="field.operation.neuromonitoring"]');
+    if (nm && C.value(nm).some(function (v) { return v !== 'none'; })) want.neuromonitoring = 1;
+    var adj = form.querySelector('.chipf[data-list="field.operation.adjuncts"]');
+    if (adj) C.value(adj).forEach(function (t) { if (ft[t]) want[ft[t]] = 1; });
+    into.querySelectorAll('.su-row').forEach(function (r) { delete want[suKind(r)]; });
+    offering = true;
+    Object.keys(want).forEach(function (k) {
+      if (dismissed[k]) return;
+      addRow(document.querySelector('.row-add[data-tpl="su-tpl"]'), true);
+      var rows = into.querySelectorAll('.su-row'), row = rows[rows.length - 1];
+      fill(row, 'supply_kind', k);
+    });
+    offering = false;
   }
 
   // ---------- levels ----------
@@ -231,6 +273,14 @@
       var c = C.value(r.querySelector('.chipf[data-list="procedure"]'))[0];
       prNames.push([r.dataset.row, (k + 1) + '. ' + (c ? C.label('procedure', c) : '…')]);
     });
+    form.querySelectorAll('.su-row').forEach(function (r, k) {
+      r.querySelector('.row-no').textContent = String(k + 1);
+      var sel = r.querySelector('select.su-for'), cur = sel.value || sel.dataset.value || '';
+      sel.innerHTML = '<option value="">—</option>';
+      prNames.forEach(function (n) { var o = document.createElement('option'); o.value = n[0]; o.textContent = n[1]; if (n[0] === cur) o.selected = true; sel.appendChild(o); });
+      sel.dataset.value = sel.value;
+    });
+    offerSuppliers();
     form.querySelectorAll('.im-row').forEach(function (r, k) {
       r.querySelector('.row-no').textContent = String(k + 1);
       var sel = r.querySelector('select.im-for'), cur = sel.value || sel.dataset.value || '';
@@ -342,9 +392,18 @@
     });
     refresh();
     box.innerHTML = '';
-    var n = (d.procedures || []).length + (d.implants || []).length, m = (d.diagnoses || []).length;
+    // suppliers from @προμ (or a drain or sealant under @υλ): fill an empty row of the same kind, else add one
+    (d.supplies || []).forEach(function (x) {
+      var into = document.getElementById('su-rows'), row = null;
+      into.querySelectorAll('.su-row').forEach(function (r) { if (!row && suKind(r) === x.supply_kind && !r.querySelector('.su-company').value) row = r; });
+      if (!row) { addRow(document.querySelector('.row-add[data-tpl="su-tpl"]'), true); var all = into.querySelectorAll('.su-row'); row = all[all.length - 1]; }
+      fill(row, 'supply_kind', x.supply_kind);
+      if (x.company_ref) row.querySelector('.su-company').value = String(x.company_ref);
+      productList(row);
+    });
+    var n = (d.procedures || []).length + (d.implants || []).length + (d.supplies || []).length, m = (d.diagnoses || []).length;
     var p = document.createElement('p');
-    p.textContent = n || m ? ('Proposed: ' + n + ' procedure or implant row' + (n === 1 ? '' : 's') + ', ' + m + ' diagnos' + (m === 1 ? 'is' : 'es') + '. Check them, add the technology, then accept.') : 'Nothing recognised.';
+    p.textContent = n || m ? ('Proposed: ' + n + ' procedure, implant or supplier row' + (n === 1 ? '' : 's') + ', ' + m + ' diagnos' + (m === 1 ? 'is' : 'es') + '. Check them, add the technology, then accept.') : 'Nothing recognised.';
     box.appendChild(p);
     if (n || m) {
       var all = document.createElement('button'); all.type = 'button'; all.className = 'btn small-btn'; all.textContent = '✓ Accept all';

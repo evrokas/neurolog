@@ -116,7 +116,7 @@ register_shutdown_function(function () use ($db, &$created, &$hid, &$mS, &$mO) {
         $r = $db->query("SELECT patient_ref FROM operations WHERE id = $oid")->fetch_row();
         $db->query("DELETE c FROM rf_cycles c JOIN procedures p ON p.id = c.procedure_ref WHERE p.op_ref = $oid");
         $db->query("DELETE FROM change_log WHERE entity = 'complications' AND entity_ref IN (SELECT id FROM complications WHERE op_ref = $oid)");
-        foreach (['procedures', 'diagnoses', 'implants', 'complications', 'scores'] as $t) $db->query("DELETE FROM $t WHERE op_ref = $oid");
+        foreach (['procedures', 'diagnoses', 'implants', 'supplies', 'complications', 'scores'] as $t) $db->query("DELETE FROM $t WHERE op_ref = $oid");
         $db->query("DELETE FROM change_log WHERE entity = 'followups' AND entity_ref IN (SELECT id FROM followups WHERE op_ref = $oid)");
         $db->query("DELETE FROM followups WHERE op_ref = $oid");
         $db->query("DELETE FROM change_log WHERE entity = 'operations' AND entity_ref = $oid");
@@ -318,6 +318,29 @@ if ($F) {
     check('search by a size range (screw diameter 6–7 mm)', in_array($F, $find(['implant' => 'pedicle_screw', 'iparam' => 'diameter_mm', 'imin' => '6', 'imax' => '7']), true));
     check('…and not outside it (7–8 mm)', !in_array($F, $find(['implant' => 'pedicle_screw', 'iparam' => 'diameter_mm', 'imin' => '7', 'imax' => '8']), true));
     check('implant filters match one row (a cage is not 6.5 mm)', !in_array($F, $find(['implant' => 'cage_PLIF_TLIF', 'iparam' => 'diameter_mm', 'imin' => '6']), true));
+
+    // suppliers (docs/plans/suppliers.md): a company tagged with what it supplies, supplier rows on the operation
+    $r = req("$base/settings/companies", $ja, ['csrf_token' => token(req("$base/settings/companies", $ja)['body']), 'name' => 'wt company Monitor', 'active' => '1',
+             'supplies' => ['neuromonitoring', 'bogus']]);
+    $coM = (int)($db->query("SELECT id FROM companies WHERE name = 'wt company Monitor'")->fetch_row()[0] ?? 0);
+    check('admin adds a supplier with what it supplies (unknown values dropped)', $coM > 0
+          && $db->query("SELECT supplies FROM companies WHERE id = $coM")->fetch_row()[0] === '["neuromonitoring"]');
+    $r = $opPost($js, "/operations/$F/edit", $mS, $fusion + ['op' => ['op_date' => $past, 'neuromonitoring' => '["MEP"]'],
+        'su' => ['0' => ['supply_kind' => 'neuromonitoring', 'company_ref' => (string)$coM, 'product' => 'WT Monitor 2', 'for' => '0'],
+                 '1' => ['supply_kind' => 'microscope'],   // offered by the page, left blank: skipped
+                 '2' => ['supply_kind' => 'dural_sealant', 'company_ref' => (string)$coA, 'product' => 'WT Seal']]]);
+    $su = $db->query("SELECT s.*, p.procedure_code FROM supplies s LEFT JOIN procedures p ON p.id = s.procedure_ref WHERE s.op_ref = $fid ORDER BY s.sort")->fetch_all(MYSQLI_ASSOC);
+    check('supplier rows saved (blank offered row skipped), linked to the procedure', $r['code'] === 302 && count($su) === 2 && (int)$su[0]['company_ref'] === $coM
+          && $su[0]['product'] === 'WT Monitor 2' && $su[0]['procedure_code'] === 'pedicle_screw_fixation' && $su[1]['supply_kind'] === 'dural_sealant' && $su[0]['source'] === 'entered', json_encode($su));
+    $v = req("$base/operations/$F", $js)['body'];
+    check('operation page shows the suppliers and the missing microscope supplier', str_contains($v, 'wt company Monitor') && str_contains($v, 'WT Monitor 2') && str_contains($v, 'supplier: microscope') && clean($v));
+    check('edit form brings the supplier rows back', str_contains(req("$base/operations/$F/edit", $js)['body'], 'value="WT Monitor 2"'));
+    check('search by supply kind and supplier', in_array($F, $find(['supply' => 'neuromonitoring', 'supplier' => (string)$coM]), true)
+          && !in_array($F, $find(['supply' => 'neuromonitoring', 'supplier' => (string)$coA]), true));
+    check('a supplier alone also finds its implants', in_array($F, $find(['supplier' => (string)$coA]), true));
+    check('search by supplied product', in_array($F, $find(['sproduct' => 'monitor 2']), true));
+    $hist = (int)$db->query("SELECT COUNT(*) FROM change_log WHERE entity = 'operations' AND entity_ref = $fid AND field = 'supplies'")->fetch_row()[0];
+    check('supplier changes are in the change log', $hist === 1);
     // preset keeps the implants without sizes
     req("$base/operations/$F/preset", $js, ['csrf_token' => token(req("$base/operations/$F", $js)['body']), 'name' => 'wt implant preset']);
     $pj = json_decode((string)($db->query("SELECT rows_json FROM presets WHERE name = 'wt implant preset'")->fetch_row()[0] ?? ''), true);

@@ -11,6 +11,12 @@ table:
   - name: name_match
     type: varchar(96)
 
+  - name: supplies
+    type: text
+
+  - name: apyweb_name
+    type: varchar(150)
+
   - name: active
     type: boolean
     default: 1
@@ -29,5 +35,7 @@ table:
 
 ...
 
-# Implant companies of the group (admin list, like hospitals). A company is switched off (active = 0), never deleted.
+# Companies that supply the group: implants, equipment, services, consumables (admin list, like hospitals). A company is switched off (active = 0), never deleted.
 # - name_match  uppercase without accents, for matching a name typed in the quick line
+# - supplies    JSON list of field.company.supplies codes; empty = offered for everything (docs/plans/suppliers.md)
+# - apyweb_name company name as written in APYweb (bin/import_apyweb_companies.php matches on it first)

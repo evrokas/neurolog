@@ -54,6 +54,9 @@ the user brings new information; record new decisions there (newest first, with 
 - M4: `web/implants.php` (implant rows; parameters per category in `vocab/implants.yaml`, stored as JSON in
   `implants.params`), `web/outcomes.php` (complication, follow-up and score rules, pure) and `web/outcome_pages.php`;
   windows and scores asked in `vocab/followup.yaml`. Implants carry company (`companies`) and sizes, never lot numbers.
+- Suppliers: `web/supplies.php` (supplier rows: kind, company, product; pure validation). `companies` is every supplier,
+  tagged with what it supplies (`companies.supplies`); all drains and catheters are the supply kind `drain`.
+  `php bin/import_apyweb_companies.php [--apply]` fills Companies from APYweb (read-only; the names stay in the database).
 - `bin/check_schema.php` (in the runner) checks tables, columns, unique IDs and that `vocab/` and `nl_codes` agree.
 - Development uses made-up cases only. No web fonts or scripts from other hosts (the check enforces it on the sign-in page).
 

@@ -76,7 +76,7 @@
             <h3>{{{t('Quick line')}}}</h3>
             <div class="quick-line" data-url="{{rel_url('/operations/parse')}}">
                 <input type="text" name="op[quick_line]" class="quick-input wide-text" value="{{{$in['op']['quick_line'] ?? ''}}}" autocomplete="off"
-                       placeholder="Διαδερμική δισκεκτομή Ο4/5 αρ, TLIF   ·   tags: @δγ @επ @πλ @προσ @υλ">
+                       placeholder="Διαδερμική δισκεκτομή Ο4/5 αρ, TLIF   ·   tags: @δγ @επ @πλ @προσ @υλ @προμ">
                 <button type="button" class="btn quick-go">{{{t('Suggest')}}}</button>
             </div>
             <p class="muted small">{{{t('Type the operation as you write it; Enter fills suggested rows (dashed). Accept them, or change them; rows not accepted are saved as suggested.')}}}</p>
@@ -108,7 +108,7 @@
         <section class="op-section">
             <h3>{{{t('Implants')}}}</h3>
             <p class="muted small">{{{t('One row per group of identical implants (same company, product and size), with its count.')}}}
-               {% if(!$companies): %}<strong>{{{t('No companies yet: an administrator adds them under Admin › Implant companies.')}}}</strong>{% endif %}</p>
+               {% if(!$companies): %}<strong>{{{t('No companies yet: an administrator adds them under Admin › Companies.')}}}</strong>{% endif %}</p>
             <div class="rows" id="im-rows">
                 {% foreach($in['im'] as $i => $r): %}{% include op_im_row.zetem %}{% endforeach %}
             </div>
@@ -117,6 +117,15 @@
                 <label>{{{t('Fluoroscopy time (s)')}}} <input type="number" min="0" name="op[fluoroscopy_time_s]" value="{{{$in['op']['fluoroscopy_time_s'] ?? ''}}}"> {{ nl_ferr($errors, 'op.fluoroscopy_time_s') }}</label>
                 <label class="wide">{{{t('Adjuncts')}}} {{ nl_chip('op[adjuncts]', 'field.operation.adjuncts', $in['op']['adjuncts'] ?? '', true) }} {{ nl_ferr($errors, 'op.adjuncts') }}</label>
             </div>
+        </section>
+
+        <section class="op-section">
+            <h3>{{{t('Suppliers')}}}</h3>
+            <p class="muted small">{{{t('Who supplied the equipment, service or material used (neuromonitoring, navigation, endoscope, sealant, drain…) and its product. A row is offered for each technology ticked above; leave it blank if not known.')}}}</p>
+            <div class="rows" id="su-rows">
+                {% foreach($in['su'] as $i => $r): %}{% include op_su_row.zetem %}{% endforeach %}
+            </div>
+            <button type="button" class="btn row-add" data-tpl="su-tpl" data-into="su-rows">+ {{{t('Supplier')}}}</button>
         </section>
 
         <section class="op-section">
@@ -133,5 +142,6 @@
     <template id="dx-tpl">{% include op_dx_row.zetem %}</template>
     <template id="pr-tpl">{% include op_pr_row.zetem %}</template>
     <template id="im-tpl">{% include op_im_row.zetem %}</template>
+    <template id="su-tpl">{% include op_su_row.zetem %}</template>
     <div class="levels-grid-pop" hidden></div>
 </div>

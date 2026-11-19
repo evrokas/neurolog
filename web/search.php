@@ -8,6 +8,8 @@
  *   implant facets (one implant row): implant (category), company, iparam + imin/imax (a parameter of
  *     vocab/implants.yaml within a range, e.g. cage height_mm 10–12)
  *   complications (M4): comp (type), cd (Clavien-Dindo grade or worse)
+ *   suppliers (docs/plans/suppliers.md; one supply row): supply (kind), supplier (company), sproduct (product contains);
+ *     `supplier` alone also finds the company's implant rows ("anything from company X")
  * A level filter also finds ranges that cover it (L4-L5 finds L3-L5) and, for a vertebra, the segments around it.
  * The search line (`s`) is read with the quick-line parser (same words and notation) plus a year, and becomes the
  * filters above. Pure functions; the SQL uses bound parameters only.
@@ -30,6 +32,7 @@ function nl_filter_spec(): array {
         'construct' => ['construct', 'operation.construct'], 'patient' => ['patient', ':patient'],
         'implant' => ['implant', 'field.implant.category'], 'company' => ['company', ':company'],
         'iparam' => ['implant parameter', ':iparam'], 'imin' => ['from', ':num'], 'imax' => ['to', ':num'],
+        'supply' => ['supply', 'field.supply.kind'], 'supplier' => ['supplier', ':company'], 'sproduct' => ['product', ':text'],
         'comp' => ['complication', 'complication'], 'cd' => ['Clavien-Dindo ≥', 'field.complication.clavien_dindo'],
     ];
 }
@@ -74,6 +77,9 @@ function nl_filters_from_get(array $get, array $lists, array $members = [], arra
                 break;
             case ':num':
                 if (($n = nl_num($v)) !== null) $f[$k] = $n;
+                break;
+            case ':text':
+                if (mb_strlen($v) >= 2) $f[$k] = $v;
                 break;
             case ':patient':
                 if (($id = nl_id_normalize($v, 'P')) !== null) $f[$k] = $id;
@@ -134,6 +140,17 @@ function nl_filters_sql(array $f): array {
         if (isset($f['imax'])) { $iw[] = "CAST(JSON_EXTRACT(i.params, '$path') AS DECIMAL(10,2)) <= ?"; $p[] = $f['imax']; }
     }
     if ($iw) $w[] = 'EXISTS (SELECT 1 FROM implants i WHERE i.op_ref = o.id AND ' . implode(' AND ', $iw) . ')';
+    // one supply row must satisfy all supplier filters; a company alone also matches its implant rows
+    $sw = []; $sp = [];
+    if (isset($f['supply'])) { $sw[] = 's.supply_kind = ?'; $sp[] = $f['supply']; }
+    if (isset($f['supplier'])) { $sw[] = 's.company_ref = ?'; $sp[] = $f['supplier']; }
+    if (isset($f['sproduct'])) { $sw[] = "s.product LIKE ? ESCAPE '\\\\'"; $sp[] = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $f['sproduct']) . '%'; }
+    if ($sw) {
+        $sql = 'EXISTS (SELECT 1 FROM supplies s WHERE s.op_ref = o.id AND ' . implode(' AND ', $sw) . ')';
+        if (isset($f['supplier']) && !isset($f['supply']) && !isset($f['sproduct'])) $sql = "($sql OR EXISTS (SELECT 1 FROM implants si WHERE si.op_ref = o.id AND si.company_ref = ?))";
+        $w[] = $sql; array_push($p, ...$sp);
+        if (str_contains($sql, 'si.company_ref')) $p[] = $f['supplier'];
+    }
     $cw = [];
     if (isset($f['comp'])) { $cw[] = 'c.complication_type = ?'; $p[] = $f['comp']; }
     if (isset($f['cd'])) { $cw[] = "FIELD(c.clavien_dindo, 'I','II','IIIa','IIIb','IVa','IVb','V') >= FIELD(?, 'I','II','IIIa','IIIb','IVa','IVb','V')"; $p[] = $f['cd']; }

@@ -36,7 +36,7 @@ procedure:
   intent: [therapeutic, diagnostic, palliative, symptomatic]
   level_kind: [segment, vertebra, root, range]
   product:
-    intradiscal_hydrogel: [DiscoGel, GelStix]
+    intradiscal_hydrogel: [DiscoGel, GelStix, AnsoluteGel]
   # trigeminal_percutaneous only (see "Trigeminal procedures" in the data dictionary)
   trigeminal:
     technique: [radiofrequency, balloon_compression, glycerol_rhizotomy]   # pulsed/thermal comes from rf_protocol

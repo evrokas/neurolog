@@ -1,0 +1,48 @@
+---
+table:
+  name: supplies
+  class: suppliesClass
+
+  fields:
+  - name: op_ref
+    type: int
+    required: true
+
+  - name: sort
+    type: int
+
+  - name: procedure_ref
+    type: int
+
+  - name: supply_kind
+    type: varchar(40)
+
+  - name: company_ref
+    type: int
+
+  - name: product
+    type: varchar(96)
+
+  - name: note
+    type: varchar(128)
+
+  - name: source
+    type: varchar(12)
+
+  - name: source_key
+    type: varchar(64)
+
+  - name: cdate
+    type: '@cdate'
+
+  - name: cuser
+    type: '@cuser'
+
+...
+
+# What a company supplied to an operation besides implants (docs/plans/suppliers.md): neuromonitoring, navigation,
+# endoscope, sealant, drain… One row per kind, company and product. Implants keep their own rows (implants table).
+# - supply_kind    field.supply.kind
+# - procedure_ref  the procedure row it was used for (optional)
+# - note           description, required for kind `other`
+# - source         entered | apyweb; source_key the APYweb pair (operation:technology:company) for the M5 import

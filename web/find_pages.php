@@ -23,7 +23,7 @@ function nl_filter_label(string $k, $v, array $lists, array $members, array $hos
         case ':num': return rtrim(rtrim(number_format((float)$v, 2, '.', ''), '0'), '.');
         case ':patient': return nl_id_format($v);
         case ':region': case ':route': case ':coding': return str_replace('_', ' ', (string)$v);
-        case ':level': case ':date': case ':branch': return (string)$v;
+        case ':level': case ':date': case ':branch': case ':text': return (string)$v;
         default: return nl_label($lists, $spec, (string)$v);
     }
 }

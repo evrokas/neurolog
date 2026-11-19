@@ -74,6 +74,17 @@
     {% if(!$im): %}<p class="muted">{{{t('none recorded')}}}</p>{% endif %}
     {% if($op['fluoroscopy_time_s'] !== null || $op['adjuncts']): %}<p class="muted small">{% if($op['fluoroscopy_time_s'] !== null): %}{{{t('Fluoroscopy')}}} {{{$op['fluoroscopy_time_s']}}} s{% endif %}{% if($op['adjuncts']): %} · {{{t('Adjuncts')}}}: {{{nl_show($lists, 'field.operation.adjuncts', $op['adjuncts'])}}}{% endif %}</p>{% endif %}
 
+    <h3>{{{t('Suppliers')}}}</h3>
+    {% foreach($su as $m): %}
+    <div class="coded-row">
+        <span class="chip" data-family="supply">{{{nl_label($lists, 'field.supply.kind', $m['supply_kind'])}}}</span>
+        <span>{{{$m['company'] ?? ''}}}{% if($m['product']): %} · {{{$m['product']}}}{% endif %}</span>
+        {% if($m['note']): %}<span class="muted small">{{{$m['note']}}}</span>{% endif %}
+        {% if($m['source'] === 'apyweb'): %}<span class="status-tag">APYweb</span>{% endif %}
+    </div>
+    {% endforeach %}
+    {% if(!$su): %}<p class="muted">{{{t('none recorded')}}}</p>{% endif %}
+
     {% if($op['quick_line']): %}<h3>{{{t('Quick line')}}}</h3><p class="note">{{ nl_tags_render($op['quick_line']) }}</p>{% endif %}
     {% if($op['op_note']): %}<h3>{{{t('Operative note')}}}</h3><p class="note">{{ nl_tags_render($op['op_note']) }}</p>{% endif %}
 

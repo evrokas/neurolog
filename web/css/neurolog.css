@@ -266,6 +266,7 @@ form.inline { display: inline; }
 .tag-lvl { color: #594796; background: #EFEBFA; }
 .tag-side, .tag-appr { color: #22686A; background: #E2F3F3; }
 .tag-impl { color: #7C5B1A; background: #F8F0DF; }
+.tag-supp { color: #4B4F7A; background: #ECEDF8; }
 
 /* the hidden attribute always wins over component display rules */
 [hidden] { display: none !important; }
@@ -297,3 +298,5 @@ form.inline { display: inline; }
 
 /* IDs and dates never wrap */
 table.list code, table.list td:nth-child(2) { white-space: nowrap; }
+.chip[data-family="supply"] { background: #ECEDF8; color: #4B4F7A; border-color: #C3C6E6; }
+.supplies-pick label.check { display: inline-flex; margin-right: .8em; }

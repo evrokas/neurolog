@@ -1,0 +1,12 @@
+<fieldset class="op-row su-row" data-row="{{{$i}}}">
+    <legend>{{{t('Supplier')}}} <span class="row-no"></span>
+        {% if(($r['_source'] ?? '') === 'apyweb'): %}<span class="badge">{{{t('from APYweb')}}}</span>{% endif %}</legend>
+    <div class="row-grid">
+        <label class="wide">{{{t('What')}}} {{ nl_chip("su[$i][supply_kind]", 'field.supply.kind', $r['supply_kind'] ?? '', false, false, true) }} {{ nl_ferr($errors, "su.$i.supply_kind") }}</label>
+        <label>{{{t('Company')}}} {{ nl_company_select("su[$i][company_ref]", $companies, $r['company_ref'] ?? '', 'su-company') }} {{ nl_ferr($errors, "su.$i.company_ref") }}</label>
+        <label>{{{t('Product')}}} <input type="text" name="su[{{{$i}}}][product]" class="su-product" value="{{{$r['product'] ?? ''}}}" maxlength="96" autocomplete="off" list="su-products-{{{$i}}}"><datalist id="su-products-{{{$i}}}"></datalist> {{ nl_ferr($errors, "su.$i.product") }}</label>
+        <label>{{{t('Note')}}} <input type="text" name="su[{{{$i}}}][note]" value="{{{$r['note'] ?? ''}}}" maxlength="128"> {{ nl_ferr($errors, "su.$i.note") }}</label>
+        <label>{{{t('For procedure')}}} <select name="su[{{{$i}}}][for]" class="su-for" data-value="{{{$r['for'] ?? ''}}}"><option value="">—</option></select></label>
+    </div>
+    <button type="button" class="btn small-btn row-remove">{{{t('Remove')}}}</button>
+</fieldset>

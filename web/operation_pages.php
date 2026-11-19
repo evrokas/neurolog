@@ -58,9 +58,9 @@ function nl_form_data(PDO $db): array {
     $flags = JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
     $presets = array_map(fn($p) => ['id' => (int)$p['id'], 'name' => $p['name'], 'rows' => json_decode($p['rows_json'], true)], nl_presets($db));
     $companies = nl_companies($db);
-    $products = [];
-    foreach ($db->query('SELECT DISTINCT company_ref, product FROM implants WHERE product IS NOT NULL AND company_ref IS NOT NULL ORDER BY product') as $r) $products[(int)$r['company_ref']][] = $r['product'];
-    $implantJs = ['spec' => nl_implant_spec(), 'companies' => $companies ?: new stdClass(), 'products' => $products ?: new stdClass()];
+    // companies with what they supply (pickers offer only those that fit), products used before per company and kind
+    $implantJs = ['spec' => nl_implant_spec(), 'companies' => $companies ?: new stdClass(), 'supplies' => nl_company_supplies($db) ?: new stdClass(),
+                  'products' => nl_products_used($db) ?: new stdClass(), 'from_technology' => NL_SUPPLY_FROM_TECHNOLOGY];
     return ['lists_json' => json_encode($js, $flags), 'implants_json' => json_encode($implantJs, $flags), 'companies' => $companies, 'freq_json' => json_encode((object)$freq, $flags), 'presets_json' => json_encode($presets, $flags), 'presets' => $presets,
             'members' => $members, 'hospitals' => $hospitals, 'lists' => $lists, 'my_members' => $mine];
 }
@@ -111,13 +111,19 @@ function nl_op_as_input(PDO $db, array $op): array {
             'p' => $m['params'] ? json_decode($m['params'], true) : [], 'for' => $m['procedure_ref'] !== null ? ($prPos[$m['procedure_ref']] ?? '') : '',
             '_status' => $m['coding_status']];
     }
+    $in['su'] = [];
+    $st = $db->prepare('SELECT * FROM supplies WHERE op_ref = ? ORDER BY sort'); $st->execute([$op['id']]);
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $k => $m) {
+        $in['su'][(string)$k] = ['supply_kind' => $m['supply_kind'], 'company_ref' => (string)($m['company_ref'] ?? ''), 'product' => $m['product'] ?? '',
+            'note' => $m['note'] ?? '', 'for' => $m['procedure_ref'] !== null ? ($prPos[$m['procedure_ref']] ?? '') : '', '_source' => $m['source']];
+    }
     return $in;
 }
 
 /** Codes already stored on an operation (a retired value may stay on it). */
 function nl_op_keep(PDO $db, int $opId): array {
     $keep = [];
-    foreach (['procedures', 'diagnoses', 'implants'] as $t) {
+    foreach (['procedures', 'diagnoses', 'implants', 'supplies'] as $t) {
         $st = $db->prepare("SELECT * FROM $t WHERE op_ref = ?"); $st->execute([$opId]);
         foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) foreach ($r as $v) {
             if (!is_string($v) || $v === '') continue;
@@ -146,9 +152,10 @@ function nl_render_form(PDO $db, array $in, array $errors, array $missing, ?arra
     $patient = ($in['patient_ref'] ?? '') !== '' ? nl_patient_brief($db, (int)$in['patient_ref']) : null;
     if (!$in['dx']) $in['dx'] = ['0' => []];
     if (!$in['pr']) $in['pr'] = ['0' => []];
-    $in['im'] ??= [];
+    $in['im'] ??= []; $in['su'] ??= [];
     // a company switched off but stored on this operation stays choosable
-    foreach ($in['im'] as $m) if (($m['company_ref'] ?? '') !== '' && !isset($data['companies'][(int)$m['company_ref']])) $data['companies'] = nl_companies($db, array_map('intval', array_column($in['im'], 'company_ref')));
+    $used = array_map('intval', array_filter(array_merge(array_column($in['im'], 'company_ref'), array_column($in['su'], 'company_ref')), fn($x) => (string)$x !== ''));
+    foreach ($used as $c) if (!isset($data['companies'][$c])) { $data['companies'] = nl_companies($db, $used); break; }
     return Renderer::render('operation_form.zetem', $data + [
         'in' => $in, 'errors' => $errors, 'missing' => $missing, 'op' => $op, 'patient' => $patient,
         'action' => $op ? rel_url('/operations/' . nl_id_format($op['nl_id']) . '/edit') : rel_url('/operations/new'),
@@ -159,7 +166,7 @@ function nl_page_operation_new($params) {
     $db = dbConnection::getConnection();
     $mine = nl_my_member_ids($db);
     $in = ['patient_ref' => '', 'op' => ['op_date' => date('Y-m-d'), 'primary_surgeon_ref' => $mine ? (string)$mine[0] : '', 'reoperation' => 'primary'],
-           'dx' => [], 'pr' => [], 'im' => [], 'main_dx' => '0', 'main_pr' => '0'];
+           'dx' => [], 'pr' => [], 'im' => [], 'su' => [], 'main_dx' => '0', 'main_pr' => '0'];
     return nl_render_form($db, $in, [], [], null);
 }
 
@@ -176,7 +183,7 @@ function nl_operation_save_post(?array $op) {
     if ($refused = csrfClass::requireValid()) return $refused;
     $db = dbConnection::getConnection();
     $in = ['patient_ref' => (string)($_POST['patient_ref'] ?? ''), 'new_patient' => (array)($_POST['new_patient'] ?? []),
-           'op' => (array)($_POST['op'] ?? []), 'dx' => (array)($_POST['dx'] ?? []), 'pr' => (array)($_POST['pr'] ?? []), 'im' => (array)($_POST['im'] ?? []),
+           'op' => (array)($_POST['op'] ?? []), 'dx' => (array)($_POST['dx'] ?? []), 'pr' => (array)($_POST['pr'] ?? []), 'im' => (array)($_POST['im'] ?? []), 'su' => (array)($_POST['su'] ?? []),
            'main_dx' => (string)($_POST['main_dx'] ?? '0'), 'main_pr' => (string)($_POST['main_pr'] ?? '0')];
     if ($op) $in['patient_ref'] = (string)$op['patient_ref'];   // the patient of an existing operation is not changed here
     $v = nl_op_validate($in, nl_op_ctx($db, $op ? nl_op_keep($db, (int)$op['id']) : []));
@@ -218,6 +225,8 @@ function nl_page_operation($params) {
     $st = $db->prepare('SELECT * FROM procedures WHERE op_ref = ? ORDER BY sort'); $st->execute([$op['id']]); $pr = $st->fetchAll(PDO::FETCH_ASSOC);
     $st = $db->prepare('SELECT i.*, c.name AS company FROM implants i LEFT JOIN companies c ON c.id = i.company_ref WHERE i.op_ref = ? ORDER BY i.sort');
     $st->execute([$op['id']]); $im = $st->fetchAll(PDO::FETCH_ASSOC);
+    $st = $db->prepare('SELECT s.*, c.name AS company FROM supplies s LEFT JOIN companies c ON c.id = s.company_ref WHERE s.op_ref = ? ORDER BY s.sort');
+    $st->execute([$op['id']]); $su = $st->fetchAll(PDO::FETCH_ASSOC);
     $cyc = [];
     foreach ($pr as $p) { $s = $db->prepare('SELECT * FROM rf_cycles WHERE procedure_ref = ? ORDER BY seq'); $s->execute([$p['id']]); $cyc[$p['id']] = $s->fetchAll(PDO::FETCH_ASSOC); }
     $suggested = count(array_filter(array_merge($pr, $dx, $im), fn($r) => $r['coding_status'] !== 'confirmed'));
@@ -228,7 +237,7 @@ function nl_page_operation($params) {
     $st->execute(['operations', $op['id']]);
     return Renderer::render('operation_view.zetem', [
         'op' => $op, 'nl' => nl_id_format($op['nl_id']), 'patient' => nl_patient_brief($db, (int)$op['patient_ref']),
-        'dx' => $dx, 'pr' => $pr, 'im' => $im, 'cycles' => $cyc, 'lists' => $lists, 'names' => $names, 'hosp' => $hosp,
+        'dx' => $dx, 'pr' => $pr, 'im' => $im, 'su' => $su, 'cycles' => $cyc, 'lists' => $lists, 'names' => $names, 'hosp' => $hosp,
         'can_edit' => nl_can_edit(), 'can_confirm' => $canConfirm, 'suggested' => $suggested,
         'missing' => $v['missing'], 'history' => $st->fetchAll(PDO::FETCH_ASSOC),
         'out' => nl_op_outcomes($db, $op), 'is_admin' => in_array('admin', nl_user_roles(), true),
@@ -300,9 +309,9 @@ function nl_select(string $name, array $rows, $value, ?string $kind = null): str
     return $h . '</select>';
 }
 
-/** <select> of implant companies [id => name]. */
-function nl_company_select(string $name, array $companies, $value): string {
-    $h = '<select name="' . nl_e($name) . '" class="im-company"><option value="">—</option>';
+/** <select> of companies [id => name]; the page's script hides those that do not supply the row's kind. */
+function nl_company_select(string $name, array $companies, $value, string $class = 'im-company'): string {
+    $h = '<select name="' . nl_e($name) . '" class="' . nl_e($class) . '"><option value="">—</option>';
     foreach ($companies as $id => $n) $h .= '<option value="' . (int)$id . '"' . ((string)$id === (string)$value ? ' selected' : '') . '>' . nl_e($n) . '</option>';
     return $h . '</select>';
 }

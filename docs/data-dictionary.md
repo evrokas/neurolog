@@ -164,7 +164,7 @@ The database fields behind the Procedure facets (see Classification model and Pr
 | technology | multi | C | Technology list; `none` allowed | Technique comparison |
 | episode | enum | C | primary, revision\_same\_level, revision\_adjacent\_level, staged, return\_to\_theatre | Revision rates |
 | intent | enum | E | therapeutic, diagnostic, palliative, symptomatic |  |
-| product | enum | C if intradiscal\_hydrogel; E otherwise | DiscoGel, GelStix; cage or implant product if stated | Device comparison |
+| product | enum | C if intradiscal\_hydrogel; E otherwise | DiscoGel, GelStix, AnsoluteGel; cage or implant product if stated | Device comparison |
 | coding\_status | enum | A | uncoded, suggested, confirmed (+ coded\_by, coded\_at) | Only confirmed rows enter statistics |
 
 Construct (`cage_only`, `screws_only`, `cage_and_screws`, `none`) and the review flag are stored on the Operation, derived from these rows (see Controlled vocabularies).
@@ -242,8 +242,8 @@ kept 2026-11-18).
 
 | Field | Type | Req | Values / units | Answers |
 | --- | --- | --- | --- | --- |
-| implant\_category | enum | C | pedicle\_screw, lateral\_mass\_screw, rod, cage\_PLIF/TLIF, cage\_ALIF/LLIF, cage\_ACDF, cervical\_disc, plate, interspinous\_device, bone\_graft\_substitute, vertebral\_augmentation\_cement, shunt\_valve, external\_drain, neurostimulator\_lead, IPG, intrathecal\_pump, cranioplasty\_implant, other | Implant studies |
-| company | ref | C | Group list of implant companies (admin page); switched off, never deleted | Device comparisons |
+| implant\_category | enum | C | pedicle\_screw, lateral\_mass\_screw, rod, cage\_PLIF/TLIF, cage\_ALIF/LLIF, cage\_ACDF, cervical\_disc, plate, interspinous\_device, bone\_graft\_substitute, vertebral\_augmentation\_cement, shunt\_valve, neurostimulator\_lead, IPG, intrathecal\_pump, cranioplasty\_implant, other | Implant studies |
+| company | ref | C | Group list of companies (admin page; every supplier, tagged with what it supplies); switched off, never deleted | Device comparisons |
 | product | text | E | Product or system name as on the label | Device comparisons |
 | implant\_count | int | C | 1–50 | Construct size |
 | levels, side | levels, enum | C for spinal | Same notation as procedure rows | Where |
@@ -263,7 +263,6 @@ kept 2026-11-18).
 | bone graft substitute | **type** (DBM, ceramic, bioactive glass), volume (mL) |
 | vertebral augmentation cement | **volume per level (mL)**, balloon / cavity creation |
 | shunt valve | **valve type** (fixed, programmable, anti-siphon), **setting or opening pressure**, **route** (VP, VA, VPl, LP) |
-| external drain | **site** (ventricular, lumbar) |
 | neurostimulator lead | **lead type** (percutaneous, paddle, depth/DBS), **contacts** |
 | IPG | **rechargeable**, implant site |
 | intrathecal pump | **reservoir (mL)**, **drug** (baclofen, morphine, ziconotide) |
@@ -273,6 +272,31 @@ kept 2026-11-18).
 On the operation (not per implant): `fluoroscopy_time_s` (seconds; radiation exposure) and `adjuncts` (multi:
 5-ALA, fluorescein, ICG, intraop\_MRI, intraop\_US; resection studies). Guidance technology is the procedure row's
 `technology` field; the implant table no longer repeats it.
+
+`external_drain` was retired on 2026-11-19: every drain or catheter (wound, ventricular, lumbar) is one supply kind,
+`drain` (Suppliers below).
+
+## Suppliers
+
+Every company that supplies the group is in one list (admin page **Companies**), with **what it supplies**
+(`field.company.supplies`: `implants` plus the supply kinds; none ticked = offered everywhere). Implants keep their
+own rows (above). Everything else a company supplied to an operation is a **supply row**: one per kind, company and
+product. Plan and reasons: [plans/suppliers.md](plans/suppliers.md).
+
+| Field | Type | Req | Values / units | Answers |
+| --- | --- | --- | --- | --- |
+| supply\_kind | enum | C | neuromonitoring, navigation, robot, endoscope, microscope, exoscope, intraop\_CT, intraop\_US, intraop\_MRI, RF\_generator, ultrasonic\_aspirator, dural\_graft, dural\_sealant, haemostat, drain, intradiscal\_product, other | Supplier comparisons |
+| company | ref | C | Companies list, filtered by what the company supplies | Supplier comparisons |
+| product | text | E | System or product name as on the label; suggested from earlier rows of the company | Product comparisons |
+| procedure | ref | E | The procedure row it was used for | Links it to the procedure |
+| note | text | E | Required for `other` | — |
+| source | enum | A | entered, apyweb (+ source\_key of the APYweb pair) | Import |
+
+The supplier is **optional**. A row is offered for each technology ticked on a procedure row (neuromonitoring,
+navigation, robot, endoscope, microscope, exoscope, intra-op CT/US/MRI), for the operation's neuromonitoring and for
+intra-op US/MRI adjuncts; a technology without a supplier is listed as missing on the operation page. One kind may
+come from two companies on one operation. All drains and catheters are `drain`. An intradiscal hydrogel keeps its
+product on the procedure row; the company goes on an `intradiscal_product` supply row.
 
 ## Complications
 
@@ -336,7 +360,7 @@ The procedure and diagnosis lists below are built from the group's real caseload
 | spinal | cervical\_disc\_arthroplasty | Τεχνητός δίσκος |  | cervical-disc-arthroplasty |
 | spinal | posterior\_cervical\_fusion | Οπίσθια αυχενική σπονδυλοδεσία |  | posterior-cervical-fusion |
 | spinal | vertebral\_augmentation | Κυφοπλαστική | qualifier: kyphoplasty, vertebroplasty; vertebrae | kyphoplasty |
-| spinal | intradiscal\_hydrogel | Δισκοπλαστική | product: DiscoGel, GelStix | — |
+| spinal | intradiscal\_hydrogel | Δισκοπλαστική | product: DiscoGel, GelStix, AnsoluteGel | — |
 | spinal | intradiscal\_thermal | IDET |  | — |
 | spinal | spinal\_biopsy | Βιοψία σπονδύλου |  | spinal-biopsy |
 | spinal | vertebral\_tumour\_resection | Αφαίρεση όγκου σπονδύλου |  | — |
@@ -486,7 +510,7 @@ An `iatrogenic` diagnosis carries `index_op_id` (the earlier NeuroLog operation 
 
 | List | Values |
 | --- | --- |
-| Intradiscal hydrogel product | DiscoGel, GelStix |
+| Intradiscal hydrogel product | DiscoGel, GelStix, AnsoluteGel |
 | Complication | Wound infection superficial / deep, CSF leak, incidental durotomy, haematoma (epidural / subdural / intracerebral), new motor deficit, new sensory deficit, C5 palsy, dysphagia, recurrent laryngeal palsy, hardware malposition, hardware failure, pseudarthrosis, adjacent-segment disease, recurrent disc herniation, shunt malfunction, shunt infection, seizure, hydrocephalus, corneal hypoaesthesia / keratitis, masticatory weakness, anaesthesia dolorosa, dysaesthesia, DVT / PE, pneumonia, UTI, delirium, death (graded by Clavien-Dindo) |
 | Hospital | From APYweb's clinic list, mapped once |
 | Surgeon, anaesthetist | Group members from APYweb's doctor list, plus `resident` and `external` |

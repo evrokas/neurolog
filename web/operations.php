@@ -16,6 +16,7 @@
 
 require_once __DIR__ . '/levels.php';
 require_once __DIR__ . '/implants.php';
+require_once __DIR__ . '/supplies.php';
 require_once __DIR__ . '/../tools/rf_protocol/rf_protocol.php';
 
 // procedures.csv uses short domain names; the facet list (vocab/facets.yaml procedure.domain) the long ones
@@ -357,6 +358,13 @@ function nl_op_validate(array $in, array $ctx): array {
     if (array_intersect($cats, ['pedicle_screw']) && !in_array('pedicle_screw_fixation', $codes, true)) $missing[] = 'check: pedicle screws recorded but no screw fixation procedure';
     if (array_intersect($cats, ['cage_PLIF_TLIF', 'cage_ALIF_LLIF']) && !in_array('interbody_fusion', $codes, true)) $missing[] = 'check: a cage recorded but no interbody fusion procedure';
 
+    // ---------- suppliers (docs/plans/suppliers.md): optional; a technology without its supplier is listed as missing ----------
+    [$su, $suErr] = nl_supplies_validate((array)($in['su'] ?? []), $ctx);
+    $err += $suErr;
+    foreach ($su as &$row) $row['_for'] = $row['_for'] !== null && isset($prIndex[$row['_for']]) ? $prIndex[$row['_for']] : null;
+    unset($row);
+    foreach (nl_supplies_expected(array_column($pr, 'technology'), $op['neuromonitoring'], $op['adjuncts'], $su) as $k) $missing[] = 'supplier: ' . str_replace('_', ' ', $k);
+
     // patient
     $patient = null;
     $pref = trim((string)($in['patient_ref'] ?? ''));
@@ -376,7 +384,7 @@ function nl_op_validate(array $in, array $ctx): array {
         }
     }
 
-    return ['ok' => !$err, 'op' => $op, 'dx' => $dx, 'pr' => $pr, 'im' => $im, 'patient' => $patient, 'construct' => nl_construct($pr),
+    return ['ok' => !$err, 'op' => $op, 'dx' => $dx, 'pr' => $pr, 'im' => $im, 'su' => $su, 'patient' => $patient, 'construct' => nl_construct($pr),
             'errors' => $err, 'missing' => array_values(array_unique($missing))];
 }
 
@@ -478,8 +486,8 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
         }
 
         // rows: previous status by content
-        $prevPr = $prevDx = $prevIm = [];
-        $oldPrRows = $oldDxRows = $oldImRows = [];
+        $prevPr = $prevDx = $prevIm = $prevSu = [];
+        $oldPrRows = $oldDxRows = $oldImRows = $oldSuRows = [];
         if ($old) {
             $st = $pdo->prepare('SELECT * FROM procedures WHERE op_ref = ? ORDER BY sort'); $st->execute([$opId]); $oldPrRows = $st->fetchAll(PDO::FETCH_ASSOC);
             $st = $pdo->prepare('SELECT * FROM diagnoses WHERE op_ref = ? ORDER BY sort'); $st->execute([$opId]); $oldDxRows = $st->fetchAll(PDO::FETCH_ASSOC);
@@ -488,6 +496,9 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
             $st = $pdo->prepare('SELECT * FROM implants WHERE op_ref = ? ORDER BY sort'); $st->execute([$opId]); $oldImRows = $st->fetchAll(PDO::FETCH_ASSOC);
             foreach ($oldImRows as $r) $prevIm[nl_row_signature($r, NL_IM_COLS)] = $r;
             $pdo->prepare('DELETE FROM implants WHERE op_ref = ?')->execute([$opId]);
+            $st = $pdo->prepare('SELECT * FROM supplies WHERE op_ref = ? ORDER BY sort'); $st->execute([$opId]); $oldSuRows = $st->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($oldSuRows as $r) $prevSu[nl_row_signature($r, NL_SU_COLS)] = $r;
+            $pdo->prepare('DELETE FROM supplies WHERE op_ref = ?')->execute([$opId]);
             $pdo->prepare('DELETE c FROM rf_cycles c JOIN procedures p ON p.id = c.procedure_ref WHERE p.op_ref = ?')->execute([$opId]);
             $pdo->prepare('DELETE FROM procedures WHERE op_ref = ?')->execute([$opId]);
             $pdo->prepare('DELETE FROM diagnoses WHERE op_ref = ?')->execute([$opId]);
@@ -534,6 +545,15 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
             $pdo->prepare('INSERT INTO implants (' . implode(',', array_keys($vals)) . ') VALUES (' . implode(',', array_fill(0, count($vals), '?')) . ')')
                 ->execute(array_values($vals));
         }
+        foreach ($v['su'] ?? [] as $k => $row) {
+            // a row saved unchanged keeps where it came from (an APYweb import keeps its source key)
+            $prev = $prevSu[nl_row_signature($row, NL_SU_COLS)] ?? null;
+            $vals = ['op_ref' => $opId, 'sort' => $k, 'procedure_ref' => $row['_for'] !== null ? ($prIds[$row['_for']] ?? null) : null]
+                  + array_intersect_key($row, array_flip(NL_SU_COLS))
+                  + ['source' => $prev['source'] ?? 'entered', 'source_key' => $prev['source_key'] ?? null, 'cuser' => $uname];
+            $pdo->prepare('INSERT INTO supplies (' . implode(',', array_keys($vals)) . ') VALUES (' . implode(',', array_fill(0, count($vals), '?')) . ')')
+                ->execute(array_values($vals));
+        }
         if ($old) {
             $sum = fn(array $rows, string $col) => implode(' | ', array_map(fn($r) => ($r[$col] ?? '') . ' ' . ($r['levels_list'] ?? '') . ' ' . ($r['lesion_side'] ?? ''), $rows));
             $oPr = $sum($oldPrRows, 'procedure_code'); $nPr = $sum($v['pr'], 'procedure_code');
@@ -543,6 +563,9 @@ function nl_op_save(PDO $pdo, array $v, string $uname, bool $actorIsSurgeon, ?in
             $isum = fn(array $rows) => implode(' | ', array_map(fn($r) => ($r['implant_category'] ?? '') . ' x' . ($r['implant_count'] ?? '') . ' ' . ($r['company_ref'] ?? '') . ' ' . ($r['product'] ?? '') . ' ' . ($r['levels_list'] ?? '') . ' ' . ($r['params'] ?? ''), $rows));
             $oIm = $isum($oldImRows); $nIm = $isum($v['im'] ?? []);
             if ($oIm !== $nIm) nl_change($pdo, $uname, 'operations', $opId, $nlId, 'implants', $oIm, $nIm);
+            $ssum = fn(array $rows) => implode(' | ', array_map(fn($r) => ($r['supply_kind'] ?? '') . ' ' . ($r['company_ref'] ?? '') . ' ' . ($r['product'] ?? '') . ' ' . ($r['note'] ?? ''), $rows));
+            $oSu = $ssum($oldSuRows); $nSu = $ssum($v['su'] ?? []);
+            if ($oSu !== $nSu) nl_change($pdo, $uname, 'operations', $opId, $nlId, 'supplies', $oSu, $nSu);
         }
         $pdo->commit();
         return $opId;

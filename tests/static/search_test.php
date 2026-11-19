@@ -37,5 +37,12 @@ foreach ([
     ksort($got); ksort($want);
     t("search line «{$s}»", $got === $want, $got);
 }
+// suppliers: one supply row matches all supplier filters; a supplier alone also finds the company's implants
+$f = nl_filters_from_get(['supply' => 'neuromonitoring', 'supplier' => '5', 'sproduct' => '50%_x'], $lists, [], [], [5 => 'Co']);
+[$w, $p] = nl_filters_sql($f);
+t('supplier filters: one supply row, product as a LIKE with % and _ escaped', substr_count($w, 'FROM supplies s') === 1 && !str_contains($w, 'FROM implants') && $p === ['neuromonitoring', 5, '%50\\%\\_x%'], [$w, $p]);
+[$w, $p] = nl_filters_sql(nl_filters_from_get(['supplier' => '5'], $lists, [], [], [5 => 'Co']));
+t('a supplier alone: supply rows or implant rows of that company', str_contains($w, 'FROM supplies s') && str_contains($w, 'FROM implants si') && $p === [5, 5], [$w, $p]);
+t('an unknown supplier or kind is dropped', nl_filters_from_get(['supplier' => '9', 'supply' => 'teleporter', 'sproduct' => 'x'], $lists, [], [], [5 => 'Co']) === []);
 echo ($n - $fail) . "/$n passed\n";
 exit($fail ? 1 : 0);

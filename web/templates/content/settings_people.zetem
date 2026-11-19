@@ -7,6 +7,10 @@
         <label>{{{t('Name')}}}<input type="text" name="name" value="{{{$v['name'] ?? ''}}}" required maxlength="{{{$kind === 'companies' ? 96 : 128}}}">
             {% if(isset($errors['name'])): %}<span class="field-error">{{{$errors['name']}}}</span>{% endif %}</label>
         {% if($kind === 'companies'): %}
+        {% $sv = isset($v['supplies']) ? (is_array($v['supplies']) ? $v['supplies'] : (json_decode((string)$v['supplies'], true) ?: [])) : []; %}
+        <fieldset class="wide supplies-pick"><legend>{{{t('Supplies')}}} <span class="muted small">{{{t('(none ticked = offered for everything)')}}}</span></legend>
+            {% foreach($supplies as $code => $sx): %}<label class="check"><input type="checkbox" name="supplies[]" value="{{{$code}}}"{% if(in_array($code, $sv, true)): %} checked{% endif %}> {{{$sx['label_en'] ?: str_replace('_', ' ', $code)}}}</label> {% endforeach %}
+        </fieldset>
         <span class="muted small">{{{t('Switch a company off instead of deleting it: operations keep it.')}}}</span>
         {% elseif($kind === 'hospitals'): %}
         <label>{{{t('Short name')}}}<input type="text" name="short_name" value="{{{$v['short_name'] ?? ''}}}" maxlength="32"></label>
@@ -25,12 +29,12 @@
             {% if($edit): %}<a class="btn" href="{{rel_url($cfg['url'])}}">{{{t('Cancel')}}}</a>{% endif %}</div>
     </form>
     <table class="list">
-        <thead><tr><th>{{{t('Name')}}}</th>{% if($kind === 'members'): %}<th>{{{t('Kind')}}}</th><th>{{{t('Account')}}}</th>{% elseif($kind === 'hospitals'): %}<th>{{{t('Short name')}}}</th>{% endif %}{% if($kind !== 'companies'): %}<th>APYweb</th>{% endif %}<th></th></tr></thead>
+        <thead><tr><th>{{{t('Name')}}}</th>{% if($kind === 'members'): %}<th>{{{t('Kind')}}}</th><th>{{{t('Account')}}}</th>{% elseif($kind === 'hospitals'): %}<th>{{{t('Short name')}}}</th>{% elseif($kind === 'companies'): %}<th>{{{t('Supplies')}}}</th>{% endif %}{% if($kind !== 'companies'): %}<th>APYweb</th>{% endif %}<th></th></tr></thead>
         <tbody>
         {% foreach($rows as $r): %}
             <tr{% if(!$r['active']): %} class="retired"{% endif %}>
                 <td>{{{$r['name']}}}</td>
-                {% if($kind === 'members'): %}<td>{{{$r['kind']}}}</td><td>{{{$r['uname'] ?? ''}}}</td>{% elseif($kind === 'hospitals'): %}<td>{{{$r['short_name'] ?? ''}}}</td>{% endif %}
+                {% if($kind === 'members'): %}<td>{{{$r['kind']}}}</td><td>{{{$r['uname'] ?? ''}}}</td>{% elseif($kind === 'hospitals'): %}<td>{{{$r['short_name'] ?? ''}}}</td>{% elseif($kind === 'companies'): %}<td class="small">{{{$r['supplies'] ? str_replace('_', ' ', implode(', ', json_decode($r['supplies'], true) ?: [])) : t('everything')}}}</td>{% endif %}
                 {% if($kind !== 'companies'): %}<td>{{{$r['apyweb_name'] ?? ''}}}</td>{% endif %}
                 <td><a href="{{rel_url($cfg['url'])}}?edit={{{$r['id']}}}">{{{t('Edit')}}}</a></td>
             </tr>
