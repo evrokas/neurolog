@@ -11,7 +11,8 @@
  *   suppliers (docs/plans/suppliers.md; one supply row): supply (kind), supplier (company), sproduct (product contains);
  *     `supplier` alone also finds the company's implant rows ("anything from company X")
  * A level filter also finds ranges that cover it (L4-L5 finds L3-L5) and, for a vertebra, the segments around it.
- * The search line (`s`) is read with the quick-line parser (same words and notation) plus a year, and becomes the
+ * The search line (`s`) is read with the quick-line parser (same words and notation) plus a year and a region
+ * abbreviation (ΟΜΣΣ, ΑΜΣΣ, ΘΜΣΣ), and becomes the
  * filters above. Pure functions; the SQL uses bound parameters only.
  */
 
@@ -191,6 +192,8 @@ function nl_search_line(string $s, array $aliases, array $diadermiki): array {
         if ($s = nl_ql_side($norm)) $f['side'] = $s;
         if ($a = nl_ql_approach($norm)) $f['approach'] = $a;
     }
+    // a region abbreviation (ΟΜΣΣ, ΑΜΣΣ, ΘΜΣΣ) when no level was written: the procedure's region
+    if (!isset($f['level']) && !isset($f['dxlevel']) && ($rg = nl_ql_region($rest))) $f['region'] = $rg;
     if ($dx) {
         $f['dx'] = $dx['diagnosis_code'];
         if (!$pr && $dx['levels'] !== '') { $r = nl_levels_parse($dx['levels']); if ($r['ok'] && count($r['items']) === 1) $f['dxlevel'] = $r['text']; }

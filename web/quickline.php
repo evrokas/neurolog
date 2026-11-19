@@ -159,6 +159,12 @@ function nl_ql_implant(string $text, array $companies, string $context = ''): ?a
     return $row;
 }
 
+/** A spine region written as the group's abbreviation (ΑΜΣΣ, ΘΜΣΣ, ΟΜΣΣ, dots allowed), or null. */
+function nl_ql_region(string $t): ?string {
+    if (!preg_match('/(?<![\p{L}\p{N}])([ΑAΘΟO])\.?\s?[ΜM]\.?\s?Σ\.?\s?Σ\.?(?![\p{L}\p{N}])/u', nl_ql_norm($t), $m)) return null;
+    return ['Α' => 'cervical', 'A' => 'cervical', 'Θ' => 'thoracic', 'Ο' => 'lumbar', 'O' => 'lumbar'][$m[1]];
+}
+
 /** The company named in a (normalised) text: the longest name of the list found as whole words, or null. */
 function nl_ql_company(string $t, array $companies): ?int {
     $best = 0; $found = null;
@@ -215,6 +221,7 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
     $lineLevels = $tagged['lvl'] ? implode(', ', $tagged['lvl']) : '';
     $diadermikiOn = (bool)preg_match('/ΔΙΑΔΕΡΜ|ΔΙΑΔΕΜΙΚ|ΔΙΑΔΡΕΜ|PERCUTAN/u', $rest);
     $lineSide ??= nl_ql_side($rest);
+    $lineRegion = nl_ql_region($rest);
     $product = null;
     foreach (array_merge($tagged['impl'], [$rest]) as $t) {
         $t = nl_ql_norm($t);
@@ -243,6 +250,19 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
         $procs = array_values(array_unique(array_map(fn($f) => $f[1], array_filter($found, fn($f) => $f[0] === 'procedure'))));
         $dxs = array_values(array_unique(array_map(fn($f) => $f[1], array_filter($found, fn($f) => $f[0] === 'diagnosis'))));
         if (in_array('trigeminal_percutaneous', $procs, true)) $procs = array_values(array_diff($procs, ['rf_neurotomy']));
+        // «πρόσθια αυχενική δισκεκτομή (και) σπονδυλοδεσία» is the ACDF's own fusion (a cage, with or without a plate), never
+        // screw fixation; only «οπίσθια (αυχενική) σπονδυλοδεσία» or screw words are screws (surgeon, 2026-11-19)
+        $posterior = (bool)preg_match('/(ΟΠΙΣΘ|ΚΟΧΛΙ|ΔΙΑΥΧΕΝ|ΔΙΑΔΕΡΜ|SCREW|POSTERIOR)/u', $part);
+        if (in_array('acdf', $procs, true) && !$posterior) $procs = array_values(array_diff($procs, ['pedicle_screw_fixation']));
+        if ($procs === ['pedicle_screw_fixation'] && !$dxs && !$posterior && $prev !== null) {
+            $acdf = null;
+            for ($k = $prevStart; $k < count($out['procedures']); $k++) if ($out['procedures'][$k]['procedure_code'] === 'acdf') $acdf = $k;
+            $plv = $lv !== '' ? nl_levels_parse($lv) : null;
+            if ($acdf !== null && ($plv === null || ($plv['ok'] && in_array($plv['region'], ['cervical', 'craniocervical', 'cervicothoracic'], true)))) {
+                if ($lv !== '' && $out['procedures'][$acdf]['levels'] === '') { $out['procedures'][$acdf]['levels'] = $lv; $prevLevels = $lv; }
+                continue;
+            }
+        }
         if (!$procs && !$dxs) {
             $more = $lv !== '' ? $lv : nl_ql_levels($part, true);
             if ($more !== '' && $prev !== null) {          // levels only: they belong to the part before
@@ -254,6 +274,7 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
             if ($more !== '' && $lineLevels === '') { $lineLevels = $more; continue; }
             // a part with only a side or an approach («…, ανοικτή», «…, αρ») qualifies the procedures of the part before
             $ps = nl_ql_side($part); $pa = nl_ql_approach($part);
+            if (nl_ql_region($part) && !$ps && !$pa) continue;   // «…, ΟΜΣΣ»: the line's region (rows take it below)
             if (($ps || $pa) && $prev !== null) {
                 for ($k = $prevStart; $k < count($out['procedures']); $k++) {
                     if ($pa) $out['procedures'][$k]['approach_type'] = $pa;
@@ -261,7 +282,7 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
                 }
                 continue;
             }
-            if (!nl_ql_side($part) && !nl_ql_approach($part) && !preg_match('/^(ΔΙΑΔΕΡΜ|ΔΙΑΔΕΜΙΚ)\p{L}*$/u', $part)) $out['unplaced'][] = $part;
+            if (!nl_ql_side($part) && !nl_ql_approach($part) && !nl_ql_region($part) && !preg_match('/^(ΔΙΑΔΕΡΜ|ΔΙΑΔΕΜΙΚ)\p{L}*$/u', $part)) $out['unplaced'][] = $part;
             continue;
         }
         $levels = $lv !== '' ? $lv : ($prevLevels !== '' ? $prevLevels : $lineLevels);
@@ -269,7 +290,7 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
         $appr = nl_ql_approach($part) ?? $lineAppr;
         if ($procs) $prevStart = count($out['procedures']);
         foreach ($procs as $code) {
-            $row = ['procedure_code' => $code, 'levels' => $levels, 'lesion_side' => $side, 'approach_type' => null,
+            $row = ['procedure_code' => $code, 'levels' => $levels, 'region' => $levels === '' ? (nl_ql_region($part) ?? $lineRegion) : null, 'lesion_side' => $side, 'approach_type' => null,
                     'approach_route' => null, 'product' => null, 'trigeminal_technique' => null, 'branches_treated' => [], 'source' => $part];
             if ($appr) $row['approach_type'] = $appr;
             elseif (in_array($code, $diadermiki['percutaneous_by_nature'] ?? [], true)) $row['approach_type'] = 'percutaneous';
@@ -294,7 +315,7 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
             }
             $out['procedures'][] = $row;
         }
-        foreach ($dxs as $code) $out['diagnoses'][] = ['diagnosis_code' => $code, 'levels' => $levels, 'lesion_side' => $side, 'source' => $part];
+        foreach ($dxs as $code) $out['diagnoses'][] = ['diagnosis_code' => $code, 'levels' => $levels, 'region' => $levels === '' ? (nl_ql_region($part) ?? $lineRegion) : null, 'lesion_side' => $side, 'source' => $part];
         if ($procs) { $prev = $part; $prevLevels = $levels; }
     }
     // 3. tagged diagnoses
@@ -315,6 +336,15 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
     foreach ($tagged['supp'] as $t) {
         $su = nl_ql_supply($t, $companies);
         if ($su) $out['supplies'][] = $su; else $out['unplaced'][] = '@προμ ' . $t;
+    }
+    // an ACDF is a cage (with or without a plate, which is entered when used): propose the cage at the ACDF's levels,
+    // unless an @υλ tag already gave one or the line is a disc arthroplasty
+    $codesNow = array_column($out['procedures'], 'procedure_code');
+    if (!in_array('cervical_disc_arthroplasty', $codesNow, true) && !in_array('cage_ACDF', array_column($out['implants'], 'implant_category'), true)) {
+        foreach ($out['procedures'] as $p) if ($p['procedure_code'] === 'acdf') {
+            $out['implants'][] = ['implant_category' => 'cage_ACDF', 'company_ref' => null, 'implant_count' => null, 'levels' => $p['levels'] !== '' ? $p['levels'] : $lineLevels,
+                                  'side' => null, 'params' => [], 'source' => $p['source'], 'implied_by' => 'acdf'];
+        }
     }
     // procedures with no levels yet take the line's levels (e.g. «@επ Ο4/5» written last)
     foreach ($out['procedures'] as &$p) if ($p['levels'] === '' && $lineLevels !== '' && $p['procedure_code'] !== 'trigeminal_percutaneous') $p['levels'] = $lineLevels;

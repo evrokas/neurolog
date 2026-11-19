@@ -354,11 +354,11 @@ The procedure and diagnosis lists below are built from the group's real caseload
 | spinal | laminectomy\_decompression | Πεταλεκτομή / αποσυμπίεση | qualifier: laminotomy, laminectomy, unilateral-for-bilateral (ULBD) | minimally-invasive-laminectomy |
 | spinal | foraminotomy | Τρηματεκτομή | root level | — |
 | spinal | interbody\_fusion | Μεσοσπονδύλια σπονδυλοδεσία | cage only, never implies screws; route: transforaminal (TLIF), posterior (PLIF), lateral (XLIF/LLIF), oblique (OLIF), anterior (ALIF); cage product if stated | posterior-lumbar-fusion, lateral-lumbar-interbody-fusion |
-| spinal | pedicle\_screw\_fixation | Διαυχένια κοχλίωση | only when «σπονδυλοδεσία» is written; «Διαδερμική» = percutaneous; own levels; navigation (O-arm) if stated | thoracolumbar-stabilization |
-| spinal | acdf | ACDF | levels; cage or cage + plate | anterior-cervical-discectomy-fusion |
+| spinal | pedicle\_screw\_fixation | Διαυχένια κοχλίωση | only when «σπονδυλοδεσία» is written; «Διαδερμική» = percutaneous; own levels; navigation (O-arm) if stated; «οπίσθια αυχενική σπονδυλοδεσία» is this code; never the fusion of an ACDF | thoracolumbar-stabilization |
+| spinal | acdf | ACDF | levels; cage, with or without a plate; «πρόσθια αυχενική δισκεκτομή και σπονδυλοδεσία» is this code (a cage implant, never screws) | anterior-cervical-discectomy-fusion |
 | spinal | cervical\_corpectomy | Πρόσθια αυχενική σωματεκτομή | vertebra | — |
 | spinal | cervical\_disc\_arthroplasty | Τεχνητός δίσκος |  | cervical-disc-arthroplasty |
-| spinal | posterior\_cervical\_fusion | Οπίσθια αυχενική σπονδυλοδεσία |  | posterior-cervical-fusion |
+| spinal | ~~posterior\_cervical\_fusion~~ | Οπίσθια αυχενική σπονδυλοδεσία | **retired 2026-11-19**: counted as `pedicle_screw_fixation` | posterior-cervical-fusion |
 | spinal | vertebral\_augmentation | Κυφοπλαστική | qualifier: kyphoplasty, vertebroplasty; vertebrae | kyphoplasty |
 | spinal | intradiscal\_hydrogel | Δισκοπλαστική | product: DiscoGel, GelStix, AnsoluteGel | — |
 | spinal | intradiscal\_thermal | IDET |  | — |

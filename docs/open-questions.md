@@ -30,7 +30,8 @@ When one is answered, move it to [decisions.md](decisions.md).
     lesioning, intradiscal_hydrogel = injection_block).
 
 18. **Words per code** (`vocab/aliases.yaml`, used by the quick line, the `@` tags and later the APYweb import):
-    drafted 2026-11-18 from general clinical vocabulary. Add the group's own abbreviations and spellings; remove any
+    drafted 2026-11-18 from general clinical vocabulary. Compared with ZPMS's tag lists on 2026-11-19: cervical fusion wording and
+    the region abbreviations settled (decisions); still open: «ριζοπάθεια». Add the group's own abbreviations and spellings; remove any
     word that means something else in the group's usage.
 
 19. **Follow-up windows and scores per case** (`vocab/followup.yaml`), drafted 2026-11-18 for M4: windows in days

@@ -14,8 +14,9 @@ foreach ($cases as $c) {
     foreach ($c['pr'] ?? [] as $k => $w) $ok = $ok && isset($r['procedures'][$k]) && $sub($w, $r['procedures'][$k]);
     if (isset($c['dx'])) { $ok = $ok && count($r['diagnoses']) === count($c['dx']); foreach ($c['dx'] as $k => $w) $ok = $ok && isset($r['diagnoses'][$k]) && $sub($w, $r['diagnoses'][$k]); }
     if (isset($c['unplaced'])) $ok = $ok && $r['unplaced'] === $c['unplaced'];
+    if (isset($c['im'])) { $ok = $ok && count($r['implants']) === count($c['im']); foreach ($c['im'] as $k => $w) $ok = $ok && isset($r['implants'][$k]) && $sub($w, $r['implants'][$k]); }
     if (isset($c['tags'])) $ok = $ok && $r['tags'] === $c['tags'];
-    if (!$ok) { $fail++; echo "FAIL «{$c['in']}»\n  got ", json_encode(['pr' => $r['procedures'], 'dx' => $r['diagnoses'], 'unplaced' => $r['unplaced'], 'tags' => $r['tags']], JSON_UNESCAPED_UNICODE), "\n"; }
+    if (!$ok) { $fail++; echo "FAIL «{$c['in']}»\n  got ", json_encode(['pr' => $r['procedures'], 'dx' => $r['diagnoses'], 'im' => $r['implants'], 'unplaced' => $r['unplaced'], 'tags' => $r['tags']], JSON_UNESCAPED_UNICODE), "\n"; }
 }
 // reading look: tag words hidden, value kept, text escaped
 $h = nl_tags_render('Δισκεκτομή @επ Ο4/5 <b> @δγ κήλη, τέλος');

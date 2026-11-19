@@ -8,11 +8,12 @@ procedure:
   laminectomy_decompression: [πεταλεκτομή, ημιπεταλεκτομή, αποσυμπίεση, laminectomy, laminotomy, decompression, ULBD]
   foraminotomy: [τρηματεκτομή, τρηματοτομή, foraminotomy]
   interbody_fusion: [PLIF, TLIF, XLIF, LLIF, OLIF, ALIF, μεσοσπονδύλια σπονδυλοδεσία, κλωβός, cage]
-  pedicle_screw_fixation: [σπονδυλοδεσία, κοχλίωση, διαυχένια κοχλίωση, κοχλίες, pedicle screws, screw fixation]
+  # «οπίσθια αυχενική σπονδυλοδεσία» counts as screw fixation; «πρόσθια αυχενική δισκεκτομή και σπονδυλοδεσία» is the ACDF (surgeon, 2026-11-19);
+  # posterior_cervical_fusion is retired
+  pedicle_screw_fixation: [σπονδυλοδεσία, κοχλίωση, διαυχένια κοχλίωση, κοχλίες, pedicle screws, screw fixation, οπίσθια αυχενική σπονδυλοδεσία, posterior cervical fusion]
   acdf: [ACDF, πρόσθια αυχενική δισκεκτομή, πρόσθια αυχενική σπονδυλοδεσία]
   cervical_corpectomy: [σωματεκτομή, corpectomy]
   cervical_disc_arthroplasty: [τεχνητός δίσκος, αρθροπλαστική δίσκου, disc arthroplasty, disc replacement]
-  posterior_cervical_fusion: [οπίσθια αυχενική σπονδυλοδεσία, posterior cervical fusion]
   vertebral_augmentation: [κυφοπλαστική, σπονδυλοπλαστική, kyphoplasty, vertebroplasty]
   intradiscal_hydrogel: [δισκοπλαστική, νουκλεοπλαστική, nucleoplasty, discogel, gelstix, gelstiks, ansolutegel]
   intradiscal_thermal: [IDET]

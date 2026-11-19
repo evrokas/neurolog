@@ -44,5 +44,9 @@ t('supplier filters: one supply row, product as a LIKE with % and _ escaped', su
 [$w, $p] = nl_filters_sql(nl_filters_from_get(['supplier' => '5'], $lists, [], [], [5 => 'Co']));
 t('a supplier alone: supply rows or implant rows of that company', str_contains($w, 'FROM supplies s') && str_contains($w, 'FROM implants si') && $p === [5, 5], [$w, $p]);
 t('an unknown supplier or kind is dropped', nl_filters_from_get(['supplier' => '9', 'supply' => 'teleporter', 'sproduct' => 'x'], $lists, [], [], [5 => 'Co']) === []);
+$r = nl_search_line('στένωση ΟΜΣΣ 2025', nl_aliases($root), $dia);
+t('a region abbreviation becomes the region filter', ($r['filters']['region'] ?? '') === 'lumbar' && ($r['filters']['dx'] ?? '') === 'spinal_stenosis' && !$r['unplaced'], $r);
+$r = nl_search_line('δισκεκτομή Ο4/5 ΑΜΣΣ', nl_aliases($root), $dia);
+t('a level wins over a region abbreviation', !isset($r['filters']['region']) && ($r['filters']['level'] ?? '') === 'L4-L5', $r);
 echo ($n - $fail) . "/$n passed\n";
 exit($fail ? 1 : 0);

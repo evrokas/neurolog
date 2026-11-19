@@ -3,11 +3,10 @@ discectomy,spinal,Δισκεκτομή,Discectomy,discectomy,segment,"lumbar, ce
 laminectomy_decompression,spinal,Πεταλεκτομή / αποσυμπίεση,Laminectomy / decompression,decompression,range,"qualifier: laminotomy, laminectomy, unilateral-for-bilateral (ULBD)",minimally-invasive-laminectomy
 foraminotomy,spinal,Τρηματεκτομή,Foraminotomy,decompression,root,root level,—
 interbody_fusion,spinal,Μεσοσπονδύλια σπονδυλοδεσία,Interbody fusion (cage),fusion,segment,"cage only, never implies screws; route: transforaminal (TLIF), posterior (PLIF), lateral (XLIF/LLIF), oblique (OLIF), anterior (ALIF); cage product if stated","posterior-lumbar-fusion, lateral-lumbar-interbody-fusion"
-pedicle_screw_fixation,spinal,Διαυχένια κοχλίωση,Pedicle screw fixation,fixation_without_fusion,vertebra,only when «σπονδυλοδεσία» is written; «Διαδερμική» = percutaneous; own levels; navigation (O-arm) if stated,thoracolumbar-stabilization
-acdf,spinal,ACDF,Anterior cervical discectomy and fusion (ACDF),fusion,segment,levels; cage or cage + plate,anterior-cervical-discectomy-fusion
+pedicle_screw_fixation,spinal,Διαυχένια κοχλίωση,Pedicle screw fixation,fixation_without_fusion,vertebra,only when «σπονδυλοδεσία» is written; «Διαδερμική» = percutaneous; own levels; navigation (O-arm) if stated; «οπίσθια αυχενική σπονδυλοδεσία» is this code; never the fusion of an ACDF,thoracolumbar-stabilization
+acdf,spinal,ACDF,Anterior cervical discectomy and fusion (ACDF),fusion,segment,"levels; cage, with or without a plate; «πρόσθια αυχενική δισκεκτομή και σπονδυλοδεσία» is this code (a cage implant, never screws)",anterior-cervical-discectomy-fusion
 cervical_corpectomy,spinal,Πρόσθια αυχενική σωματεκτομή,Anterior cervical corpectomy,decompression,vertebra,vertebra,—
 cervical_disc_arthroplasty,spinal,Τεχνητός δίσκος,Cervical disc arthroplasty,arthroplasty,segment,,cervical-disc-arthroplasty
-posterior_cervical_fusion,spinal,Οπίσθια αυχενική σπονδυλοδεσία,Posterior cervical fusion,fusion,range,,posterior-cervical-fusion
 vertebral_augmentation,spinal,Κυφοπλαστική,Vertebral augmentation (kyphoplasty / vertebroplasty),vertebral_augmentation,vertebra,"qualifier: kyphoplasty, vertebroplasty; vertebrae",kyphoplasty
 intradiscal_hydrogel,spinal,Δισκοπλαστική,Intradiscal hydrogel (nucleoplasty),injection_block,segment,"product: DiscoGel, GelStix, AnsoluteGel",—
 intradiscal_thermal,spinal,IDET,Intradiscal electrothermal therapy (IDET),ablation,segment,,—
