@@ -409,6 +409,23 @@ if ($r['code'] === 302 && preg_match('#/operations/(O-[^/]+)$#', urldecode($r['l
 $r = req("$base/settings/hospitals", login_as($base, $users['admin'], $pass), ['csrf_token' => 'bad', 'name' => 'wt csrf']);
 check('settings save without a valid CSRF token is refused', $r['code'] === 403);
 
+// deletions are confirmed and audited: the framework's users list shows its icons and asks before deleting
+$ja = login_as($base, $users['admin'], $pass);
+exec('NEUROLOG_PASSWORD=' . escapeshellarg($pass) . ' php ' . escapeshellarg("$root/bin/seed_users.php") . ' --user=wt_delete_me --role=viewer', $o, $c);
+$delId = (int)($db->query("SELECT id FROM users WHERE uname = 'wt_delete_me'")->fetch_row()[0] ?? 0);
+$list = req("$base/admin/users", $ja)['body'];
+check('admin lists load the local icons and the confirmation script', str_contains($list, 'css/icons.css') && str_contains($list, 'js/confirm.js') && str_contains($list, 'bx bx-trash') && clean($list));
+check('every delete form on the users list is marked for confirmation', substr_count($list, 'class="inline-delete-form"') > 0
+      && substr_count($list, 'class="inline-delete-form"') === preg_match_all('/class="inline-delete-form"[^>]*\sconfirmation/', $list));
+$r = req("$base/admin/users/$delId/delete", $ja, ['csrf_token' => token($list)]);
+$aud = $db->query("SELECT action, entity, entity_ref, detail FROM audit_log WHERE entity = 'users' AND entity_ref = $delId ORDER BY id DESC LIMIT 1")->fetch_assoc();
+check('a user deleted on the admin page is in the audit log', $delId > 0 && $r['code'] === 302 && ($aud['action'] ?? '') === 'deleted' && str_contains((string)($aud['detail'] ?? ''), 'wt_delete_me'), json_encode($aud));
+cleanup($db, ['wt_delete_me']);
+if (isset($F)) {
+    $e = req("$base/operations/$F/edit", $js)['body'];
+    check('the edit form knows the saved rows (asks before a save deletes some)', (bool)preg_match('/id="op-form"[^>]*data-saved="\{&quot;diagnosis&quot;/', $e));
+}
+
 $srv = (string)@file_get_contents($log);
 check('server log has no PHP warning', !preg_match('/PHP (Warning|Notice|Fatal|Deprecated)/', $srv), substr($srv, 0, 300));
 exit($fail ? 1 : 0);

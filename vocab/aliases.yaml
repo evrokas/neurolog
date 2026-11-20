@@ -88,3 +88,7 @@ diagnosis:
   spasticity: [σπαστικότητα, spasticity]
   implant_failure: [αποτυχία υλικών, χαλάρωση κοχλιών, μετατόπιση κλωβού]
   csf_leak: [διαφυγή ΕΝΥ, ρινόρροια, CSF leak]
+
+# A syndrome is set on the diagnosis it is written with (field diagnosis.clinical_syndrome), never a row of its own.
+clinical_syndrome:
+  radiculopathy: [ριζοπάθεια, radiculopathy]

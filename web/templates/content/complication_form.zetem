@@ -27,7 +27,7 @@
         <div class="form-actions"><button class="btn primary" type="submit">{{{t('Save')}}}</button></div>
     </form>
     {% if($comp): %}
-    <form method="post" action="{{rel_url('/complications/' . nl_id_format($comp['nl_id']) . '/delete')}}" class="inline" onsubmit="return confirm('Remove this complication?');">
+    <form method="post" action="{{rel_url('/complications/' . nl_id_format($comp['nl_id']) . '/delete')}}" class="inline" confirmation="Remove this complication? It no longer counts in the operation's outcome.">
         {{ csrf_field() }}<button class="btn small-btn" type="submit">{{{t('Remove this complication')}}}</button></form>
     {% endif %}
 </div>

@@ -1,0 +1,21 @@
+/* Icons of the framework's pages (class "bx bx-…", e.g. Admin › Users), drawn locally as SVG masks in the text
+   colour: no icon font and nothing from another host. Simple shapes of our own; add one here when a page needs it. */
+.bx { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -0.2em; background-color: currentColor;
+      -webkit-mask: var(--bx) center / contain no-repeat; mask: var(--bx) center / contain no-repeat; }
+.bx-edit { --bx: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3Cpath d='M13 7l4 4'/%3E%3C/svg%3E"); }
+.bx-trash { --bx: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16'/%3E%3Cpath d='M9 7V4h6v3'/%3E%3Cpath d='M6 7l1 13h10l1-13'/%3E%3Cpath d='M10 11v6M14 11v6'/%3E%3C/svg%3E"); }
+.bx-plus { --bx: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E"); }
+.bx-inbox { --bx: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 13h5l1 3h6l1-3h5'/%3E%3Cpath d='M5 5h14l2 8v6H3v-6z'/%3E%3C/svg%3E"); }
+.bx-x { --bx: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E"); }
+.bx-menu { --bx: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16M4 12h16M4 17h16'/%3E%3C/svg%3E"); }
+.bx-chevron-right { --bx: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E"); }
+.bx-dots-horizontal-rounded { --bx: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h.01M12 12h.01M19 12h.01' stroke-width='3.5'/%3E%3C/svg%3E"); }
+
+/* row actions on the framework's admin lists */
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 2em; height: 2em; padding: 0;
+            border: 1px solid var(--nl-border); border-radius: 6px; background: var(--nl-surface); color: var(--nl-text); cursor: pointer; text-decoration: none; }
+.icon-btn:hover { background: var(--nl-background); }
+.icon-btn-danger { color: var(--nl-danger); }
+.icon-btn-danger:hover { background: #fdecea; }
+td.actions { white-space: nowrap; }
+.inline-delete-form { display: inline; margin: 0 0 0 .3em; }

@@ -103,3 +103,17 @@ function nl_page_status($params) {
     $checks[] = ['label' => 'Session folder writable', 'ok' => is_dir($sess) && is_writable($sess), 'detail' => 'var/sessions'];
     return Renderer::render("status.zetem", ['checks' => $checks]);
 }
+
+/**
+ * The framework's audit events (zeusfw_audit_event(): admin pages for users, roles and permissions, sign-in) into
+ * NeuroLog's audit_log. Ids and account names only, never other values.
+ */
+function zeusfw_app_audit_event(string $event, array $context = []): void {
+    global $kernel;
+    $entity = isset($context['entity']) ? substr((string)$context['entity'], 0, 32) : null;
+    $ref = isset($context['entity_id']) ? (int)$context['entity_id'] : null;
+    $detail = $event . (!empty($context['username']) ? ' account: ' . $context['username'] : '');
+    $uname = isset($kernel) && method_exists($kernel, 'getUserName') ? $kernel->getUserName() : null;
+    $action = ['admin_user_roles_changed' => 'roles_changed'][$event] ?? (str_starts_with($event, 'admin_') ? substr($event, 6) : $event);
+    nl_audit(dbConnection::getConnection(), $uname ? substr($uname, 0, 32) : null, substr($action, 0, 16), $entity, $ref, null, $detail);
+}

@@ -156,7 +156,15 @@ function nl_render_form(PDO $db, array $in, array $errors, array $missing, ?arra
     // a company switched off but stored on this operation stays choosable
     $used = array_map('intval', array_filter(array_merge(array_column($in['im'], 'company_ref'), array_column($in['su'], 'company_ref')), fn($x) => (string)$x !== ''));
     foreach ($used as $c) if (!isset($data['companies'][$c])) { $data['companies'] = nl_companies($db, $used); break; }
-    return Renderer::render('operation_form.zetem', $data + [
+    // rows stored on this operation per section: the page asks before a save that would delete some (js/confirm.js)
+    $saved = null;
+    if ($op) {
+        $saved = [];
+        foreach (['diagnosis' => 'diagnoses', 'procedure' => 'procedures', 'implant' => 'implants', 'supplier' => 'supplies'] as $k => $t) {
+            $st = $db->prepare("SELECT COUNT(*) FROM $t WHERE op_ref = ?"); $st->execute([$op['id']]); $saved[$k] = (int)$st->fetchColumn();
+        }
+    }
+    return Renderer::render('operation_form.zetem', $data + ['saved_json' => $saved ? json_encode($saved) : '',
         'in' => $in, 'errors' => $errors, 'missing' => $missing, 'op' => $op, 'patient' => $patient,
         'action' => $op ? rel_url('/operations/' . nl_id_format($op['nl_id']) . '/edit') : rel_url('/operations/new'),
     ]);

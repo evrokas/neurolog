@@ -367,6 +367,7 @@
     (d.diagnoses || []).forEach(function (x) {
       var row = emptyRow('dx-rows', 'dx-tpl', function (r) { return !C.value(r.querySelector('.chipf[data-list="diagnosis"]')).length; });
       fill(row, 'diagnosis_code', x.diagnosis_code); qualifiers(row);
+      fill(row, 'clinical_syndrome', x.clinical_syndrome);
       var li = row.querySelector('.levels-input'); if (x.levels) { li.value = x.levels; li.dispatchEvent(new Event('input')); }
       fill(row, 'lesion_side', x.lesion_side);
       setProposed(row, true);

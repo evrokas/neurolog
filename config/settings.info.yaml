@@ -32,6 +32,14 @@ css:
     src: 'css/styles.css'
   - neurolog:
     src: 'css/neurolog.css'
+  - icons:
+    src: 'css/icons.css'
+
+# On every page: every deletion is confirmed before it is sent (js/confirm.js).
+foot_script:
+  - confirm:
+    type: 'text/javascript'
+    src: 'js/confirm.js'
 
 multilingual: false
 

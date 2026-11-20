@@ -1,6 +1,15 @@
 {
   "note": "web/quickline.php. Each expected procedure lists only the keys checked; diagnoses likewise. Made-up lines in the group's style.",
   "cases": [
+    {"in": "ΚΜΔ Ο5/Ι1 με ριζοπάθεια αρ", "pr": [], "dx": [{"diagnosis_code": "disc_herniation", "clinical_syndrome": ["radiculopathy"]}], "unplaced": []},
+    {"in": "Κήλη Ο4/5, ριζοπάθεια", "pr": [], "dx": [{"diagnosis_code": "disc_herniation", "clinical_syndrome": ["radiculopathy"]}], "unplaced": []},
+    {"in": "Ριζοπάθεια, κήλη Ο4/5", "pr": [], "dx": [{"diagnosis_code": "disc_herniation", "clinical_syndrome": ["radiculopathy"]}], "unplaced": []},
+    {"in": "Κήλη Ο4/5, ριζοπάθεια, στένωση Ο3/4", "pr": [],
+     "dx": [{"diagnosis_code": "disc_herniation", "clinical_syndrome": ["radiculopathy"]}, {"diagnosis_code": "spinal_stenosis", "clinical_syndrome": []}]},
+    {"in": "μικροδισκεκτομή Ο4/5 @δγ κήλη Ο4/5 με ριζοπάθεια", "pr": [{"procedure_code": "discectomy"}],
+     "dx": [{"diagnosis_code": "disc_herniation", "clinical_syndrome": ["radiculopathy"]}]},
+    {"in": "@δγ ριζοπάθεια @δγ στένωση Ο4/5", "pr": [], "dx": [{"diagnosis_code": "spinal_stenosis", "clinical_syndrome": ["radiculopathy"]}], "unplaced": []},
+    {"in": "Μικροδισκεκτομή Ο4/5 για ριζοπάθεια", "pr": [{"procedure_code": "discectomy"}], "dx": [], "unplaced": ["ΡΙΖΟΠΑΘΕΙΑ"]},
     {"in": "Πρόσθια Αυχενική Δισκεκτομή και Σπονδυλοδεσία Α5/6",
      "pr": [{"procedure_code": "acdf", "levels": "Α5/6", "approach_route": "anterior_cervical"}],
      "im": [{"implant_category": "cage_ACDF", "levels": "Α5/6"}]},

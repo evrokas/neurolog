@@ -16,7 +16,7 @@
     <script type="application/json" id="nl-presets">{{ $presets_json }}</script>
     <script type="application/json" id="nl-implants">{{ $implants_json }}</script>
 
-    <form method="post" action="{{$action}}" id="op-form" novalidate>
+    <form method="post" action="{{$action}}" id="op-form" novalidate{% if($saved_json): %} data-saved="{{{$saved_json}}}"{% endif %}>
         {{ csrf_field() }}
 
         <section class="op-section">

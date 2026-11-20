@@ -27,14 +27,15 @@ function nl_ql_norm(string $s): string {
     return strtr($s, ['Ά' => 'Α', 'Έ' => 'Ε', 'Ή' => 'Η', 'Ί' => 'Ι', 'Ϊ' => 'Ι', 'Ό' => 'Ο', 'Ύ' => 'Υ', 'Ϋ' => 'Υ', 'Ώ' => 'Ω', 'ΐ' => 'Ι', 'ΰ' => 'Υ']);
 }
 
-/** Aliases from vocab/aliases.yaml, normalised, longest first: [[norm phrase, list, code], …]. */
+/** Aliases from vocab/aliases.yaml, normalised, longest first: [[norm phrase, list, code], …]. Lists: procedure,
+ * diagnosis, clinical_syndrome (set on a diagnosis of the line, never a row of its own). */
 function nl_aliases(string $root): array {
     static $cache = [];
     if (isset($cache[$root])) return $cache[$root];
     if (!function_exists('yaml_parse_file')) require_once((defined('__FWDIR__') ? __FWDIR__ : "$root/fw/core") . '/lib/yaml_compat.php');
     $y = yaml_parse_file("$root/vocab/aliases.yaml") ?: [];
     $out = [];
-    foreach (['procedure', 'diagnosis'] as $list) {
+    foreach (['procedure', 'diagnosis', 'clinical_syndrome'] as $list) {
         foreach ($y[$list] ?? [] as $code => $words) foreach ($words as $w) $out[] = [nl_ql_norm((string)$w), $list, (string)$code];
     }
     usort($out, fn($a, $b) => mb_strlen($b[0]) <=> mb_strlen($a[0]));
@@ -230,7 +231,9 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
         elseif (str_contains($t, 'ANSOLUTE')) $product = 'AnsoluteGel';
     }
 
-    // 2. parts
+    // 2. parts. A syndrome word («ριζοπάθεια») is set on the diagnoses of its own part, else of the part before,
+    // else of the next one; with no diagnosis in the line it is reported, never guessed (surgeon, 2026-11-19)
+    $dxParts = []; $synAt = [];
     $parts = preg_split('/\s*(?:[,;··\n+]|(?<![\p{L}])ΚΑΙ(?![\p{L}])|(?<![\p{L}])AND(?![\p{L}]))\s*/u', $rest);
     $prevLevels = ''; $prev = null; $prevStart = 0;
     foreach ($parts as $part) {
@@ -249,6 +252,9 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
         $lv = nl_ql_levels($part);
         $procs = array_values(array_unique(array_map(fn($f) => $f[1], array_filter($found, fn($f) => $f[0] === 'procedure'))));
         $dxs = array_values(array_unique(array_map(fn($f) => $f[1], array_filter($found, fn($f) => $f[0] === 'diagnosis'))));
+        $syn = array_values(array_unique(array_map(fn($f) => $f[1], array_filter($found, fn($f) => $f[0] === 'clinical_syndrome'))));
+        if ($syn && !$dxs) $synAt[] = ['codes' => $syn, 'after' => count($dxParts),
+                                       'text' => implode(' ', array_unique(array_map(fn($f) => $f[2], array_filter($found, fn($f) => $f[0] === 'clinical_syndrome'))))];
         if (in_array('trigeminal_percutaneous', $procs, true)) $procs = array_values(array_diff($procs, ['rf_neurotomy']));
         // «πρόσθια αυχενική δισκεκτομή (και) σπονδυλοδεσία» is the ACDF's own fusion (a cage, with or without a plate), never
         // screw fixation; only «οπίσθια (αυχενική) σπονδυλοδεσία» or screw words are screws (surgeon, 2026-11-19)
@@ -264,6 +270,7 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
             }
         }
         if (!$procs && !$dxs) {
+            if ($syn) continue;   // a syndrome alone: placed on a diagnosis after the loop
             $more = $lv !== '' ? $lv : nl_ql_levels($part, true);
             if ($more !== '' && $prev !== null) {          // levels only: they belong to the part before
                 $i = count($out['procedures']) - 1;
@@ -315,15 +322,28 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
             }
             $out['procedures'][] = $row;
         }
-        foreach ($dxs as $code) $out['diagnoses'][] = ['diagnosis_code' => $code, 'levels' => $levels, 'region' => $levels === '' ? (nl_ql_region($part) ?? $lineRegion) : null, 'lesion_side' => $side, 'source' => $part];
+        if ($dxs) $dxParts[] = [count($out['diagnoses']), count($out['diagnoses']) + count($dxs)];
+        foreach ($dxs as $code) $out['diagnoses'][] = ['diagnosis_code' => $code, 'levels' => $levels, 'region' => $levels === '' ? (nl_ql_region($part) ?? $lineRegion) : null,
+                                                       'lesion_side' => $side, 'clinical_syndrome' => $syn, 'source' => $part];
         if ($procs) { $prev = $part; $prevLevels = $levels; }
     }
     // 3. tagged diagnoses
     foreach ($tagged['dx'] as $t) {
-        $tn = nl_ql_norm($t); $code = null;
+        $tn = nl_ql_norm($t); $code = null; $syn = [];
         foreach ($aliases as [$w, $list, $c]) if ($list === 'diagnosis' && preg_match('/(?<![\p{L}\p{N}])' . preg_quote($w, '/') . '/u', $tn)) { $code = $c; break; }
-        if ($code) $out['diagnoses'][] = ['diagnosis_code' => $code, 'levels' => nl_ql_levels($tn) ?: $lineLevels, 'lesion_side' => nl_ql_side($tn) ?? $lineSide, 'source' => $t];
+        foreach ($aliases as [$w, $list, $c]) if ($list === 'clinical_syndrome' && preg_match('/(?<![\p{L}\p{N}])' . preg_quote($w, '/') . '/u', $tn)) $syn[] = $c;
+        $syn = array_values(array_unique($syn));
+        if ($code) {
+            $dxParts[] = [count($out['diagnoses']), count($out['diagnoses']) + 1];
+            $out['diagnoses'][] = ['diagnosis_code' => $code, 'levels' => nl_ql_levels($tn) ?: $lineLevels, 'region' => null, 'lesion_side' => nl_ql_side($tn) ?? $lineSide,
+                                   'clinical_syndrome' => $syn, 'source' => $t];
+        } elseif ($syn) $synAt[] = ['codes' => $syn, 'after' => count($dxParts), 'text' => '@δγ ' . $t];
         else $out['unplaced'][] = '@δγ ' . $t;
+    }
+    foreach ($synAt as $m) {
+        $range = $dxParts[$m['after'] - 1] ?? $dxParts[$m['after']] ?? null;
+        if ($range === null) { $out['unplaced'][] = $m['text']; continue; }
+        for ($k = $range[0]; $k < $range[1]; $k++) $out['diagnoses'][$k]['clinical_syndrome'] = array_values(array_unique(array_merge($out['diagnoses'][$k]['clinical_syndrome'], $m['codes'])));
     }
     // 4. tagged implants (M4): proposed implant rows; a tag that names only a hydrogel product is the product above
     foreach ($tagged['impl'] as $t) {
@@ -351,6 +371,13 @@ function nl_quickline_parse(string $text, array $aliases, array $diadermiki, arr
     unset($p);
     // the same diagnosis twice -> once
     $seen = [];
-    $out['diagnoses'] = array_values(array_filter($out['diagnoses'], function ($d) use (&$seen) { $k = $d['diagnosis_code'] . '|' . $d['levels']; if (isset($seen[$k])) return false; return $seen[$k] = true; }));
+    foreach ($out['diagnoses'] as $i => $d) {
+        $k = $d['diagnosis_code'] . '|' . $d['levels'];
+        if (!isset($seen[$k])) { $seen[$k] = $i; continue; }
+        $j = $seen[$k];
+        $out['diagnoses'][$j]['clinical_syndrome'] = array_values(array_unique(array_merge($out['diagnoses'][$j]['clinical_syndrome'], $d['clinical_syndrome'])));
+        unset($out['diagnoses'][$i]);
+    }
+    $out['diagnoses'] = array_values($out['diagnoses']);
     return $out;
 }
