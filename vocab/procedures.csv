@@ -3,51 +3,51 @@ discectomy,spinal,Δισκεκτομή,Discectomy,discectomy,segment,"lumbar, ce
 laminectomy_decompression,spinal,Πεταλεκτομή / αποσυμπίεση,Laminectomy / decompression,decompression,range,"qualifier: laminotomy, laminectomy, unilateral-for-bilateral (ULBD)",minimally-invasive-laminectomy
 foraminotomy,spinal,Τρηματεκτομή,Foraminotomy,decompression,root,root level,—
 interbody_fusion,spinal,Μεσοσπονδύλια σπονδυλοδεσία,Interbody fusion (cage),fusion,segment,"cage only, never implies screws; route: transforaminal (TLIF), posterior (PLIF), lateral (XLIF/LLIF), oblique (OLIF), anterior (ALIF); cage product if stated","posterior-lumbar-fusion, lateral-lumbar-interbody-fusion"
-pedicle_screw_fixation,spinal,Διαυχένια κοχλίωση,Pedicle screw fixation,fixation_without_fusion,vertebra,only when «σπονδυλοδεσία» is written; «Διαδερμική» = percutaneous; own levels; navigation (O-arm) if stated; «οπίσθια αυχενική σπονδυλοδεσία» is this code; never the fusion of an ACDF,thoracolumbar-stabilization
-acdf,spinal,ACDF,Anterior cervical discectomy and fusion (ACDF),fusion,segment,"levels; cage, with or without a plate; «πρόσθια αυχενική δισκεκτομή και σπονδυλοδεσία» is this code (a cage implant, never screws)",anterior-cervical-discectomy-fusion
+pedicle_screw_fixation,spinal,Διαυχενική σπονδυλοδεσία,Pedicle screw fixation,fixation_without_fusion,vertebra,only when «σπονδυλοδεσία» is written; «Διαδερμική» = percutaneous; own levels; navigation (O-arm) if stated; «οπίσθια αυχενική σπονδυλοδεσία» is this code; never the fusion of an ACDF,thoracolumbar-stabilization
+acdf,spinal,Πρόσθια αυχενική δισκεκτομή και σπονδυλοδεσία,Anterior cervical discectomy and fusion (ACDF),fusion,segment,"levels; cage, with or without a plate; «πρόσθια αυχενική δισκεκτομή και σπονδυλοδεσία» is this code (a cage implant, never screws)",anterior-cervical-discectomy-fusion
 cervical_corpectomy,spinal,Πρόσθια αυχενική σωματεκτομή,Anterior cervical corpectomy,decompression,vertebra,vertebra,—
-cervical_disc_arthroplasty,spinal,Τεχνητός δίσκος,Cervical disc arthroplasty,arthroplasty,segment,,cervical-disc-arthroplasty
+cervical_disc_arthroplasty,spinal,Αυχενική αρθροπλαστική - Τεχνητός δίσκος,Cervical disc arthroplasty,arthroplasty,segment,,cervical-disc-arthroplasty
 vertebral_augmentation,spinal,Κυφοπλαστική,Vertebral augmentation (kyphoplasty / vertebroplasty),vertebral_augmentation,vertebra,"qualifier: kyphoplasty, vertebroplasty; vertebrae",kyphoplasty
 intradiscal_hydrogel,spinal,Δισκοπλαστική,Intradiscal hydrogel (nucleoplasty),injection_block,segment,"product: DiscoGel, GelStix, AnsoluteGel",—
 intradiscal_thermal,spinal,IDET,Intradiscal electrothermal therapy (IDET),ablation,segment,,—
 spinal_biopsy,spinal,Βιοψία σπονδύλου,Vertebral biopsy,biopsy,vertebra,,spinal-biopsy
 vertebral_tumour_resection,spinal,Αφαίρεση όγκου σπονδύλου,Vertebral tumour resection,excision_resection,vertebra,,—
-vertebral_tumour_ablation,spinal,RF αποδομή όγκου σπονδύλου,Radiofrequency ablation of vertebral tumour,ablation,vertebra,OsteoCool,vertebral-tumor-radiofrequency-ablation
+vertebral_tumour_ablation,spinal,Καυτηριασμός σπονδυλικού όγκου με RF,Radiofrequency ablation of vertebral tumour,ablation,vertebra,OsteoCool,vertebral-tumor-radiofrequency-ablation
 intradural_tumour_resection,spinal,Αφαίρεση ενδομηνιγγικού όγκου,Intradural spinal tumour resection,excision_resection,range,"compartment: extramedullary, intramedullary",spinal-cord-tumor-resection
 transverse_process_resection,spinal,Αφαίρεση εγκάρσιας απόφυσης,Transverse process resection,excision_resection,vertebra,Bertolotti,—
 hardware_removal,spinal,Αφαίρεση υλικών,Hardware removal,hardware_removal,range,"which implant, levels",—
 implant_revision,spinal,Αναθεώρηση υλικών,Instrumentation revision,device_revision,range,"cage, screw, rod",—
 dural_repair,spinal,Μηνιγγοπλαστική,Dural repair,dural_repair,range,primary or for CSF leak,—
-posterior_fossa_decompression,spinal,Αποσυμπίεση οπίσθιας κρανιακής βόθρου,Posterior fossa decompression,decompression,range,Chiari,posterior-fossa-decompression
+posterior_fossa_decompression,spinal,Αποσυμπίεση οπισθίου κρανιακού βόθρου,Posterior fossa decompression,decompression,range,Chiari,posterior-fossa-decompression
 syrinx_shunt,spinal,Shunt συριγγομυελίας,Syringo-subarachnoid shunt,CSF_diversion,range,,syringo-subarachnoid-shunt
 spinal_injection,pain,Έγχυση / block,Spinal injection / nerve block,injection_block,segment,"target: transforaminal, epidural, facet, medial branch, SI joint",spinal-injections
 rf_neurotomy,pain,RF θερμοπηξία νεύρου,Radiofrequency neurotomy,lesioning,root,"target: spinal root / DRG, medial branch, SI joint, glossopharyngeal nerve, peripheral nerve; cycles in rf_protocol","facet-joint-radiofrequency-neurotomy, radiofrequency-ablation"
-trigeminal_percutaneous,pain,Θερμοπηξία γασσερίου,Percutaneous trigeminal procedure (RF / balloon / glycerol),lesioning,,"technique + branches treated (V1/V2/V3, multi) + rf_protocol; see Trigeminal procedures and RF protocol below",percutaneous-trigeminal-procedures
+trigeminal_percutaneous,pain,Θερμοπηξία γασσερίου γαγγλίου,Percutaneous trigeminal procedure (RF / balloon / glycerol),lesioning,,"technique + branches treated (V1/V2/V3, multi) + rf_protocol; see Trigeminal procedures and RF protocol below",percutaneous-trigeminal-procedures
 spinal_cord_stimulation,pain,Νευροδιέγερση νωτιαίου μυελού,Spinal cord stimulation,stimulation_implant,range,trial or implant,spinal-cord-stimulation
-deep_brain_stimulation,pain,DBS,Deep brain stimulation (DBS),stimulation_implant,,target,deep-brain-stimulation
-intrathecal_pump,pain,Αντλία,Intrathecal drug pump,pump_implant,,"baclofen, morphine",programmable-pump-implantation
-sacral_or_vagus_stimulation,pain,Ιερή / πνευμονογαστρική διέγερση,Sacral or vagus nerve stimulation,stimulation_implant,,,"sacral-root-stimulation, vagus-nerve-stimulation"
-neurostimulator_hardware,pain,Αντικατάσταση / αφαίρεση διεγέρτη,Neurostimulator replacement / removal,device_revision,,"IPG change, lead revision, removal",—
+deep_brain_stimulation,pain,Εν τω βάθει εγκεφαλική διέγερση - DBS,Deep brain stimulation (DBS),stimulation_implant,,target,deep-brain-stimulation
+intrathecal_pump,pain,Αντλία ενδορραχιαίας έγχυσης,Intrathecal drug pump,pump_implant,,"baclofen, morphine",programmable-pump-implantation
+sacral_or_vagus_stimulation,pain,Διέγερση ιερών ριζών / Διέγερση πνευμονογαστρικού,Sacral or vagus nerve stimulation,stimulation_implant,,,"sacral-root-stimulation, vagus-nerve-stimulation"
+neurostimulator_hardware,pain,Αντικατάσταση / αφαίρεση νευροδιεγέρτη,Neurostimulator replacement / removal,device_revision,,"IPG change, lead revision, removal",—
 microvascular_decompression,pain,Μικροαγγειακή αποσυμπίεση,Microvascular decompression,decompression,,"nerve V, VII, IX",microvascular-decompression
-burr_hole_evacuation,cranial,Κρανιοανάτρηση / παροχέτευση,Burr-hole evacuation / drainage,evacuation_drainage,,"chronic SDH, hygroma",burr-hole-hematoma-evacuation
-craniotomy_haematoma,cranial,Κρανιοτομία αιματώματος,Craniotomy for haematoma,evacuation_drainage,,"epidural, subdural, intracerebral",craniotomy-hematoma-evacuation
-craniotomy_tumour,cranial,Κρανιοτομία όγκου,Craniotomy for tumour,excision_resection,,awake yes/no; extent of resection,"craniotomy-tumor-resection, awake-craniotomy"
+burr_hole_evacuation,cranial,Παροχέτευση αιματώματος με κρανιοανάτρηση,Burr-hole evacuation / drainage,evacuation_drainage,,"chronic SDH, hygroma",burr-hole-hematoma-evacuation
+craniotomy_haematoma,cranial,Παροχέτευση αιματώματος με κρανιοτομία,Craniotomy for haematoma,evacuation_drainage,,"epidural, subdural, intracerebral",craniotomy-hematoma-evacuation
+craniotomy_tumour,cranial,Αφαίρεση όγκου εγκεφάλου με κρανιοτομία,Craniotomy for tumour,excision_resection,,awake yes/no; extent of resection,"craniotomy-tumor-resection, awake-craniotomy"
 stereotactic_biopsy,cranial,Στερεοτακτική βιοψία,Stereotactic biopsy,biopsy,,,stereotactic-brain-biopsy
 decompressive_craniectomy,cranial,Αποσυμπιεστική κρανιεκτομή,Decompressive craniectomy,decompression,,,—
 cranioplasty,cranial,Κρανιοπλαστική,Cranioplasty,cranioplasty_reconstruction,,,cranioplasty
-aneurysm_clipping,cranial,,Aneurysm clipping,clipping,,kept for completeness,matching erweb pages
-avm_excision,cranial,,AVM excision,vascular_excision,,kept for completeness,matching erweb pages
-skull_base_endonasal,cranial,,Endoscopic endonasal skull base surgery,excision_resection,,kept for completeness,matching erweb pages
-cpa_surgery,cranial,,Cerebellopontine angle surgery,excision_resection,,kept for completeness,matching erweb pages
-epilepsy_surgery,cranial,,Epilepsy surgery,excision_resection,,kept for completeness,matching erweb pages
-radiosurgery,cranial,,Stereotactic radiosurgery,ablation,,kept for completeness,matching erweb pages
-shunt_insertion,CSF,Τοποθέτηση βαλβίδας,Shunt insertion,CSF_diversion,,"VP, VA, LP; valve type",hydrocephalus-shunting
-shunt_revision,CSF,Revision βαλβίδας,Shunt revision,device_revision,,which component,—
-external_ventricular_drain,CSF,EVD,External ventricular drain (EVD),CSF_diversion,,,—
-ommaya_reservoir,CSF,Ommaya,Ommaya reservoir,CSF_diversion,,,—
-etv,CSF,Ενδοσκοπική κοιλιοστομία,Endoscopic third ventriculostomy (ETV),fenestration,,,endoscopic-third-ventriculostomy
-nerve_decompression,peripheral,Απελευθέρωση νεύρου,Peripheral nerve decompression,neurolysis_release,,"nerve + site (carpal tunnel, cubital tunnel, …)",peripheral-nerve-decompression
-nerve_repair,peripheral,Αποκατάσταση νεύρου,Peripheral nerve repair,nerve_repair_graft,,,peripheral-nerve-repair
+aneurysm_clipping,cranial,Αποκλεισμός ανευρύσματος - clip,Aneurysm clipping,clipping,,kept for completeness,matching erweb pages
+avm_excision,cranial,Αφαίρεση αρτηριοφλεβώδους δυσπλασίας - AVM,AVM excision,vascular_excision,,kept for completeness,matching erweb pages
+skull_base_endonasal,cranial,Ενδοσκοπική προσπέλαση στην βάση του κρανίου,Endoscopic endonasal skull base surgery,excision_resection,,kept for completeness,matching erweb pages
+cpa_surgery,cranial,Χειρουργείο γεφυροπαρεγκεφαλιδικής γωνίας,Cerebellopontine angle surgery,excision_resection,,kept for completeness,matching erweb pages
+epilepsy_surgery,cranial,Χειρουργείο επιληψίας,Epilepsy surgery,excision_resection,,kept for completeness,matching erweb pages
+radiosurgery,cranial,Στερεοτακτική ακτινοχειρουργική,Stereotactic radiosurgery,ablation,,kept for completeness,matching erweb pages
+shunt_insertion,CSF,Τοποθέτηση βαλβίδας παροχέτευσης ΕΝΥ,Shunt insertion,CSF_diversion,,"VP, VA, LP; valve type",hydrocephalus-shunting
+shunt_revision,CSF,Revision βαλβίδας παροχέτευσης ΕΝΥ,Shunt revision,device_revision,,which component,—
+external_ventricular_drain,CSF,Εξωτερική κοιλιακή παροχέτευση - EVD,External ventricular drain (EVD),CSF_diversion,,,—
+ommaya_reservoir,CSF,Τοποθέτηση reservoir Ommaya,Ommaya reservoir,CSF_diversion,,,—
+etv,CSF,Ενδοσκοπική 3η κοιλιοστομία,Endoscopic third ventriculostomy (ETV),fenestration,,,endoscopic-third-ventriculostomy
+nerve_decompression,peripheral,Αποσυμπίεση περιφερικού νεύρου,Peripheral nerve decompression,neurolysis_release,,"nerve + site (carpal tunnel, cubital tunnel, …)",peripheral-nerve-decompression
+nerve_repair,peripheral,Αποκατάσταση περιφερικού νεύρου,Peripheral nerve repair,nerve_repair_graft,,,peripheral-nerve-repair
 soft_tissue_excision,other,Αφαίρεση βλάβης μαλακών μορίων,Soft tissue lesion excision,excision_resection,,lipoma etc.,—
 abscess_drainage,other,Παροχέτευση αποστήματος,Abscess drainage,evacuation_drainage,,site,—
 other_procedure,other,Άλλη,Other procedure,other,,note required; reviewed quarterly,—

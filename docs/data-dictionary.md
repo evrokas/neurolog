@@ -354,47 +354,47 @@ The procedure and diagnosis lists below are built from the group's real caseload
 | spinal | laminectomy\_decompression | Πεταλεκτομή / αποσυμπίεση | qualifier: laminotomy, laminectomy, unilateral-for-bilateral (ULBD) | minimally-invasive-laminectomy |
 | spinal | foraminotomy | Τρηματεκτομή | root level | — |
 | spinal | interbody\_fusion | Μεσοσπονδύλια σπονδυλοδεσία | cage only, never implies screws; route: transforaminal (TLIF), posterior (PLIF), lateral (XLIF/LLIF), oblique (OLIF), anterior (ALIF); cage product if stated | posterior-lumbar-fusion, lateral-lumbar-interbody-fusion |
-| spinal | pedicle\_screw\_fixation | Διαυχένια κοχλίωση | only when «σπονδυλοδεσία» is written; «Διαδερμική» = percutaneous; own levels; navigation (O-arm) if stated; «οπίσθια αυχενική σπονδυλοδεσία» is this code; never the fusion of an ACDF | thoracolumbar-stabilization |
-| spinal | acdf | ACDF | levels; cage, with or without a plate; «πρόσθια αυχενική δισκεκτομή και σπονδυλοδεσία» is this code (a cage implant, never screws) | anterior-cervical-discectomy-fusion |
+| spinal | pedicle\_screw\_fixation | Διαυχενική σπονδυλοδεσία | only when «σπονδυλοδεσία» is written; «Διαδερμική» = percutaneous; own levels; navigation (O-arm) if stated; «οπίσθια αυχενική σπονδυλοδεσία» is this code; never the fusion of an ACDF | thoracolumbar-stabilization |
+| spinal | acdf | Πρόσθια αυχενική δισκεκτομή και σπονδυλοδεσία | levels; cage, with or without a plate; «πρόσθια αυχενική δισκεκτομή και σπονδυλοδεσία» is this code (a cage implant, never screws) | anterior-cervical-discectomy-fusion |
 | spinal | cervical\_corpectomy | Πρόσθια αυχενική σωματεκτομή | vertebra | — |
-| spinal | cervical\_disc\_arthroplasty | Τεχνητός δίσκος |  | cervical-disc-arthroplasty |
+| spinal | cervical\_disc\_arthroplasty | Αυχενική αρθροπλαστική - Τεχνητός δίσκος |  | cervical-disc-arthroplasty |
 | spinal | ~~posterior\_cervical\_fusion~~ | Οπίσθια αυχενική σπονδυλοδεσία | **retired 2026-11-19**: counted as `pedicle_screw_fixation` | posterior-cervical-fusion |
 | spinal | vertebral\_augmentation | Κυφοπλαστική | qualifier: kyphoplasty, vertebroplasty; vertebrae | kyphoplasty |
 | spinal | intradiscal\_hydrogel | Δισκοπλαστική | product: DiscoGel, GelStix, AnsoluteGel | — |
 | spinal | intradiscal\_thermal | IDET |  | — |
 | spinal | spinal\_biopsy | Βιοψία σπονδύλου |  | spinal-biopsy |
 | spinal | vertebral\_tumour\_resection | Αφαίρεση όγκου σπονδύλου |  | — |
-| spinal | vertebral\_tumour\_ablation | RF αποδομή όγκου σπονδύλου | OsteoCool | vertebral-tumor-radiofrequency-ablation |
+| spinal | vertebral\_tumour\_ablation | Καυτηριασμός σπονδυλικού όγκου με RF | OsteoCool | vertebral-tumor-radiofrequency-ablation |
 | spinal | intradural\_tumour\_resection | Αφαίρεση ενδομηνιγγικού όγκου | compartment: extramedullary, intramedullary | spinal-cord-tumor-resection |
 | spinal | transverse\_process\_resection | Αφαίρεση εγκάρσιας απόφυσης | Bertolotti | — |
 | spinal | hardware\_removal | Αφαίρεση υλικών | which implant, levels | — |
 | spinal | implant\_revision | Αναθεώρηση υλικών | cage, screw, rod | — |
 | spinal | dural\_repair | Μηνιγγοπλαστική | primary or for CSF leak | — |
-| spinal | posterior\_fossa\_decompression | Αποσυμπίεση οπίσθιας κρανιακής βόθρου | Chiari | posterior-fossa-decompression |
+| spinal | posterior\_fossa\_decompression | Αποσυμπίεση οπισθίου κρανιακού βόθρου | Chiari | posterior-fossa-decompression |
 | spinal | syrinx\_shunt | Shunt συριγγομυελίας |  | syringo-subarachnoid-shunt |
 | pain | spinal\_injection | Έγχυση / block | target: transforaminal, epidural, facet, medial branch, SI joint | spinal-injections |
 | pain | rf\_neurotomy | RF θερμοπηξία νεύρου | target: spinal root / DRG, medial branch, SI joint, glossopharyngeal nerve, peripheral nerve; cycles in rf\_protocol | facet-joint-radiofrequency-neurotomy, radiofrequency-ablation |
-| pain | trigeminal\_percutaneous | Θερμοπηξία γασσερίου | technique + branches treated (V1/V2/V3, multi) + rf\_protocol; see Trigeminal procedures and RF protocol below | percutaneous-trigeminal-procedures |
+| pain | trigeminal\_percutaneous | Θερμοπηξία γασσερίου γαγγλίου | technique + branches treated (V1/V2/V3, multi) + rf\_protocol; see Trigeminal procedures and RF protocol below | percutaneous-trigeminal-procedures |
 | pain | spinal\_cord\_stimulation | Νευροδιέγερση νωτιαίου μυελού | trial or implant | spinal-cord-stimulation |
-| pain | deep\_brain\_stimulation | DBS | target | deep-brain-stimulation |
-| pain | intrathecal\_pump | Αντλία | baclofen, morphine | programmable-pump-implantation |
-| pain | sacral\_or\_vagus\_stimulation | Ιερή / πνευμονογαστρική διέγερση |  | sacral-root-stimulation, vagus-nerve-stimulation |
-| pain | neurostimulator\_hardware | Αντικατάσταση / αφαίρεση διεγέρτη | IPG change, lead revision, removal | — |
+| pain | deep\_brain\_stimulation | Εν τω βάθει εγκεφαλική διέγερση - DBS | target | deep-brain-stimulation |
+| pain | intrathecal\_pump | Αντλία ενδορραχιαίας έγχυσης | baclofen, morphine | programmable-pump-implantation |
+| pain | sacral\_or\_vagus\_stimulation | Διέγερση ιερών ριζών / Διέγερση πνευμονογαστρικού |  | sacral-root-stimulation, vagus-nerve-stimulation |
+| pain | neurostimulator\_hardware | Αντικατάσταση / αφαίρεση νευροδιεγέρτη | IPG change, lead revision, removal | — |
 | pain | microvascular\_decompression | Μικροαγγειακή αποσυμπίεση | nerve V, VII, IX | microvascular-decompression |
-| cranial | burr\_hole\_evacuation | Κρανιοανάτρηση / παροχέτευση | chronic SDH, hygroma | burr-hole-hematoma-evacuation |
-| cranial | craniotomy\_haematoma | Κρανιοτομία αιματώματος | epidural, subdural, intracerebral | craniotomy-hematoma-evacuation |
-| cranial | craniotomy\_tumour | Κρανιοτομία όγκου | awake yes/no; extent of resection | craniotomy-tumor-resection, awake-craniotomy |
+| cranial | burr\_hole\_evacuation | Παροχέτευση αιματώματος με κρανιοανάτρηση | chronic SDH, hygroma | burr-hole-hematoma-evacuation |
+| cranial | craniotomy\_haematoma | Παροχέτευση αιματώματος με κρανιοτομία | epidural, subdural, intracerebral | craniotomy-hematoma-evacuation |
+| cranial | craniotomy\_tumour | Αφαίρεση όγκου εγκεφάλου με κρανιοτομία | awake yes/no; extent of resection | craniotomy-tumor-resection, awake-craniotomy |
 | cranial | stereotactic\_biopsy | Στερεοτακτική βιοψία |  | stereotactic-brain-biopsy |
 | cranial | decompressive\_craniectomy | Αποσυμπιεστική κρανιεκτομή |  | — |
 | cranial | cranioplasty | Κρανιοπλαστική |  | cranioplasty |
-| cranial | aneurysm\_clipping, avm\_excision, skull\_base\_endonasal, cpa\_surgery, epilepsy\_surgery, radiosurgery |  | kept for completeness | matching erweb pages |
-| CSF | shunt\_insertion | Τοποθέτηση βαλβίδας | VP, VA, LP; valve type | hydrocephalus-shunting |
-| CSF | shunt\_revision | Revision βαλβίδας | which component | — |
-| CSF | external\_ventricular\_drain | EVD |  | — |
-| CSF | ommaya\_reservoir | Ommaya |  | — |
-| CSF | etv | Ενδοσκοπική κοιλιοστομία |  | endoscopic-third-ventriculostomy |
-| peripheral | nerve\_decompression | Απελευθέρωση νεύρου | nerve + site (carpal tunnel, cubital tunnel, …) | peripheral-nerve-decompression |
-| peripheral | nerve\_repair | Αποκατάσταση νεύρου |  | peripheral-nerve-repair |
+| cranial | aneurysm\_clipping, avm\_excision, skull\_base\_endonasal, cpa\_surgery, epilepsy\_surgery, radiosurgery | Αποκλεισμός ανευρύσματος - clip · Αφαίρεση αρτηριοφλεβώδους δυσπλασίας - AVM · Ενδοσκοπική προσπέλαση στην βάση του κρανίου · Χειρουργείο γεφυροπαρεγκεφαλιδικής γωνίας · Χειρουργείο επιληψίας · Στερεοτακτική ακτινοχειρουργική | kept for completeness | matching erweb pages |
+| CSF | shunt\_insertion | Τοποθέτηση βαλβίδας παροχέτευσης ΕΝΥ | VP, VA, LP; valve type | hydrocephalus-shunting |
+| CSF | shunt\_revision | Revision βαλβίδας παροχέτευσης ΕΝΥ | which component | — |
+| CSF | external\_ventricular\_drain | Εξωτερική κοιλιακή παροχέτευση - EVD |  | — |
+| CSF | ommaya\_reservoir | Τοποθέτηση reservoir Ommaya |  | — |
+| CSF | etv | Ενδοσκοπική 3η κοιλιοστομία |  | endoscopic-third-ventriculostomy |
+| peripheral | nerve\_decompression | Αποσυμπίεση περιφερικού νεύρου | nerve + site (carpal tunnel, cubital tunnel, …) | peripheral-nerve-decompression |
+| peripheral | nerve\_repair | Αποκατάσταση περιφερικού νεύρου |  | peripheral-nerve-repair |
 | other | soft\_tissue\_excision | Αφαίρεση βλάβης μαλακών μορίων | lipoma etc. | — |
 | other | abscess\_drainage | Παροχέτευση αποστήματος | site | — |
 | other | other\_procedure | Άλλη | note required; reviewed quarterly | — |
@@ -470,14 +470,14 @@ Region comes from the level, so one code covers all spinal regions: «ΚΜΔ Ο5
 | Class | Code | Greek label | Qualifiers |
 | --- | --- | --- | --- |
 | degenerative | disc\_herniation | Κήλη μεσοσπονδυλίου δίσκου (ΚΜΔ) | zone, type; recurrent yes/no |
-| degenerative | spinal\_stenosis | Στένωση | central, lateral recess, foraminal |
+| degenerative | spinal\_stenosis | Στένωση σπονδυλικής στήλης | central, lateral recess, foraminal |
 | degenerative | spondylolisthesis | Σπονδυλολίσθηση | degenerative, isthmic; Meyerding |
 | degenerative | segmental\_instability | Αστάθεια |  |
 | degenerative | degenerative\_disc\_disease | Εκφυλιστική δισκοπάθεια |  |
 | degenerative | myelopathy | Μυελοπάθεια | mJOA; cause in a second diagnosis |
-| degenerative | facet\_joint\_syndrome | Σύνδρομο αρθρώσεων facet |  |
-| developmental | bertolotti\_syndrome, spondylolysis, tarlov\_cyst |  |  |
-| pain | radicular\_pain\_unspecified | Ισχιαλγία / βραχιοναλγία | root; use only when no structural cause is named |
+| degenerative | facet\_joint\_syndrome | Σύνδρομο αρθρώσεων facet - FJS |  |
+| developmental | bertolotti\_syndrome, spondylolysis, tarlov\_cyst | Σύνδρομο Bertolotti · Σπονδυλόλυση · Κύστη Tarlov |  |
+| pain | radicular\_pain\_unspecified | Ριζιτικός πόνος | root; use only when no structural cause is named |
 | pain | axial\_pain\_unspecified | Οσφυαλγία / ραχιαλγία |  |
 | pain | trigeminal\_neuralgia | Νευραλγία τριδύμου | branches affected (V1/V2/V3, multi); classical, secondary, idiopathic; concomitant continuous pain |
 | pain | glossopharyngeal\_neuralgia | Νευραλγία γλωσσοφαρυγγικού |  |
@@ -485,23 +485,23 @@ Region comes from the level, so one code covers all spinal regions: «ΚΜΔ Ο5
 | traumatic / bone | vertebral\_fracture | Κάταγμα σπονδύλου | cause: osteoporotic, traumatic, pathological (required); AO Spine |
 | traumatic | traumatic\_brain\_injury | Κρανιοεγκεφαλική κάκωση | GCS |
 | vascular / haemorrhage | subdural\_collection | Υποσκληρίδιο αιμάτωμα / ύγρωμα | acute, subacute, chronic, hygroma |
-| vascular / haemorrhage | intracerebral\_haematoma, epidural\_haematoma, subarachnoid\_haemorrhage |  |  |
-| vascular | aneurysm, avm, davf, cavernoma |  | as in Diagnosis facets |
-| neoplastic | brain\_tumour | Όγκος εγκεφάλου (εξεργασία) | status: provisional until histology, then WHO type + grade (glioma, meningioma, metastasis, lymphoma…) |
+| vascular / haemorrhage | intracerebral\_haematoma, epidural\_haematoma, subarachnoid\_haemorrhage | Ενδοεγκεφαλική αιμορραγία · Επισκληρίδιο αιμάτωμα · Υπαραχνοειδής |  |
+| vascular | aneurysm, avm, davf, cavernoma | Ανεύρυσμα εγκεφάλου · Αρτηριοφλεβώδης δυσπλασία · Μηνιγγική αρτηριοφλεβώδης δυσπλασία · Σηραγγώδες αιμαγγείωμα | as in Diagnosis facets |
+| neoplastic | brain\_tumour | Όγκος εγκεφάλου | status: provisional until histology, then WHO type + grade (glioma, meningioma, metastasis, lymphoma…) |
 | neoplastic | spinal\_tumour | Όγκος σπονδυλικής στήλης | compartment; primary or metastatic; histology (plasmacytoma, lymphoma…) |
 | neoplastic | leptomeningeal\_carcinomatosis | Καρκινωματώδης μηνιγγίτιδα |  |
 | neoplastic | radiation\_necrosis | Μετακτινική νέκρωση |  |
 | CSF | hydrocephalus | Υδροκέφαλος | normal pressure, obstructive, communicating |
 | CSF | shunt\_malfunction | Δυσλειτουργία βαλβίδας | obstruction, overdrainage, infection |
-| CSF | chiari, syringomyelia, iih |  |  |
+| CSF | chiari, syringomyelia, iih | Δυσπλασία Arnold-Chiari · Συριγγομυελία · Ιδιοπαθής ενδοκράνια υπέρταση |  |
 | infectious | spinal\_infection | Απόστημα / σπονδυλοδισκίτιδα | epidural abscess, discitis |
 | entrapment | nerve\_entrapment | Παγίδευση νεύρου | nerve + site (ΣΚΣ = carpal tunnel); severity |
-| functional | movement\_disorder, epilepsy, spasticity, hemifacial\_spasm |  |  |
+| functional | movement\_disorder, epilepsy, spasticity, hemifacial\_spasm | Κινητική διαταραχή · Επιληψία · Σπαστικότητα · Ημίσπασμος προσώπου |  |
 | iatrogenic | implant\_failure | Αποτυχία υλικών | loosening, cage migration, breakage; links to index operation |
 | iatrogenic | csf\_leak | Διαφυγή ΕΝΥ | links to index operation |
 | iatrogenic | postoperative\_haemorrhage | Μετεγχειρητική αιμορραγία | links to index operation |
-| iatrogenic | stimulator\_malfunction | Δυσλειτουργία διεγέρτη | DBS, SCS |
-| soft tissue | soft\_tissue\_lesion | Λίπωμα κ.λπ. |  |
+| iatrogenic | stimulator\_malfunction | Δυσλειτουργία νευροδιεγέρτη | DBS, SCS |
+| soft tissue | soft\_tissue\_lesion | Βλάβες μαλακών ιστών (λίπωμα κλπ) |  |
 | other | other\_diagnosis | Άλλη | note required |
 
 An `iatrogenic` diagnosis carries `index_op_id` (the earlier NeuroLog operation it complicates), so reoperation and complication rates can be counted from either side.

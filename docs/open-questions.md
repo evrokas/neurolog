@@ -20,11 +20,7 @@ When one is answered, move it to [decisions.md](decisions.md).
 7b. **RF plausibility limits.** Confirm the limits that refuse typos in the RF protocol (e.g. thermal 40–95 °C, pulsed
     limit 37–45 °C, pulsed 1–100 V, 1–20 Hz, 1–50 ms); table in [rf-protocol.md](rf-protocol.md).
 
-16. **Greek labels missing** for 21 codes in `vocab/` (procedures: aneurysm_clipping, avm_excision,
-    skull_base_endonasal, cpa_surgery, epilepsy_surgery, radiosurgery; diagnoses: bertolotti_syndrome, spondylolysis,
-    tarlov_cyst, intracerebral_haematoma, epidural_haematoma, subarachnoid_haemorrhage, aneurysm, avm, davf, cavernoma,
-    chiari, syringomyelia, iih, movement_disorder, epilepsy, spasticity, hemifacial_spasm). Until given, the forms show
-    the English label.
+16. ~~Greek labels missing~~ — answered 2026-11-20: the surgeon gave every Greek label (`vocab/procedures.csv`, `vocab/diagnoses.csv`).
 17. **Default action and level kind per procedure** (`vocab/procedures.csv`, columns `action`, `level_kind`): drafted
     2026-11-18 from the procedure names; please review (e.g. vertebral_tumour_ablation = ablation, rf_neurotomy =
     lesioning, intradiscal_hydrogel = injection_block).
