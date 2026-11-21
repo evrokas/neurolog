@@ -485,8 +485,8 @@ Region comes from the level, so one code covers all spinal regions: «ΚΜΔ Ο5
 | traumatic / bone | vertebral\_fracture | Κάταγμα σπονδύλου | cause: osteoporotic, traumatic, pathological (required); AO Spine |
 | traumatic | traumatic\_brain\_injury | Κρανιοεγκεφαλική κάκωση | GCS |
 | vascular / haemorrhage | subdural\_collection | Υποσκληρίδιο αιμάτωμα / ύγρωμα | acute, subacute, chronic, hygroma |
-| vascular / haemorrhage | intracerebral\_haematoma, epidural\_haematoma, subarachnoid\_haemorrhage | Ενδοεγκεφαλική αιμορραγία · Επισκληρίδιο αιμάτωμα · Υπαραχνοειδής |  |
-| vascular | aneurysm, avm, davf, cavernoma | Ανεύρυσμα εγκεφάλου · Αρτηριοφλεβώδης δυσπλασία · Μηνιγγική αρτηριοφλεβώδης δυσπλασία · Σηραγγώδες αιμαγγείωμα | as in Diagnosis facets |
+| vascular / haemorrhage | intracerebral\_haematoma, epidural\_haematoma, subarachnoid\_haemorrhage | Ενδοεγκεφαλική αιμορραγία · Επισκληρίδιο αιμάτωμα · Υπαραχνοειδής αιμορραγία |  |
+| vascular | aneurysm, avm, davf, cavernoma | Ανεύρυσμα εγκεφάλου · Αρτηριοφλεβώδης δυσπλασία · Αρτηριοφλεβώδης δυσπλασία της σκληράς μήνιγγας · Σηραγγώδες αιμαγγείωμα | as in Diagnosis facets |
 | neoplastic | brain\_tumour | Όγκος εγκεφάλου | status: provisional until histology, then WHO type + grade (glioma, meningioma, metastasis, lymphoma…) |
 | neoplastic | spinal\_tumour | Όγκος σπονδυλικής στήλης | compartment; primary or metastatic; histology (plasmacytoma, lymphoma…) |
 | neoplastic | leptomeningeal\_carcinomatosis | Καρκινωματώδης μηνιγγίτιδα |  |

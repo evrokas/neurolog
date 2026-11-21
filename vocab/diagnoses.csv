@@ -19,10 +19,10 @@ traumatic_brain_injury,traumatic,Κρανιοεγκεφαλική κάκωση,T
 subdural_collection,vascular / haemorrhage,Υποσκληρίδιο αιμάτωμα / ύγρωμα,Subdural haematoma / hygroma,"acute, subacute, chronic, hygroma"
 intracerebral_haematoma,vascular / haemorrhage,Ενδοεγκεφαλική αιμορραγία,Intracerebral haematoma,
 epidural_haematoma,vascular / haemorrhage,Επισκληρίδιο αιμάτωμα,Epidural haematoma,
-subarachnoid_haemorrhage,vascular / haemorrhage,Υπαραχνοειδής,Subarachnoid haemorrhage,
+subarachnoid_haemorrhage,vascular / haemorrhage,Υπαραχνοειδής αιμορραγία,Subarachnoid haemorrhage,
 aneurysm,vascular,Ανεύρυσμα εγκεφάλου,Intracranial aneurysm,as in Diagnosis facets
 avm,vascular,Αρτηριοφλεβώδης δυσπλασία,Arteriovenous malformation (AVM),as in Diagnosis facets
-davf,vascular,Μηνιγγική αρτηριοφλεβώδης δυσπλασία,Dural arteriovenous fistula (DAVF),as in Diagnosis facets
+davf,vascular,Αρτηριοφλεβώδης δυσπλασία της σκληράς μήνιγγας,Dural arteriovenous fistula (DAVF),as in Diagnosis facets
 cavernoma,vascular,Σηραγγώδες αιμαγγείωμα,Cavernoma,as in Diagnosis facets
 brain_tumour,neoplastic,Όγκος εγκεφάλου,Brain tumour,"status: provisional until histology, then WHO type + grade (glioma, meningioma, metastasis, lymphoma…)"
 spinal_tumour,neoplastic,Όγκος σπονδυλικής στήλης,Spinal tumour,"compartment; primary or metastatic; histology (plasmacytoma, lymphoma…)"
